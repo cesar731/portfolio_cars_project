@@ -1,0 +1,130 @@
+/* frontend/src/components/Header.css */
+
+.header {
+  background-color: #1a1a1a;
+  border-bottom: 1px solid #333;
+  padding: 0.5rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.header-logo {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-decoration: none;
+  font-family: 'Arial', sans-serif;
+  letter-spacing: -0.5px;
+}
+
+.header-logo:hover {
+  color: #e63946;
+  transition: color 0.3s ease;
+}
+
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.nav-link {
+  color: #e0e0e0;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  position: relative;
+  padding: 0.5rem 0;
+  transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+  color: #e63946;
+}
+
+.nav-link.active {
+  color: #e63946;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: #e63946;
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+.header-auth {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.btn-outline {
+  color: #e63946;
+  background: transparent;
+  border: 1px solid #e63946;
+}
+
+.btn-outline:hover {
+  background-color: #e63946;
+  color: white;
+}
+
+.btn-primary {
+  background-color: #e63946;
+  color: white;
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: #c1272d;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .header-container {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .nav-links {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .header-auth {
+    margin-top: 0.5rem;
+    width: 100%;
+    justify-content: center;
+  }
+}
