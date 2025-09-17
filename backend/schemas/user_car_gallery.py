@@ -1,3 +1,5 @@
+# backend/schemas/user_car_gallery.py
+
 from pydantic import BaseModel
 from typing import Optional
 

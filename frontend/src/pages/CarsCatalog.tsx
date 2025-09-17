@@ -95,7 +95,11 @@ const CarsCatalog = () => {
                     </Link>
 
                     <button
-                      onClick={() => handleAddToCompare(car.id)}
+                      onClick={
+                        selectedForComparison.includes(car.id)
+                          ? () => handleRemoveFromCompare(car.id)
+                          : () => handleAddToCompare(car.id)
+                      }
                       disabled={selectedForComparison.length >= 3}
                       className={`py-2 px-4 text-xs font-medium rounded-lg flex items-center justify-center gap-1 transition-colors ${
                         selectedForComparison.includes(car.id)

@@ -5,14 +5,12 @@ from sqlalchemy.orm import Session
 from ..database.database import get_db
 from ..schemas import user_car_gallery as gallery_schema
 from ..models import user as user_model
-from ..models import user_car_gallery as gallery_model  # ✅ ¡AHORA SÍ EXISTE!
+from ..models import user_car_gallery as gallery_model
 from ..security.oauth2 import get_current_user
 from typing import List
 from datetime import datetime
 
-
-# ✅ ¡ESTA LÍNEA ES CLAVE!
-router = APIRouter(prefix="/api/user-car-gallery", tags=["user_car_gallery"])
+router = APIRouter(tags=["user_car_gallery"])
 
 @router.get("/", response_model=List[gallery_schema.UserCarGalleryOut])
 def get_user_gallery(db: Session = Depends(get_db)):

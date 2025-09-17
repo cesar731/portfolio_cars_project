@@ -10,7 +10,7 @@ from ..models import user as user_model
 from ..security.oauth2 import get_current_user, get_current_admin
 from typing import List
 
-router = APIRouter(prefix="/api/accessories", tags=["accessories"])
+router = APIRouter(tags=["accessories"])
 
 @router.get("/", response_model=List[accessory_schema.AccessoryOut])
 def get_accessories(

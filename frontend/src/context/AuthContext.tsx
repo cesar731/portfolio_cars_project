@@ -5,7 +5,7 @@ import { LoginResponse, register as registerApi, login as loginApi } from '../se
 import { getCurrentUser, User } from '../services/userApi';
 import { useNavigate } from 'react-router-dom';
 
-// 👇 1. Define el tipo del contexto (se usa aquí, así que NO aparece como unused)
+// 👇 1. Define el tipo del contexto
 export interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -14,7 +14,7 @@ export interface AuthContextType {
   logout: () => void;
 }
 
-// 👇 2. CREA Y EXPORTA EL CONTEXTO (¡ESTO ES LO MÁS IMPORTANTE!)
+// 👇 2. CREA Y EXPORTA EL CONTEXTO
 export const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
@@ -34,11 +34,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (token) {
       getCurrentUser()
         .then(res => {
-          setUser(res);
+          setUser({
+            ...res,
+            is_active: res.is_active ?? true, // ✅ Asigna true si no viene
+          });
           setLoading(false);
         })
         .catch(() => {
           localStorage.removeItem('token');
+          setUser(null);
           setLoading(false);
         });
     } else {
@@ -47,15 +51,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const handleLogin = async (email: string, password: string) => {
-    try {
-      const data: LoginResponse = await loginApi(email, password); // ✅ Tipo explícito
-      localStorage.setItem('token', data.access_token);
-      setUser(data.user); // ✅ Ahora TypeScript sabe que data.user es de tipo User
-      navigate('/');
-    } catch (error) {
-      throw error;
+  try {
+    const data: LoginResponse = await loginApi(email, password);
+    localStorage.setItem('token', data.access_token);
+    setUser(data.user);
+
+    if (data.user.role_id === 1) {
+      navigate('/admin');   // 👈 Admin → panel de administración
+    } else if (data.user.role_id === 2) {
+      navigate('/advisor'); // 👈 Asesor → panel de asesor
+    } else {
+      navigate('/');        // 👈 Usuario normal → home
     }
-  };
+  } catch (error) {
+    throw error;
+  }
+};
 
   const handleRegister = async (username: string, email: string, password: string) => {
     try {
@@ -76,9 +87,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// 👇 4. EXPORTA EL HOOK QUE USA EL CONTEXTO (¡ESTE ES EL "useAuth"!)
+// 👇 4. EXPORTA EL HOOK
 export const useAuth = () => {
-  const context = useContext(AuthContext); // ✅ ¡Ahora AuthContext está definido y exportado!
+  const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }

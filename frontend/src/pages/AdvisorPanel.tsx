@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
+import { Consultation } from '../types';
 import { api } from '../services/api';
 
 const AdvisorPanel = () => {
   const { user, logout } = useAuth();
-  const [consultations, setConsultations] = useState([]);
+  const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -20,7 +21,9 @@ const AdvisorPanel = () => {
     const fetchConsultations = async () => {
       try {
         const response = await api.get('/api/consultations');
-        setConsultations(response.data.filter(c => c.advisor_id === user.id));
+        setConsultations(
+    response.data.filter((c: Consultation) => c.advisor_id === user.id)
+    );
       } catch (error) {
         console.error('Error fetching consultations:', error);
       } finally {

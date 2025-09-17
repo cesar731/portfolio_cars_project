@@ -8,7 +8,7 @@ from ..schemas import user as user_schema
 from ..models import user as user_model
 from ..security.oauth2 import get_current_user, get_current_admin
 
-router = APIRouter(prefix="/api/users", tags=["users"])  # ✅ ¡IMPORTANTE: prefijo /api/
+router = APIRouter(tags=["users"])
 
 @router.get("/me", response_model=user_schema.UserOut)
 def get_current_user_profile(current_user: user_model.User = Depends(get_current_user)):

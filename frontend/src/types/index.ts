@@ -1,20 +1,11 @@
-// frontend/src/types/index.ts
-
-// ================================
-// AUTENTICACIÓN
-// ================================
-
 export interface User {
   id: number;
   username: string;
   email: string;
-  role_id: 1 | 2 | 3; // 1=admin, 2=advisor, 3=user
-  is_active: boolean;
+  role_id: number;
+  is_active?: boolean;
+  created_at: string; // ✅ ¡AÑADIDA!
 }
-
-// ================================
-// CARS (AUTOS)
-// ================================
 
 export interface Car {
   id: number;
@@ -33,11 +24,14 @@ export interface Car {
   updated_at: string;
   is_published: boolean;
   deleted_at: string | null;
+  engine?: string;
+  horsepower?: number;
+  top_speed?: number;
+  transmission?: string;
+  drive_train?: string;
+  weight?: string;
+  production_years?: string;
 }
-
-// ================================
-// ACCESSORIES (ACCESORIOS)
-// ================================
 
 export interface Accessory {
   id: number;
@@ -54,9 +48,17 @@ export interface Accessory {
   deleted_at: string | null;
 }
 
-// ================================
-// USER CAR GALLERY (GALERÍA SOCIAL)
-// ================================
+export interface Consultation {
+  id: number;
+  user_id: number;
+  advisor_id: number | null;
+  subject: string;
+  message: string;
+  status: 'pending' | 'responded';
+  answered_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface UserCarGalleryItem {
   id: number;
@@ -79,26 +81,6 @@ export interface UserCarGalleryItem {
   top_speed_kmh?: number;
 }
 
-// ================================
-// CONSULTATIONS (ASESORÍAS)
-// ================================
-
-export interface Consultation {
-  id: number;
-  user_id: number;
-  advisor_id: number | null;
-  subject: string;
-  message: string;
-  status: 'pending' | 'responded';
-  answered_at: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-// ================================
-// CART ITEMS (CARRITO DE COMPRAS)
-// ================================
-
 export interface CartItem {
   id: number;
   user_id: number;
@@ -106,10 +88,6 @@ export interface CartItem {
   quantity: number;
   added_at: string;
 }
-
-// ================================
-// AUTH RESPONSES (RESPUESTAS DE API)
-// ================================
 
 export interface LoginResponse {
   access_token: string;
@@ -120,9 +98,5 @@ export interface LoginResponse {
 export interface RegisterResponse {
   msg: string;
 }
-
-// ================================
-// UTILS
-// ================================
 
 export type Nullable<T> = T | null;

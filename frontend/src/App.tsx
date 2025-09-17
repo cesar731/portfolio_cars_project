@@ -21,6 +21,8 @@ import NotFound from './pages/NotFound';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 
+
+
 function App() {
   return (
     <Router>
@@ -45,6 +47,8 @@ function App() {
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/advisor" element={<AdvisorPanel />} />
                 <Route path="*" element={<NotFound />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/advisor" element={<AdvisorPanel />} />
               </Routes>
             </main>
             <Footer />

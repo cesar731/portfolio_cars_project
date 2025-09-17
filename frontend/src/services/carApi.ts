@@ -25,6 +25,6 @@ export const getCars = async (): Promise<Car[]> => {
 };
 
 export const getCarById = async (id: number): Promise<Car> => {
-  const response = await api.get<Car>(`/cars/${id}`);
+  const response = await api.get<Car>(`/cars${id}`);
   return response.data;
 };

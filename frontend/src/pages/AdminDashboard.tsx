@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import { Car, Accessory, User, Consultation } from '../types';
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
-  const [users, setUsers] = useState([]);
-  const [cars, setCars] = useState([]);
-  const [accessories, setAccessories] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [cars, setCars] = useState<Car[]>([]);
+  const [accessories, setAccessories] = useState<Accessory[]>([]);
+  const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -21,14 +23,16 @@ const AdminDashboard = () => {
 
     const fetchData = async () => {
       try {
-        const [usersRes, carsRes, accessoriesRes] = await Promise.all([
+        const [usersRes, carsRes, accessoriesRes, consultationsRes] = await Promise.all([
           api.get('/api/users'),
           api.get('/api/cars'),
-          api.get('/api/accessories')
+          api.get('/api/accessories'),
+          api.get('/api/consultations')
         ]);
         setUsers(usersRes.data);
         setCars(carsRes.data);
         setAccessories(accessoriesRes.data);
+        setConsultations(consultationsRes.data); 
       } catch (error) {
         console.error('Error fetching admin data:', error);
       } finally {

@@ -1,12 +1,11 @@
 // frontend/src/pages/CompareCars.tsx
 
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { api } from '../services/api';
 
 const CompareCars = () => {
   const [selectedCars, setSelectedCars] = useState<any[]>([]);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const loadSelectedCars = async () => {

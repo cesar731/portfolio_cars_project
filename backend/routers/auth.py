@@ -2,15 +2,16 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from datetime import timedelta, datetime
+from datetime import timedelta
 from ..database.database import get_db
 from ..schemas import auth as auth_schema
 from ..models import user as user_model
 from ..security.password import verify_password, get_password_hash
 from ..security.oauth2 import create_access_token, get_current_user
 from typing import Annotated
+from datetime import datetime
 
-router = APIRouter(prefix="/api/auth", tags=["auth"])
+router = APIRouter(tags=["auth"])  
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 def register(
@@ -34,7 +35,7 @@ def register(
         username=user_create.username,
         email=user_create.email,
         password_hash=hashed_password,
-        role_id=3,  # Rol 'user' por defecto
+        role_id=3,
         is_active=True
     )
 
@@ -62,11 +63,9 @@ def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Actualizar último inicio de sesión
     user.last_login = datetime.utcnow()
     db.commit()
 
-    # Generar token JWT
     access_token_expires = timedelta(minutes=30)
     access_token = create_access_token(
         data={"sub": str(user.id), "role_id": str(user.role_id)},
