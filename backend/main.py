@@ -9,7 +9,7 @@ print("=== DATABASE URL ===")
 print(os.getenv("DATABASE_URL"))
 print("====================")
 
-init_db()
+# init_db()
 
 app = FastAPI(title="Portfolio de Autos - ADSO", version="1.0.0")
 
