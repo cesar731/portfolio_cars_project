@@ -1,7 +1,7 @@
 // frontend/src/pages/CarDetail.tsx
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { api } from '../services/api';
+import  api  from '../services/api';
 
 const CarDetail = () => {
   const { id } = useParams();

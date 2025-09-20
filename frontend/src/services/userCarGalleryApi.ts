@@ -4,12 +4,12 @@ import { UserCarGalleryItem } from '../types';
 
 
 export const getUserGallery = async (): Promise<UserCarGalleryItem[]> => {
-  const response = await api.get<UserCarGalleryItem[]>('/user-car-gallery');
+  const response = await api.get<UserCarGalleryItem[]>('/api/user-car-gallery');
   return response.data;
 };
 
 export const getUserGalleryItem = async (id: number): Promise<UserCarGalleryItem> => {
-  const response = await api.get<UserCarGalleryItem>(`/user-car-gallery/${id}`);
+  const response = await api.get<UserCarGalleryItem>(`/api/user-car-gallery/${id}`);
   return response.data;
 };
 

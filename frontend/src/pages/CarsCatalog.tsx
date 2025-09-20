@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { api } from '../services/api';
+import api from '../services/api';
 
 const CarsCatalog = () => {
   const [selectedForComparison, setSelectedForComparison] = useState<number[]>([]);
@@ -12,7 +12,7 @@ const CarsCatalog = () => {
   useEffect(() => {
     const fetchCars = async () => {
       try {
-        const response = await api.get('/cars');
+        const response = await api.get('/api/cars'); // ✅ ¡CORREGIDO! Con /api/
         setCars(response.data);
       } catch (error) {
         console.error('Error fetching cars:', error);
@@ -46,6 +46,22 @@ const CarsCatalog = () => {
     );
   }
 
+  // ✅ ¡AÑADE ESTO! — Verifica que cars sea un array
+  if (!Array.isArray(cars)) {
+    return (
+      <div className="min-h-screen bg-dark text-text flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl text-red-400">Error al cargar autos</h2>
+          <p className="text-text-secondary">El servidor devolvió datos inválidos.</p>
+          <button onClick={() => window.location.reload()} className="mt-4 px-6 py-2 bg-primary text-text rounded-lg hover:bg-primary/90">
+            Recargar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ SI LLEGA AQUÍ, cars ES UN ARRAY
   return (
     <div className="min-h-screen bg-dark text-text">
       {/* Hero Section */}
@@ -77,7 +93,7 @@ const CarsCatalog = () => {
                 <div className="relative overflow-hidden rounded-2xl shadow-card bg-dark-light border border-border h-full flex flex-col">
                   <img 
                     src={car.image_url?.[0] || 'https://via.placeholder.com/300x200?text=Auto+No+Disponible'} 
-                    alt={car.name} 
+                    alt={`${car.brand} ${car.model}`} 
                     className="w-full h-56 md:h-64 object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                   
@@ -152,6 +168,6 @@ const CarsCatalog = () => {
       )}
     </div>
   );
-};
+}; 
 
 export default CarsCatalog;

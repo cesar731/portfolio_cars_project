@@ -1,67 +1,81 @@
-// frontend/src/components/Header.jsx
+// frontend/src/components/Header.tsx
 
-
-import { Link, useLocation } from 'react-router-dom';
-import './Header.css';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Header = () => {
-  const location = useLocation();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
-    <header className="header">
-      <div className="header-container">
-        <Link to="/" className="header-logo">
-          VIAGGIO VELOGGE
+    <header className="bg-dark-light border-b border-border px-6 py-4 flex items-center justify-between">
+      <div className="flex items-center gap-8">
+        <Link to="/" className="text-xl font-bold text-text hover:text-primary transition-colors">
+          Viaggio Velogge
         </Link>
-        
-        <nav className="nav-links">
-          <Link 
-            to="/" 
-            className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
-          >
-            Inicio
+        <nav className="hidden md:flex gap-6">
+          <Link to="/cars" className="text-text hover:text-primary transition-colors">
+            Autos
           </Link>
-          
-          <Link 
-            to="/cars" 
-            className={`nav-link ${location.pathname === '/cars' ? 'active' : ''}`}
-          >
-            Catálogo
-          </Link>
-          
-          <Link 
-            to="/accessories" 
-            className={`nav-link ${location.pathname === '/accessories' ? 'active' : ''}`}
-          >
+          <Link to="/accessories" className="text-text hover:text-primary transition-colors">
             Accesorios
           </Link>
-          
-          <Link 
-            to="/gallery" 
-            className={`nav-link ${location.pathname === '/gallery' ? 'active' : ''}`}
-          >
+          <Link to="/gallery" className="text-text hover:text-primary transition-colors">
             Galería
           </Link>
-          
-          <Link 
-            to="/consultation" 
-            className={`nav-link ${location.pathname === '/consultation' ? 'active' : ''}`}
-          >
-            Asesoría
+          <Link to="/consultation" className="text-text hover:text-primary transition-colors">
+            Consulta
           </Link>
-          
-          <Link 
-            to="/compare" 
-            className={`nav-link ${location.pathname === '/compare' ? 'active' : ''}`}
-          >
+          <Link to="/compare" className="text-text hover:text-primary transition-colors">
             Comparar
           </Link>
         </nav>
+      </div>
 
-        <div className="header-auth">
-          <Link to="/login" className="btn btn-outline">Iniciar sesión</Link>
-          <Link to="/register" className="btn btn-primary">Registrarse</Link>
-        </div>
+      <div className="flex items-center gap-4">
+        {user ? (
+          <>
+            {/* 🟢 Mostrar nombre de usuario y menú desplegable */}
+            <div className="relative group">
+              <button className="flex items-center gap-2 text-text hover:text-primary transition-colors">
+                <span className="font-medium">{user.username}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+
+              {/* Menú desplegable */}
+              <div className="absolute right-0 mt-2 w-48 bg-dark-light border border-border rounded-lg shadow-lg z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                <Link
+                  to="/profile"
+                  className="block px-4 py-2 text-text hover:bg-primary/10 transition-colors"
+                >
+                  Mi Perfil
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2 text-red-400 hover:bg-red-500/10 transition-colors"
+                >
+                  Cerrar Sesión
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <Link to="/login" className="px-4 py-2 bg-primary text-text rounded-lg hover:bg-primary/90 transition-colors text-sm">
+              Iniciar Sesión
+            </Link>
+            <Link to="/register" className="px-4 py-2 bg-transparent border border-primary text-primary rounded-lg hover:bg-primary/10 transition-colors text-sm">
+              Registrarse
+            </Link>
+          </>
+        )}
       </div>
     </header>
   );

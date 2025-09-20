@@ -4,7 +4,7 @@ export interface User {
   email: string;
   role_id: number;
   is_active?: boolean;
-  created_at: string; // ✅ ¡AÑADIDA!
+  created_at: string; 
 }
 
 export interface Car {

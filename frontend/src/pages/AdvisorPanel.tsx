@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { Consultation } from '../types';
-import { api } from '../services/api';
+import  api  from '../services/api';
 
 const AdvisorPanel = () => {
   const { user, logout } = useAuth();

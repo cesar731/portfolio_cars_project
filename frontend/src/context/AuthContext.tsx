@@ -30,47 +30,63 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      getCurrentUser()
-        .then(res => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const userData = await getCurrentUser();
           setUser({
-            ...res,
-            is_active: res.is_active ?? true, // ✅ Asigna true si no viene
+            id: userData.id,
+            username: userData.username,
+            email: userData.email,
+            role_id: userData.role_id,
+            is_active: userData.is_active ?? true, // ✅ Asigna true si no viene
           });
-          setLoading(false);
-        })
-        .catch(() => {
-          localStorage.removeItem('token');
+        } catch (error) {
+          console.error('Error validating token:', error);
+          localStorage.removeItem('token'); // Si falla, borra el token
           setUser(null);
-          setLoading(false);
-        });
-    } else {
+        }
+      }
       setLoading(false);
-    }
+    };
+
+    checkAuth();
   }, []);
 
   const handleLogin = async (email: string, password: string) => {
-  try {
-    const data: LoginResponse = await loginApi(email, password);
-    localStorage.setItem('token', data.access_token);
-    setUser(data.user);
+    try {
+      const data: LoginResponse = await loginApi(email, password);
 
-    if (data.user.role_id === 1) {
-      navigate('/admin');   // 👈 Admin → panel de administración
-    } else if (data.user.role_id === 2) {
-      navigate('/advisor'); // 👈 Asesor → panel de asesor
-    } else {
-      navigate('/');        // 👈 Usuario normal → home
+      // ✅ GUARDA EL TOKEN EN localStorage
+      localStorage.setItem('token', data.access_token);
+
+      // ✅ GUARDA EL USUARIO EN EL ESTADO
+      setUser({
+        id: data.user.id,
+        username: data.user.username,
+        email: data.user.email,
+        role_id: data.user.role_id,
+        is_active: data.user.is_active ?? true, // ✅ Asigna true si no viene
+      });
+        console.log('Usuario logueado:', data.user); // 👈 ¡AÑADE ESTO!
+      // ✅ REDIRIGE SEGÚN EL ROL
+      if (data.user.role_id === 1) {
+        navigate('/admin');   // Admin → Panel de Administración
+      } else if (data.user.role_id === 2) {
+        navigate('/advisor'); // Asesor → Panel de Asesor
+      } else {
+        navigate('/');        // Usuario normal → Home
+      }
+    } catch (error) {
+      throw error;
     }
-  } catch (error) {
-    throw error;
-  }
-};
+  };
 
+  // ✅ ¡ESTA FUNCIÓN FALTABA! — Ahora está definida
   const handleRegister = async (username: string, email: string, password: string) => {
     try {
-      await registerApi(username, email, password);
+      await registerApi(username, email, password); // ✅ ¡AHORA SE USA!
       navigate('/login');
     } catch (error) {
       throw error;

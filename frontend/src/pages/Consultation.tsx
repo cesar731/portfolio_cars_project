@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../services/api';
+import  api  from '../services/api';
 
 const Consultation = () => {
   const [subject, setSubject] = useState('');

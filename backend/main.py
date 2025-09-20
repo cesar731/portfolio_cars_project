@@ -1,16 +1,17 @@
-# backend/main.py
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.routers import auth_router, users_router, cars_router, accessories_router, consultations_router, user_car_gallery_router
 from backend.database.database import Base, engine
 from backend.models import role, user, car, accessory, consultation, user_car_gallery, cart_item
 
+import os
+print("=== DATABASE URL ===")
+print(os.getenv("DATABASE_URL"))
+print("====================")
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Portfolio de Autos - ADSO", version="1.0.0")
-
-app.router.redirect_slashes = False 
 
 app.add_middleware(
     CORSMiddleware,
@@ -20,13 +21,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ✅ ¡USAS LOS NOMBRES EXPORTADOS EN __init__.py!
-app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
-app.include_router(users_router, prefix="/api/users", tags=["users"])
-app.include_router(cars_router, prefix="/api/cars", tags=["cars"])
-app.include_router(accessories_router, prefix="/api/accessories", tags=["accessories"])
-app.include_router(consultations_router, prefix="/api/consultations", tags=["consultations"])
-app.include_router(user_car_gallery_router, prefix="/api/user-car-gallery", tags=["user_car_gallery"])
+# ✅ ¡ESTO ES LO QUE NECESITAS! — ¡TODOS LOS ROUTERS CON /api/!
+app.include_router(auth_router, prefix="/api/auth")
+app.include_router(users_router, prefix="/api/users")
+app.include_router(cars_router, prefix="/api/cars")
+app.include_router(accessories_router, prefix="/api/accessories")  # ✅ ¡ASÍ!
+app.include_router(consultations_router, prefix="/api/consultations")
+app.include_router(user_car_gallery_router, prefix="/api/user-car-gallery")
 
 @app.get("/")
 def read_root():

@@ -21,6 +21,6 @@ export const getAccessories = async (): Promise<Accessory[]> => {
 };
 
 export const getAccessoryById = async (id: number): Promise<Accessory> => {
-  const response = await api.get<Accessory>(`/accessories/${id}`);
+  const response = await api.get<Accessory>(`/api/accessories/${id}`);
   return response.data;
 };
