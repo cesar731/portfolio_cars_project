@@ -20,6 +20,7 @@ import AdvisorPanel from './pages/AdvisorPanel';
 import NotFound from './pages/NotFound';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import ProtectedRoute from './components/ProtectedRoute';
 
 
 
@@ -44,11 +45,16 @@ function App() {
                 <Route path="/gallery" element={<UserGallery />} />
                 <Route path="/gallery/:id" element={<UserGalleryDetail />} />
                 <Route path="/profile" element={<Profile />} />
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/advisor" element={<AdvisorPanel />} />
+
+                {/* Rutas Protegidas */}
+                <Route element={<ProtectedRoute allowedRoles={[1]} />}>
+                  <Route path="/admin" element={<AdminDashboard />} />
+                </Route>
+                <Route element={<ProtectedRoute allowedRoles={[1, 2]} />}>
+                  <Route path="/advisor" element={<AdvisorPanel />} />
+                </Route>
+
                 <Route path="*" element={<NotFound />} />
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/advisor" element={<AdvisorPanel />} />
               </Routes>
             </main>
             <Footer />
