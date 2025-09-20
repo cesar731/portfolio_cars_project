@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.routers import auth_router, users_router, cars_router, accessories_router, consultations_router, user_car_gallery_router
-from backend.database.database import Base, engine
+from backend.database.database import init_db
 from backend.models import role, user, car, accessory, consultation, user_car_gallery, cart_item
 
 import os
@@ -9,7 +9,7 @@ print("=== DATABASE URL ===")
 print(os.getenv("DATABASE_URL"))
 print("====================")
 
-Base.metadata.create_all(bind=engine)
+init_db()
 
 app = FastAPI(title="Portfolio de Autos - ADSO", version="1.0.0")
 
