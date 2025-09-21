@@ -13,7 +13,7 @@ const CompareCars = () => {
       if (saved) {
         const ids = JSON.parse(saved);
         try {
-          const promises = ids.map((id: number) => api.get(`/api/cars/${id}`));
+          const promises = ids.map((id: number) => api.get(`/cars/${id}`));
           const responses = await Promise.all(promises);
           const cars = responses.map(res => res.data);
           setSelectedCars(cars);

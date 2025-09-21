@@ -26,7 +26,7 @@ const Profile = () => {
     // Cargar datos del usuario
     const fetchUser = async () => {
       try {
-        const res = await api.get(`/api/users/me`);
+        const res = await api.get(`/users/me`);
         setUserDetails({
           username: res.data.username,
           email: res.data.email,
@@ -40,7 +40,7 @@ const Profile = () => {
     // Cargar galería del usuario
     const fetchGallery = async () => {
       try {
-        const res = await api.get(`/api/user-car-gallery`);
+        const res = await api.get(`/user-car-gallery`);
         // Filtrar solo los items del usuario actual
         const myItems = res.data.filter(
           (item: UserCarGalleryItem) => item.user_id === user.id
@@ -59,7 +59,7 @@ const Profile = () => {
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.put('/api/users/me', {
+      await api.put('/users/me', {
         username: userDetails.username,
         email: userDetails.email,
         avatar_url: userDetails.avatar_url || null,

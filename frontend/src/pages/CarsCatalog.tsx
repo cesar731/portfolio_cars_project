@@ -12,7 +12,7 @@ const CarsCatalog = () => {
   useEffect(() => {
     const fetchCars = async () => {
       try {
-        const response = await api.get('/api/cars'); // ✅ ¡CORREGIDO! Con /api/
+        const response = await api.get('/cars'); // ✅ ¡CORREGIDO! Con /api/
         setCars(response.data);
       } catch (error) {
         console.error('Error fetching cars:', error);

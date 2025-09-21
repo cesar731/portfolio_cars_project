@@ -16,7 +16,7 @@ const CarDetail = () => {
         return;
       }
       try {
-        const response = await api.get(`/api/cars/${id}`);
+        const response = await api.get(`/cars/${id}`);
         setCar(response.data);
       } catch (error) {
         console.error('Error fetching car:', error);

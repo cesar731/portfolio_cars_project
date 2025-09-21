@@ -19,11 +19,11 @@ export interface Car {
 }
 
 export const getCars = async (): Promise<Car[]> => {
-  const response = await api.get<Car[]>('/api/cars');
+  const response = await api.get<Car[]>('/cars');
   return response.data;
 };
 
 export const getCarById = async (id: number): Promise<Car> => {
-  const response = await api.get<Car>(`/api/cars/${id}`);
+  const response = await api.get<Car>(`/cars/${id}`);
   return response.data;
 };

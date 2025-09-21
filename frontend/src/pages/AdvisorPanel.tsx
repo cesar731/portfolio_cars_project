@@ -20,7 +20,7 @@ const AdvisorPanel = () => {
 
     const fetchConsultations = async () => {
       try {
-        const response = await api.get('/api/consultations');
+        const response = await api.get('/consultations');
         setConsultations(
     response.data.filter((c: Consultation) => c.advisor_id === user.id)
     );

@@ -16,11 +16,11 @@ export interface RegisterResponse {
 }
 
 export const login = async (email: string, password: string): Promise<LoginResponse> => {
-  const response = await api.post<LoginResponse>('/api/auth/login', { email, password });
+  const response = await api.post<LoginResponse>('/auth/login', { email, password });
   return response.data;
 };
 
 export const register = async (username: string, email: string, password: string): Promise<RegisterResponse> => {
-  const response = await api.post<RegisterResponse>('/api/auth/register', { username, email, password });
+  const response = await api.post<RegisterResponse>('/auth/register', { username, email, password });
   return response.data;
 };

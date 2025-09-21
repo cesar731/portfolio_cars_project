@@ -9,7 +9,7 @@ from backend.database.database import get_db
 from backend import models, schemas
 
 # Configuración
-SECRET_KEY = "supersecretkey"  # ⚠️ Mejor usar variable de entorno
+SECRET_KEY = ""  # ⚠️ Mejor usar variable de entorno
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
@@ -51,8 +51,8 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     new_user = models.user.User(
         username=user.username,
         email=user.email,
-        password=hashed_password,
-        role_id=user.role_id if user.role_id else 2  # Por defecto usuario normal
+        password_hash=hashed_password,  # <-- Corregido aquí
+        role_id=user.role_id if user.role_id else 2
     )
     db.add(new_user)
     db.commit()
@@ -62,7 +62,7 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = get_user_by_email(db, form_data.username)
-    if not user or not verify_password(form_data.password, user.password):
+    if not user or not verify_password(form_data.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credenciales incorrectas",
@@ -86,10 +86,4 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise HTTPException(status_code=401, detail="Token inválido")
     
     user = db.query(models.user.User).get(int(user_id))
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return user
-
-@router.get("/me", response_model=schemas.UserOut)
-def read_users_me(current_user: models.user.User = Depends(get_current_user)):
-    return current_user

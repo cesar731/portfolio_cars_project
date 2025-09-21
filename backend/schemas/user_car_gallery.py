@@ -2,19 +2,18 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
-class UserCarGalleryBase(BaseModel):
-    title: str
-    description: Optional[str] = None
+class UserCarGalleryCreate(BaseModel):
+    user_id: int
+    car_id: Optional[int] = None
     image_url: str
 
-class UserCarGalleryCreate(UserCarGalleryBase):
-    pass
-
-class UserCarGalleryOut(UserCarGalleryBase):
+class UserCarGalleryOut(UserCarGalleryCreate):
     id: int
-    user_id: int
-    likes: int
     created_at: datetime
-
+    
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+# No necesitas un esquema de actualización si no tienes un endpoint PATCH
+# class UserCarGalleryUpdate(BaseModel):
+#     ...

@@ -1,65 +1,40 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
-from .. import models, schemas, database
+from typing import List, Optional
+from datetime import datetime
 
-router = APIRouter(
-    prefix="/user-car-gallery",
-    tags=["User Car Gallery"]
-)
+from backend.database.database import get_db
+from backend import models, schemas
+from backend.schemas.user_car_gallery import UserCarGalleryCreate, UserCarGalleryOut
 
-# Obtener todas las imágenes de galería
-@router.get("/", response_model=List[schemas.UserCarGallery])
-def get_gallery_items(db: Session = Depends(database.get_db)):
-    return db.query(models.UserCarGallery).all()
+router = APIRouter()
 
-# Obtener imagen por ID
-@router.get("/{gallery_id}", response_model=schemas.UserCarGallery)
-def get_gallery_item(gallery_id: int, db: Session = Depends(database.get_db)):
-    item = db.query(models.UserCarGallery).filter(models.UserCarGallery.id == gallery_id).first()
-    if not item:
-        raise HTTPException(status_code=404, detail="Gallery item not found")
-    return item
-
-# Crear imagen
-@router.post("/", response_model=schemas.UserCarGallery)
-def create_gallery_item(item: schemas.UserCarGalleryCreate, db: Session = Depends(database.get_db)):
-    new_item = models.UserCarGallery(**item.dict())
-    db.add(new_item)
+@router.post("/", response_model=UserCarGalleryOut, status_code=status.HTTP_201_CREATED)
+def create_user_car_gallery_entry(entry: UserCarGalleryCreate, db: Session = Depends(get_db)):
+    db_entry = models.user_car_gallery.UserCarGallery(**entry.dict())
+    db.add(db_entry)
     db.commit()
-    db.refresh(new_item)
-    return new_item
+    db.refresh(db_entry)
+    return db_entry
 
-# Actualizar imagen (PUT - reemplazo total)
-@router.put("/{gallery_id}", response_model=schemas.UserCarGallery)
-def update_gallery_item(gallery_id: int, updated: schemas.UserCarGalleryCreate, db: Session = Depends(database.get_db)):
-    item = db.query(models.UserCarGallery).filter(models.UserCarGallery.id == gallery_id).first()
-    if not item:
-        raise HTTPException(status_code=404, detail="Gallery item not found")
-    for key, value in updated.dict().items():
-        setattr(item, key, value)
-    db.commit()
-    db.refresh(item)
-    return item
+# CORRECCIÓN: Se cambia 'schemas.UserCarGallery' por 'schemas.UserCarGalleryOut'
+@router.get("/", response_model=List[UserCarGalleryOut])
+def get_all_user_car_gallery_entries(db: Session = Depends(get_db)):
+    entries = db.query(models.user_car_gallery.UserCarGallery).all()
+    return entries
 
-# Actualizar imagen parcialmente (PATCH)
-@router.patch("/{gallery_id}", response_model=schemas.UserCarGallery)
-def patch_gallery_item(gallery_id: int, updated: schemas.UserCarGalleryUpdate, db: Session = Depends(database.get_db)):
-    item = db.query(models.UserCarGallery).filter(models.UserCarGallery.id == gallery_id).first()
-    if not item:
-        raise HTTPException(status_code=404, detail="Gallery item not found")
-    for key, value in updated.dict(exclude_unset=True).items():
-        setattr(item, key, value)
-    db.commit()
-    db.refresh(item)
-    return item
+@router.get("/{entry_id}", response_model=UserCarGalleryOut)
+def get_user_car_gallery_entry(entry_id: int, db: Session = Depends(get_db)):
+    entry = db.query(models.user_car_gallery.UserCarGallery).filter(models.user_car_gallery.UserCarGallery.id == entry_id).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Entrada no encontrada")
+    return entry
 
-# Eliminar imagen
-@router.delete("/{gallery_id}")
-def delete_gallery_item(gallery_id: int, db: Session = Depends(database.get_db)):
-    item = db.query(models.UserCarGallery).filter(models.UserCarGallery.id == gallery_id).first()
-    if not item:
-        raise HTTPException(status_code=404, detail="Gallery item not found")
-    db.delete(item)
+@router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user_car_gallery_entry(entry_id: int, db: Session = Depends(get_db)):
+    entry = db.query(models.user_car_gallery.UserCarGallery).filter(models.user_car_gallery.UserCarGallery.id == entry_id).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Entrada no encontrada")
+    db.delete(entry)
     db.commit()
-    return {"message": "Gallery item deleted successfully"}
+    return {"message": "Entrada eliminada correctamente"}

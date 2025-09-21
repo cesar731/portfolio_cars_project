@@ -16,15 +16,15 @@ export interface UserUpdateRequest {
 }
 
 export const getCurrentUser = async (): Promise<User> => {
-  const response = await api.get<User>('/api/users/me');
+  const response = await api.get<User>('/users/me');
   return response.data;
 };
 
 export const updateUser = async (userData: UserUpdateRequest): Promise<User> => {
-  const response = await api.put<User>('/api/users/me', userData);
+  const response = await api.put<User>('/users/me', userData);
   return response.data;
 };
 
 export const deleteUser = async (): Promise<void> => {
-  await api.delete('/api/users/me');
+  await api.delete('/users/me');
 };

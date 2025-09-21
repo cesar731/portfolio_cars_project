@@ -24,10 +24,10 @@ const AdminDashboard = () => {
     const fetchData = async () => {
       try {
         const [usersRes, carsRes, accessoriesRes, consultationsRes] = await Promise.all([
-          api.get('/api/users'),
-          api.get('/api/cars'),
-          api.get('/api/accessories'),
-          api.get('/api/consultations')
+          api.get('/users'),
+          api.get('/cars'),
+          api.get('/accessories'),
+          api.get('/consultations')
         ]);
         setUsers(usersRes.data);
         setCars(carsRes.data);

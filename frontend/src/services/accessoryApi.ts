@@ -15,11 +15,11 @@ export interface Accessory {
 }
 
 export const getAccessories = async (): Promise<Accessory[]> => {
-  const response = await api.get<Accessory[]>('/api/accessories');
+  const response = await api.get<Accessory[]>('/accessories');
   return response.data;
 };
 
 export const getAccessoryById = async (id: number): Promise<Accessory> => {
-  const response = await api.get<Accessory>(`/api/accessories/${id}`);
+  const response = await api.get<Accessory>(`/accessories/${id}`);
   return response.data;
 };

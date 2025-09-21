@@ -17,7 +17,7 @@ const AccessoryDetail = () => {
         return;
       }
       try {
-        const response = await api.get(`/api/accessories/${id}`);
+        const response = await api.get(`/accessories/${id}`);
         setAccessory(response.data);
       } catch (error) {
         console.error('Error fetching accessory:', error);

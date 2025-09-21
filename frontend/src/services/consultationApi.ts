@@ -18,6 +18,6 @@ export interface ConsultationResponse {
 }
 
 export const createConsultation = async (subject: string | undefined, message: string): Promise<ConsultationResponse> => {
-  const response = await api.post<ConsultationResponse>('/api/consultations', { subject, message });
+  const response = await api.post<ConsultationResponse>('/consultations', { subject, message });
   return response.data;
 };

@@ -34,7 +34,7 @@ const Consultation = () => {
     setLoading(true);
 
     try {
-      await api.post('/api/consultations', {
+      await api.post('/consultations', {
         subject: subject.trim(),
         message: message.trim(),
         advisor_id: 1, // Asignado por defecto a admin
