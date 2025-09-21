@@ -1,5 +1,3 @@
-# backend/security/oauth2.py
-
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
@@ -8,7 +6,6 @@ from sqlalchemy.orm import Session
 from ..database.database import get_db
 from ..models import user as user_model
 from ..schemas import auth as auth_schema
-from ..security.password import verify_password
 import os
 from dotenv import load_dotenv
 
@@ -16,16 +13,13 @@ load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 60))
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
+    expire = datetime.utcnow() + (expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -41,10 +35,10 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         user_id: str = payload.get("sub")
         if user_id is None:
             raise credentials_exception
-        token_data = auth_schema.TokenData(user_id=int(user_id))
+        token_data = auth_schema.TokenData(sub=user_id)
     except JWTError:
         raise credentials_exception
-    user = db.query(user_model.User).filter(user_model.User.id == token_data.user_id).first()
+    user = db.query(user_model.User).filter(user_model.User.id == int(token_data.sub)).first()
     if user is None:
         raise credentials_exception
     return user

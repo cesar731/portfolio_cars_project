@@ -6,7 +6,7 @@ import axios from 'axios';
 const baseURL =
   import.meta.env.MODE === 'production'
     ? import.meta.env.VITE_API_URL || 'https://tu-backend-en-produccion.com/api'
-    : 'http://localhost:8000/api/';
+    : 'http://localhost:8000/api';
 
 // ✅ Configura la instancia de Axios
 const api = axios.create({

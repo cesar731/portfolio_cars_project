@@ -15,8 +15,15 @@ export interface RegisterResponse {
   msg?: string;
 }
 
+// Enviar login como form-urlencoded con username=email
 export const login = async (email: string, password: string): Promise<LoginResponse> => {
-  const response = await api.post<LoginResponse>('/auth/login', { email, password });
+  const formData = new URLSearchParams();
+  formData.append('username', email);
+  formData.append('password', password);
+
+  const response = await api.post<LoginResponse>('/auth/login', formData, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
   return response.data;
 };
 

@@ -17,4 +17,4 @@ class User(Base):
     cars = relationship("Car", back_populates="creator")
     accessories = relationship("Accessory", back_populates="creator")
     consultations = relationship("Consultation", back_populates="user")
-    galleries = relationship("UserCarGallery", back_populates="user")
+    galleries = relationship("User CarGallery", back_populates="user")

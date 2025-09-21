@@ -1,14 +1,24 @@
-from fastapi import APIRouter, Depends, HTTPException
+# backend/routers/users.py
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from backend.database.database import get_db
 from backend import models, schemas
+from backend.security.password import get_password_hash
+from backend.security.oauth2 import get_current_user
 
 router = APIRouter()
 
-# Crear usuario
+# Crear usuario (opcional si usas /auth/register)
 @router.post("/", response_model=schemas.UserOut)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    db_user = models.user.User(**user.dict())
+    hashed_password = get_password_hash(user.password)
+    db_user = models.user.User(
+        username=user.username,
+        email=user.email,
+        password_hash=hashed_password,
+        role_id=2
+    )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -22,7 +32,7 @@ def get_users(db: Session = Depends(get_db)):
 # Obtener usuario por ID
 @router.get("/{user_id}", response_model=schemas.UserOut)
 def get_user(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(models.user.User).filter(models.user.User.id == user_id).first()
+    user = db.get(models.user.User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return user
@@ -30,11 +40,13 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 # Actualizar usuario (PUT)
 @router.put("/{user_id}", response_model=schemas.UserOut)
 def update_user(user_id: int, updated_user: schemas.UserCreate, db: Session = Depends(get_db)):
-    user = db.query(models.user.User).filter(models.user.User.id == user_id).first()
+    user = db.get(models.user.User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    for key, value in updated_user.dict().items():
-        setattr(user, key, value)
+    user.username = updated_user.username
+    user.email = updated_user.email
+    if updated_user.password:
+        user.password_hash = get_password_hash(updated_user.password)
     db.commit()
     db.refresh(user)
     return user
@@ -42,21 +54,56 @@ def update_user(user_id: int, updated_user: schemas.UserCreate, db: Session = De
 # Actualizar parcialmente usuario (PATCH)
 @router.patch("/{user_id}", response_model=schemas.UserOut)
 def patch_user(user_id: int, updated_user: schemas.UserUpdate, db: Session = Depends(get_db)):
-    user = db.query(models.user.User).filter(models.user.User.id == user_id).first()
+    user = db.get(models.user.User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    for key, value in updated_user.dict(exclude_unset=True).items():
-        setattr(user, key, value)
+    if updated_user.username is not None:
+        user.username = updated_user.username
+    if updated_user.email is not None:
+        user.email = updated_user.email
+    if updated_user.password is not None:
+        user.password_hash = get_password_hash(updated_user.password)
     db.commit()
     db.refresh(user)
     return user
 
 # Eliminar usuario
-@router.delete("/{user_id}")
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_user(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(models.user.User).filter(models.user.User.id == user_id).first()
+    user = db.get(models.user.User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     db.delete(user)
     db.commit()
-    return {"message": "Usuario eliminado correctamente"}
+    return
+
+# --- NUEVOS ENDPOINTS PARA USUARIO ACTUAL ---
+
+@router.get("/me", response_model=schemas.UserOut)
+def read_current_user(current_user: models.user.User = Depends(get_current_user)):
+    return current_user
+
+@router.put("/me", response_model=schemas.UserOut)
+def update_current_user(
+    updated_user: schemas.UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.user.User = Depends(get_current_user)
+):
+    if updated_user.username is not None:
+        current_user.username = updated_user.username
+    if updated_user.email is not None:
+        current_user.email = updated_user.email
+    if updated_user.password is not None:
+        current_user.password_hash = get_password_hash(updated_user.password)
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+def delete_current_user(
+    db: Session = Depends(get_db),
+    current_user: models.user.User = Depends(get_current_user)
+):
+    db.delete(current_user)
+    db.commit()
+    return
