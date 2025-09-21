@@ -1,99 +1,65 @@
-# backend/routers/user_car_gallery.py
-
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from ..database.database import get_db
-from ..schemas import user_car_gallery as gallery_schema
-from ..models import user as user_model
-from ..models import user_car_gallery as gallery_model
-from ..security.oauth2 import get_current_user
 from typing import List
-from datetime import datetime
+from .. import models, schemas, database
 
-router = APIRouter(tags=["user_car_gallery"])
+router = APIRouter(
+    prefix="/user-car-gallery",
+    tags=["User Car Gallery"]
+)
 
-@router.get("/", response_model=List[gallery_schema.UserCarGalleryOut])
-def get_user_gallery(db: Session = Depends(get_db)):
-    items = db.query(gallery_model.UserCarGallery).filter(
-        gallery_model.UserCarGallery.deleted_at.is_(None)
-    ).all()
-    return items
+# Obtener todas las imágenes de galería
+@router.get("/", response_model=List[schemas.UserCarGallery])
+def get_gallery_items(db: Session = Depends(database.get_db)):
+    return db.query(models.UserCarGallery).all()
 
-@router.get("/{id}", response_model=gallery_schema.UserCarGalleryOut)
-def get_gallery_item(id: int, db: Session = Depends(get_db)):
-    item = db.query(gallery_model.UserCarGallery).filter(
-        gallery_model.UserCarGallery.id == id,
-        gallery_model.UserCarGallery.deleted_at.is_(None)
-    ).first()
+# Obtener imagen por ID
+@router.get("/{gallery_id}", response_model=schemas.UserCarGallery)
+def get_gallery_item(gallery_id: int, db: Session = Depends(database.get_db)):
+    item = db.query(models.UserCarGallery).filter(models.UserCarGallery.id == gallery_id).first()
     if not item:
-        raise HTTPException(status_code=404, detail="Publicación no encontrada")
+        raise HTTPException(status_code=404, detail="Gallery item not found")
     return item
 
-@router.post("/", response_model=gallery_schema.UserCarGalleryOut, status_code=status.HTTP_201_CREATED)
-def create_gallery_item(
-    gallery_create: gallery_schema.UserCarGalleryCreate,
-    db: Session = Depends(get_db),
-    current_user: user_model.User = Depends(get_current_user)
-):
-    new_item = gallery_model.UserCarGallery(**gallery_create.dict(), user_id=current_user.id)
+# Crear imagen
+@router.post("/", response_model=schemas.UserCarGallery)
+def create_gallery_item(item: schemas.UserCarGalleryCreate, db: Session = Depends(database.get_db)):
+    new_item = models.UserCarGallery(**item.dict())
     db.add(new_item)
     db.commit()
     db.refresh(new_item)
     return new_item
 
-@router.put("/{id}", response_model=gallery_schema.UserCarGalleryOut)
-def update_gallery_item(
-    id: int,
-    gallery_update: gallery_schema.UserCarGalleryCreate,
-    db: Session = Depends(get_db),
-    current_user: user_model.User = Depends(get_current_user)
-):
-    item = db.query(gallery_model.UserCarGallery).filter(
-        gallery_model.UserCarGallery.id == id,
-        gallery_model.UserCarGallery.user_id == current_user.id,
-        gallery_model.UserCarGallery.deleted_at.is_(None)
-    ).first()
+# Actualizar imagen (PUT - reemplazo total)
+@router.put("/{gallery_id}", response_model=schemas.UserCarGallery)
+def update_gallery_item(gallery_id: int, updated: schemas.UserCarGalleryCreate, db: Session = Depends(database.get_db)):
+    item = db.query(models.UserCarGallery).filter(models.UserCarGallery.id == gallery_id).first()
     if not item:
-        raise HTTPException(status_code=404, detail="Publicación no encontrada o no autorizada")
-    
-    for key, value in gallery_update.dict().items():
+        raise HTTPException(status_code=404, detail="Gallery item not found")
+    for key, value in updated.dict().items():
         setattr(item, key, value)
-    item.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(item)
     return item
 
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_gallery_item(
-    id: int,
-    db: Session = Depends(get_db),
-    current_user: user_model.User = Depends(get_current_user)
-):
-    item = db.query(gallery_model.UserCarGallery).filter(
-        gallery_model.UserCarGallery.id == id,
-        gallery_model.UserCarGallery.user_id == current_user.id,
-        gallery_model.UserCarGallery.deleted_at.is_(None)
-    ).first()
+# Actualizar imagen parcialmente (PATCH)
+@router.patch("/{gallery_id}", response_model=schemas.UserCarGallery)
+def patch_gallery_item(gallery_id: int, updated: schemas.UserCarGalleryUpdate, db: Session = Depends(database.get_db)):
+    item = db.query(models.UserCarGallery).filter(models.UserCarGallery.id == gallery_id).first()
     if not item:
-        raise HTTPException(status_code=404, detail="Publicación no encontrada o no autorizada")
-    item.deleted_at = datetime.utcnow()
-    db.commit()
-    return None
-
-@router.post("/{id}/like")
-def like_gallery_item(
-    id: int,
-    db: Session = Depends(get_db),
-    current_user: user_model.User = Depends(get_current_user)
-):
-    item = db.query(gallery_model.UserCarGallery).filter(
-        gallery_model.UserCarGallery.id == id,
-        gallery_model.UserCarGallery.deleted_at.is_(None)
-    ).first()
-    if not item:
-        raise HTTPException(status_code=404, detail="Publicación no encontrada")
-    
-    item.likes += 1
+        raise HTTPException(status_code=404, detail="Gallery item not found")
+    for key, value in updated.dict(exclude_unset=True).items():
+        setattr(item, key, value)
     db.commit()
     db.refresh(item)
-    return {"likes": item.likes}
+    return item
+
+# Eliminar imagen
+@router.delete("/{gallery_id}")
+def delete_gallery_item(gallery_id: int, db: Session = Depends(database.get_db)):
+    item = db.query(models.UserCarGallery).filter(models.UserCarGallery.id == gallery_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Gallery item not found")
+    db.delete(item)
+    db.commit()
+    return {"message": "Gallery item deleted successfully"}

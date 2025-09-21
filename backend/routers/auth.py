@@ -1,88 +1,95 @@
-# backend/routers/auth.py
-
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from datetime import timedelta
-from ..database.database import get_db
-from ..schemas import auth as auth_schema
-from ..models import user as user_model
-from ..security.password import verify_password, get_password_hash
-from ..security.oauth2 import create_access_token, get_current_user
-from typing import Annotated
-from datetime import datetime
+from datetime import datetime, timedelta
+import jwt
+from passlib.context import CryptContext
 
-router = APIRouter(tags=["auth"])  
+from backend.database.database import get_db
+from backend import models, schemas
 
-@router.post("/register", status_code=status.HTTP_201_CREATED)
-def register(
-    user_create: auth_schema.UserCreate,
-    db: Session = Depends(get_db)
-):
-    existing_user = db.query(user_model.User).filter(
-        (user_model.User.email == user_create.email) |
-        (user_model.User.username == user_create.username)
-    ).first()
+# Configuración
+SECRET_KEY = "supersecretkey"  # ⚠️ Mejor usar variable de entorno
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="El email o nombre de usuario ya están registrados."
-        )
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
-    hashed_password = get_password_hash(user_create.password)
+router = APIRouter()
 
-    new_user = user_model.User(
-        username=user_create.username,
-        email=user_create.email,
-        password_hash=hashed_password,
-        role_id=3,
-        is_active=True
+# --------------------------
+# Utils
+# --------------------------
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
+    to_encode = data.copy()
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+def get_user_by_email(db: Session, email: str):
+    return db.query(models.user.User).filter(models.user.User.email == email).first()
+
+# --------------------------
+# Endpoints
+# --------------------------
+
+@router.post("/register", response_model=schemas.UserOut)
+def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    db_user = get_user_by_email(db, user.email)
+    if db_user:
+        raise HTTPException(status_code=400, detail="El email ya está registrado")
+    
+    hashed_password = get_password_hash(user.password)
+    new_user = models.user.User(
+        username=user.username,
+        email=user.email,
+        password=hashed_password,
+        role_id=user.role_id if user.role_id else 2  # Por defecto usuario normal
     )
-
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-
-    return {"msg": "Usuario registrado correctamente"}
+    return new_user
 
 @router.post("/login")
-def login(
-    login_data: auth_schema.UserLogin,
-    db: Session = Depends(get_db)
-):
-    user = db.query(user_model.User).filter(
-        user_model.User.email == login_data.email,
-        user_model.User.deleted_at.is_(None),
-        user_model.User.is_active == True
-    ).first()
-
-    if not user or not verify_password(login_data.password, user.password_hash):
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = get_user_by_email(db, form_data.username)
+    if not user or not verify_password(form_data.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenciales inválidas o cuenta no activada.",
+            detail="Credenciales incorrectas",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    user.last_login = datetime.utcnow()
-    db.commit()
+    access_token = create_access_token(data={"sub": str(user.id)})
+    return {"access_token": access_token, "token_type": "bearer"}
 
-    access_token_expires = timedelta(minutes=30)
-    access_token = create_access_token(
-        data={"sub": str(user.id), "role_id": str(user.role_id)},
-        expires_delta=access_token_expires
-    )
+# --------------------------
+# Dependencia para proteger rutas
+# --------------------------
 
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": {
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "role_id": user.role_id
-        }
-    }
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Token inválido")
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Token inválido")
+    
+    user = db.query(models.user.User).get(int(user_id))
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return user
 
-@router.get("/me", response_model=auth_schema.UserOut)
-def read_users_me(current_user: Annotated[user_model.User, Depends(get_current_user)]):
+@router.get("/me", response_model=schemas.UserOut)
+def read_users_me(current_user: models.user.User = Depends(get_current_user)):
     return current_user

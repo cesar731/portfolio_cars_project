@@ -1,34 +1,26 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from backend.routers import auth_router, users_router, cars_router, accessories_router, consultations_router, user_car_gallery_router
 from backend.database.database import Base, engine
-from backend.models import role, user, car, accessory, consultation, user_car_gallery, cart_item
+from backend.routers import accessories, auth, cars, consultations, user_car_gallery, users
+
+# Crear tablas (si no usas alembic, descomenta esta línea)
+# Base.metadata.create_all(bind=engine)
 
 import os
 print("=== DATABASE URL ===")
 print(os.getenv("DATABASE_URL"))
 print("====================")
 
-Base.metadata.create_all(bind=engine)
+app = FastAPI(title="Portfolio Cars API")
 
-app = FastAPI(title="Portfolio de Autos - ADSO", version="1.0.0")
+# Incluir routers
+app.include_router(users.router, prefix="/users", tags=["Users"])
+app.include_router(auth.router, prefix="/auth", tags=["Auth"])
+app.include_router(cars.router, prefix="/cars", tags=["Cars"])
+app.include_router(accessories.router, prefix="/accessories", tags=["Accessories"])
+app.include_router(consultations.router, prefix="/consultations", tags=["Consultations"])
+app.include_router(user_car_gallery.router, prefix="/user-car-gallery", tags=["User Car Gallery"])
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# ✅ ¡ESTO ES LO QUE NECESITAS! — ¡TODOS LOS ROUTERS CON /api/!
-app.include_router(auth_router, prefix="/api/auth")
-app.include_router(users_router, prefix="/api/users")
-app.include_router(cars_router, prefix="/api/cars")
-app.include_router(accessories_router, prefix="/api/accessories")  # ✅ ¡ASÍ!
-app.include_router(consultations_router, prefix="/api/consultations")
-app.include_router(user_car_gallery_router, prefix="/api/user-car-gallery")
 
 @app.get("/")
-def read_root():
-    return {"message": "Bienvenido al Backend del Portfolio de Autos - ADSO"}
+def root():
+    return {"message": "Bienvenido a Portfolio Cars API 🚗"}

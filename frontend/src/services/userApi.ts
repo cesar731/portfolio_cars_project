@@ -1,5 +1,3 @@
-// frontend/src/services/userApi.ts
-
 import api from './api';
 
 export interface User {
@@ -8,7 +6,7 @@ export interface User {
   email: string;
   role_id: number;
   avatar_url?: string | null;
-  is_active: boolean; // 👈 CLAVE: coincide con el backend
+  is_active: boolean;
 }
 
 export interface UserUpdateRequest {
@@ -18,15 +16,15 @@ export interface UserUpdateRequest {
 }
 
 export const getCurrentUser = async (): Promise<User> => {
-  const response = await api.get<User>('/users/me');
+  const response = await api.get<User>('/api/users/me');
   return response.data;
 };
 
 export const updateUser = async (userData: UserUpdateRequest): Promise<User> => {
-  const response = await api.put<User>('/users/me', userData);
+  const response = await api.put<User>('/api/users/me', userData);
   return response.data;
 };
 
 export const deleteUser = async (): Promise<void> => {
-  await api.delete('/users/me');
+  await api.delete('/api/users/me');
 };

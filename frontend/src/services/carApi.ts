@@ -1,4 +1,3 @@
- 
 import api from './api';
 
 export interface Car {
@@ -20,11 +19,11 @@ export interface Car {
 }
 
 export const getCars = async (): Promise<Car[]> => {
-  const response = await api.get<Car[]>('/cars');
+  const response = await api.get<Car[]>('/api/cars');
   return response.data;
 };
 
 export const getCarById = async (id: number): Promise<Car> => {
-  const response = await api.get<Car>(`/cars${id}`);
+  const response = await api.get<Car>(`/api/cars/${id}`);
   return response.data;
 };

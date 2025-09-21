@@ -2,13 +2,19 @@
 
 import axios from 'axios';
 
-// ✅ Configura la instancia de Axios con la URL del backend
+// ✅ Detecta si estamos en producción o desarrollo
+const baseURL =
+  import.meta.env.MODE === 'production'
+    ? import.meta.env.VITE_API_URL || 'https://tu-backend-en-produccion.com/api'
+    : 'http://localhost:8000/api';
+
+// ✅ Configura la instancia de Axios
 const api = axios.create({
-  baseURL: '/', // ✅ ¡Correcto! Apunta al backend
-  withCredentials: true,           // ✅ Permite enviar cookies (esencial para JWT)
+  baseURL,
+  withCredentials: true, // ✅ Permite enviar cookies (ej: JWT)
 });
 
-// ✅ Añade un interceptor para incluir el token JWT en cada petición
+// ✅ Interceptor para incluir token JWT en cada request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -17,5 +23,5 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// ✅ ¡EXPORTA COMO DEFAULT — NUNCA uses "export const api"!
+// ✅ Exporta como default
 export default api;

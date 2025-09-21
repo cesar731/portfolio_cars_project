@@ -1,19 +1,21 @@
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, Numeric, ForeignKey
-from sqlalchemy.sql import func
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Boolean
+from sqlalchemy.orm import relationship
 from ..database.database import Base
+from datetime import datetime
 
 class Accessory(Base):
     __tablename__ = "accessories"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(150), nullable=False)
-    description = Column(Text, nullable=True)
-    price = Column(Numeric(10, 2), nullable=False)
-    image_url = Column(Text, nullable=True)
-    category = Column(String(100), nullable=True)
+    name = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    price = Column(Float, nullable=False)
     stock = Column(Integer, default=0)
-    created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
-    is_published = Column(Boolean, default=True)
-    deleted_at = Column(DateTime(timezone=True), nullable=True)
+    is_published = Column(Boolean, default=False)
+
+    created_by = Column(Integer, ForeignKey("users.id"))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=True)
+    deleted_at = Column(DateTime, nullable=True)
+
+    creator = relationship("User", back_populates="accessories")

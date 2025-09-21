@@ -1,102 +1,56 @@
-# backend/routers/accessories.py
-
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from ..database.database import get_db
-from ..schemas import accessory as accessory_schema
-from ..models import accessory as accessory_model
-from datetime import datetime
-from ..models import user as user_model 
-from ..security.oauth2 import get_current_user, get_current_admin
-from typing import List
+from backend.database.database import get_db
+from backend import models, schemas
 
-router = APIRouter(tags=["accessories"])
+router = APIRouter()
 
-@router.get("/", response_model=List[accessory_schema.AccessoryOut])
-def get_accessories(
-    db: Session = Depends(get_db),
-    published: bool = True
-):
-    query = db.query(accessory_model.Accessory).filter(accessory_model.Accessory.deleted_at.is_(None))
-    if published:
-        query = query.filter(accessory_model.Accessory.is_published == True)
-    return query.all()
-
-@router.get("/{id}", response_model=accessory_schema.AccessoryOut)
-def get_accessory_by_id(id: int, db: Session = Depends(get_db)):
-    accessory = db.query(accessory_model.Accessory).filter(
-        accessory_model.Accessory.id == id,
-        accessory_model.Accessory.deleted_at.is_(None),
-        accessory_model.Accessory.is_published == True
-    ).first()
-    if not accessory:
-        raise HTTPException(status_code=404, detail="Accesorio no encontrado o no publicado")
-    return accessory
-
-@router.post("/", response_model=accessory_schema.AccessoryOut, status_code=status.HTTP_201_CREATED)
-def create_accessory(
-    accessory_create: accessory_schema.AccessoryCreate,
-    db: Session = Depends(get_db),
-    current_user: user_model.User = Depends(get_current_user)
-):
-    new_accessory = accessory_model.Accessory(**accessory_create.dict(), created_by=current_user.id)
-    db.add(new_accessory)
+@router.post("/", response_model=schemas.AccessoryOut)
+def create_accessory(accessory: schemas.AccessoryCreate, db: Session = Depends(get_db)):
+    db_accessory = models.accessory.Accessory(**accessory.dict())
+    db.add(db_accessory)
     db.commit()
-    db.refresh(new_accessory)
-    return new_accessory
+    db.refresh(db_accessory)
+    return db_accessory
 
-@router.put("/{id}", response_model=accessory_schema.AccessoryOut)
-def update_accessory(
-    id: int,
-    accessory_update: accessory_schema.AccessoryUpdate,
-    db: Session = Depends(get_db),
-    current_user: user_model.User = Depends(get_current_user)
-):
-    accessory = db.query(accessory_model.Accessory).filter(
-        accessory_model.Accessory.id == id,
-        accessory_model.Accessory.created_by == current_user.id,
-        accessory_model.Accessory.deleted_at.is_(None)
-    ).first()
-    if not accessory:
-        raise HTTPException(status_code=404, detail="Accesorio no encontrado o no autorizado")
-    
-    for key, value in accessory_update.dict(exclude_unset=True).items():
-        setattr(accessory, key, value)
-    accessory.updated_at = datetime.utcnow()
-    db.commit()
-    db.refresh(accessory)
-    return accessory
+@router.get("/", response_model=list[schemas.AccessoryOut])
+def get_accessories(db: Session = Depends(get_db)):
+    return db.query(models.accessory.Accessory).all()
 
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_accessory(
-    id: int,
-    db: Session = Depends(get_db),
-    current_user: user_model.User = Depends(get_current_user)
-):
-    accessory = db.query(accessory_model.Accessory).filter(
-        accessory_model.Accessory.id == id,
-        accessory_model.Accessory.created_by == current_user.id,
-        accessory_model.Accessory.deleted_at.is_(None)
-    ).first()
-    if not accessory:
-        raise HTTPException(status_code=404, detail="Accesorio no encontrado o no autorizado")
-    accessory.deleted_at = datetime.utcnow()
-    db.commit()
-    return None
-
-@router.patch("/{id}/publish", response_model=accessory_schema.AccessoryOut)
-def toggle_publish_accessory(
-    id: int,
-    db: Session = Depends(get_db),
-    current_user: user_model.User = Depends(get_current_admin)
-):
-    accessory = db.query(accessory_model.Accessory).filter(
-        accessory_model.Accessory.id == id,
-        accessory_model.Accessory.deleted_at.is_(None)
-    ).first()
+@router.get("/{accessory_id}", response_model=schemas.AccessoryOut)
+def get_accessory(accessory_id: int, db: Session = Depends(get_db)):
+    accessory = db.query(models.accessory.Accessory).filter(models.accessory.Accessory.id == accessory_id).first()
     if not accessory:
         raise HTTPException(status_code=404, detail="Accesorio no encontrado")
-    accessory.is_published = not accessory.is_published
+    return accessory
+
+@router.put("/{accessory_id}", response_model=schemas.AccessoryOut)
+def update_accessory(accessory_id: int, updated_accessory: schemas.AccessoryCreate, db: Session = Depends(get_db)):
+    accessory = db.query(models.accessory.Accessory).filter(models.accessory.Accessory.id == accessory_id).first()
+    if not accessory:
+        raise HTTPException(status_code=404, detail="Accesorio no encontrado")
+    for key, value in updated_accessory.dict().items():
+        setattr(accessory, key, value)
     db.commit()
     db.refresh(accessory)
     return accessory
+
+@router.patch("/{accessory_id}", response_model=schemas.AccessoryOut)
+def patch_accessory(accessory_id: int, updated_accessory: schemas.AccessoryUpdate, db: Session = Depends(get_db)):
+    accessory = db.query(models.accessory.Accessory).filter(models.accessory.Accessory.id == accessory_id).first()
+    if not accessory:
+        raise HTTPException(status_code=404, detail="Accesorio no encontrado")
+    for key, value in updated_accessory.dict(exclude_unset=True).items():
+        setattr(accessory, key, value)
+    db.commit()
+    db.refresh(accessory)
+    return accessory
+
+@router.delete("/{accessory_id}")
+def delete_accessory(accessory_id: int, db: Session = Depends(get_db)):
+    accessory = db.query(models.accessory.Accessory).filter(models.accessory.Accessory.id == accessory_id).first()
+    if not accessory:
+        raise HTTPException(status_code=404, detail="Accesorio no encontrado")
+    db.delete(accessory)
+    db.commit()
+    return {"message": "Accesorio eliminado correctamente"}

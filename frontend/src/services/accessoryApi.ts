@@ -1,4 +1,3 @@
- 
 import api from './api';
 
 export interface Accessory {
@@ -16,7 +15,7 @@ export interface Accessory {
 }
 
 export const getAccessories = async (): Promise<Accessory[]> => {
-  const response = await api.get<Accessory[]>('/accessories');
+  const response = await api.get<Accessory[]>('/api/accessories');
   return response.data;
 };
 

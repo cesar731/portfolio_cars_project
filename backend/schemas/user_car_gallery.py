@@ -1,35 +1,20 @@
-# backend/schemas/user_car_gallery.py
-
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
 
 class UserCarGalleryBase(BaseModel):
-    user_id: int
-    car_name: str
+    title: str
     description: Optional[str] = None
     image_url: str
-    is_vehicle: bool = False
-    brand: Optional[str] = None
-    model: Optional[str] = None
-    year: Optional[int] = None
-    fuel_type: Optional[str] = None
-    mileage: Optional[int] = None
-    engine_spec: Optional[str] = None
-    horsepower: Optional[int] = None
-    top_speed_kmh: Optional[int] = None
 
 class UserCarGalleryCreate(UserCarGalleryBase):
     pass
 
-class UserCarGalleryUpdate(UserCarGalleryBase):
-    pass
-
 class UserCarGalleryOut(UserCarGalleryBase):
     id: int
+    user_id: int
     likes: int
-    created_at: str
-    updated_at: str
-    deleted_at: Optional[str] = None
+    created_at: datetime
 
     class Config:
-        from_attributes = True
+        orm_mode = True

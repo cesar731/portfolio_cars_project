@@ -1,27 +1,18 @@
-# backend/models/user_car_gallery.py
-
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey
-from sqlalchemy.sql import func
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy.orm import relationship
 from ..database.database import Base
+from datetime import datetime
 
 class UserCarGallery(Base):
     __tablename__ = "user_car_gallery"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    car_name = Column(String(150), nullable=False)
-    description = Column(Text, nullable=True)
-    image_url = Column(Text, nullable=False)
+    title = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    image_url = Column(String, nullable=False)
     likes = Column(Integer, default=0)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
-    deleted_at = Column(DateTime(timezone=True), nullable=True)
-    is_vehicle = Column(Boolean, default=False)
-    brand = Column(String(100), nullable=True)
-    model = Column(String(100), nullable=True)
-    year = Column(Integer, nullable=True)
-    fuel_type = Column(String(50), nullable=True)
-    mileage = Column(Integer, nullable=True)
-    engine_spec = Column(Text, nullable=True)
-    horsepower = Column(Integer, nullable=True)
-    top_speed_kmh = Column(Integer, nullable=True)
+
+    user_id = Column(Integer, ForeignKey("users.id"))
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="galleries")
