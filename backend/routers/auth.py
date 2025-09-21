@@ -5,6 +5,7 @@ from datetime import timedelta
 from backend.database.database import get_db
 from backend import models, schemas
 from backend.security.password import verify_password, get_password_hash
+from backend.schemas.auth import Token, TokenData, LoginRequest, UserAuth
 from backend.security.oauth2 import create_access_token
 import os
 
@@ -47,7 +48,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         "user": {
             "id": user.id,
             "username": user.username,
-            "email": user.email,
-            "role_id": user.role_id,
+            "email": user.email,     
+            "role_id": int(user.role_id),
+            "is_active": user.is_active, 
         }
     }

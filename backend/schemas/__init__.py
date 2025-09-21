@@ -1,4 +1,4 @@
-from .user import UserCreate, UserLogin, UserOut, UserUpdate
+from .user import UserCreate, UserOut, UserUpdate
 from .consultation import ConsultationCreate, ConsultationOut
 from .car import CarCreate, CarOut, CarUpdate
 from .accessory import AccessoryCreate, AccessoryOut, AccessoryUpdate

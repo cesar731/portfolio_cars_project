@@ -11,7 +11,7 @@ router = APIRouter()
 
 @router.post("/", response_model=UserCarGalleryOut, status_code=status.HTTP_201_CREATED)
 def create_user_car_gallery_entry(entry: UserCarGalleryCreate, db: Session = Depends(get_db)):
-    db_entry = models.user_car_gallery.UserCarGallery(**entry.dict())
+    db_entry = models.user_car_gallery.UserCarGallery(**entry.dict())  # ✅ This now matches!
     db.add(db_entry)
     db.commit()
     db.refresh(db_entry)

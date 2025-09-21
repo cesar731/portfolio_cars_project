@@ -5,7 +5,6 @@ from datetime import datetime
 
 class Car(Base):
     __tablename__ = "cars"
-
     id = Column(Integer, primary_key=True, index=True)
     brand = Column(String(100), nullable=False)
     model = Column(String(100), nullable=False)
@@ -25,10 +24,8 @@ class Car(Base):
     weight = Column(String(20))
     production_years = Column(String(20))
     is_published = Column(Boolean, default=True)
-    
     created_by = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # ✅ ¡AÑADIDO!
     deleted_at = Column(DateTime, nullable=True)
-
     creator = relationship("User", back_populates="cars")

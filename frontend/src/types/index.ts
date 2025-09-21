@@ -1,10 +1,14 @@
+// frontend/src/types/index.ts
+
 export interface User {
   id: number;
   username: string;
   email: string;
   role_id: number;
-  is_active?: boolean;
-  created_at: string; 
+  is_active: boolean; // ✅ ¡AÑADIDO! El backend lo envía siempre
+  created_at: string;
+  updated_at?: string;           // ✅ Opcional, si lo usas
+  avatar_url?: string | null; 
 }
 
 export interface Car {

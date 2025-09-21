@@ -1,11 +1,9 @@
 // frontend/src/context/AuthContext.tsx
-
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { LoginResponse, register as registerApi, login as loginApi } from '../services/authApi';
 import { getCurrentUser, User } from '../services/userApi';
 import { useNavigate } from 'react-router-dom';
 
-// 👇 1. Define el tipo del contexto
 export interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -14,7 +12,6 @@ export interface AuthContextType {
   logout: () => void;
 }
 
-// 👇 2. CREA Y EXPORTA EL CONTEXTO
 export const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
@@ -23,7 +20,6 @@ export const AuthContext = createContext<AuthContextType>({
   logout: () => {},
 });
 
-// 👇 3. CREA EL PROVEEDOR
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -40,53 +36,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             username: userData.username,
             email: userData.email,
             role_id: userData.role_id,
-            is_active: userData.is_active ?? true, // ✅ Asigna true si no viene
+            is_active: userData.is_active ?? true,
           });
         } catch (error) {
           console.error('Error validating token:', error);
-          localStorage.removeItem('token'); // Si falla, borra el token
+          localStorage.removeItem('token');
           setUser(null);
         }
       }
       setLoading(false);
     };
-
     checkAuth();
   }, []);
 
   const handleLogin = async (email: string, password: string) => {
     try {
-      const data: LoginResponse = await loginApi(email, password);
+      const response: LoginResponse = await loginApi(email, password);
+      localStorage.setItem('token', response.access_token);
 
-      // ✅ GUARDA EL TOKEN EN localStorage
-      localStorage.setItem('token', data.access_token);
-
-      // ✅ GUARDA EL USUARIO EN EL ESTADO
       setUser({
-        id: data.user.id,
-        username: data.user.username,
-        email: data.user.email,
-        role_id: data.user.role_id,
-        is_active: data.user.is_active ?? true, // ✅ Asigna true si no viene
+        id: response.user.id,
+        username: response.user.username,
+        email: response.user.email,
+        role_id: response.user.role_id,
+        is_active: response.user.is_active ?? true,
       });
-        console.log('Usuario logueado:', data.user); // 👈 ¡AÑADE ESTO!
-      // ✅ REDIRIGE SEGÚN EL ROL
-      if (data.user.role_id === 1) {
-        navigate('/admin');   // Admin → Panel de Administración
-      } else if (data.user.role_id === 2) {
-        navigate('/advisor'); // Asesor → Panel de Asesor
+
+      console.log('Usuario logueado:', response.user); // ✅ CORREGIDO: response.user, no data.user
+
+      if (response.user.role_id === 1) {
+        navigate('/admin');
+      } else if (response.user.role_id === 2) {
+        navigate('/advisor');
       } else {
-        navigate('/');        // Usuario normal → Home
+        navigate('/');
       }
     } catch (error) {
       throw error;
     }
   };
 
-  // ✅ ¡ESTA FUNCIÓN FALTABA! — Ahora está definida
   const handleRegister = async (username: string, email: string, password: string) => {
     try {
-      await registerApi(username, email, password); // ✅ ¡AHORA SE USA!
+      await registerApi(username, email, password);
       navigate('/login');
     } catch (error) {
       throw error;
@@ -103,7 +95,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// 👇 4. EXPORTA EL HOOK
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

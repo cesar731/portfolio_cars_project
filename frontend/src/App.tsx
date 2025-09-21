@@ -1,5 +1,4 @@
 // frontend/src/App.tsx
-
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -16,12 +15,11 @@ import UserGallery from './pages/UserGallery';
 import UserGalleryDetail from './pages/UserGalleryDetail';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
+import CarCreate from './pages/CarCreate';
 import AdvisorPanel from './pages/AdvisorPanel';
 import NotFound from './pages/NotFound';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
-
-
 
 function App() {
   return (
@@ -45,10 +43,9 @@ function App() {
                 <Route path="/gallery/:id" element={<UserGalleryDetail />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/cars/new" element={<CarCreate />} />
                 <Route path="/advisor" element={<AdvisorPanel />} />
                 <Route path="*" element={<NotFound />} />
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/advisor" element={<AdvisorPanel />} />
               </Routes>
             </main>
             <Footer />

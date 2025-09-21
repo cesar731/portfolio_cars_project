@@ -10,8 +10,8 @@ load_dotenv()
 app = FastAPI(title="Portfolio Cars API")
 
 origins = [
-    "http://localhost:5174",
-    "http://127.0.0.1:5174",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
 
 app.add_middleware(
@@ -22,8 +22,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Crear tablas si no existen (opcional, usar migraciones en producción)
-Base.metadata.create_all(bind=engine)
+
 
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
