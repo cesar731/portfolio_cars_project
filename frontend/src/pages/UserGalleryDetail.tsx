@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getUserGalleryItem, likeGalleryItem } from '../services/userCarGalleryApi';
+import { toast } from 'react-hot-toast';
 
 const UserGalleryDetail = () => {
   const { id } = useParams();
@@ -41,6 +42,17 @@ const UserGalleryDetail = () => {
       // En producción, aquí se desactivaría el like.
       // Por simplicidad, lo dejamos como solo "like" sin deslike.
       // Puedes implementar un toggle más adelante.
+    }
+  };
+
+  // ✅ ¡NUEVA FUNCIÓN! Para copiar el enlace al portapapeles
+  const handleShare = async () => {
+    const url = window.location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('¡Enlace copiado al portapapeles!');
+    } catch (err) {
+      toast.error('Error al copiar el enlace.');
     }
   };
 
@@ -188,9 +200,28 @@ const UserGalleryDetail = () => {
             >
               ← Volver a la Galería
             </Link>
-            <button className="px-6 py-3 bg-primary text-text rounded-lg hover:bg-primary/90 transition-colors">
-              Compartir
-            </button>
+            <div className="flex gap-4">
+              {/* ✅ ¡BOTÓN DE COMPARTIR FUNCIONAL! */}
+              <button
+                onClick={handleShare}
+                className="px-6 py-3 bg-primary text-text rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                </svg>
+                Compartir
+              </button>
+              {/* ✅ ¡BOTÓN PARA PUBLICAR OTRO AUTO! */}
+              <Link
+                to="/gallery/new"
+                className="px-6 py-3 bg-green-600 text-text rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Publicar Automovil
+              </Link>
+            </div>
           </div>
         </div>
       </div>

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
+from sqlalchemy.orm import Session, joinedload
 
 from backend.database.database import get_db
 from backend import models, schemas
@@ -38,3 +39,28 @@ def delete_user_car_gallery_entry(entry_id: int, db: Session = Depends(get_db)):
     db.delete(entry)
     db.commit()
     return {"message": "Entrada eliminada correctamente"}
+
+
+
+@router.post("/{entry_id}/like", response_model=dict)
+def like_gallery_entry(entry_id: int, db: Session = Depends(get_db)):
+    entry = db.query(models.user_car_gallery.UserCarGallery).filter(models.user_car_gallery.UserCarGallery.id == entry_id).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Entrada no encontrada")
+    
+    # Incrementar el contador de likes
+    entry.likes = (entry.likes or 0) + 1
+    db.commit()
+    db.refresh(entry)
+    
+    return {"likes": entry.likes}  
+  
+
+@router.get("/{entry_id}", response_model=UserCarGalleryOut)
+def get_user_car_gallery_entry(entry_id: int, db: Session = Depends(get_db)):
+    entry = db.query(models.user_car_gallery.UserCarGallery).options(
+        joinedload(models.user_car_gallery.UserCarGallery.user)
+    ).filter(models.user_car_gallery.UserCarGallery.id == entry_id).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Entrada no encontrada")
+    return entry

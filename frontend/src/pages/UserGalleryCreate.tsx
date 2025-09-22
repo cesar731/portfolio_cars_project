@@ -40,30 +40,48 @@ const UserGalleryCreate = () => {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
 
-    try {
-      const payload = {
-        ...formData,
-        user_id: user.id, // ✅ Asignamos el ID del usuario logueado
-        year: parseInt(formData.year as any),
-        mileage: parseInt(formData.mileage as any),
-        horsepower: parseInt(formData.horsepower as any),
-        top_speed_kmh: parseInt(formData.top_speed_kmh as any),
-      };
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
 
-      await api.post('/user-car-gallery', payload);
-      toast.success('¡Publicación creada con éxito!');
-      navigate('/profile'); // Redirigir al perfil después de publicar
-    } catch (error) {
-      console.error('Error creating gallery item:', error);
-      toast.error('Error al crear la publicación. Verifica los datos.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    const payload = {
+      ...formData,
+      user_id: user.id,
+      year: parseInt(formData.year as any),
+      mileage: parseInt(formData.mileage as any),
+      horsepower: parseInt(formData.horsepower as any),
+      top_speed_kmh: parseInt(formData.top_speed_kmh as any),
+    };
+
+    await api.post('/user-car-gallery', payload);
+    toast.success('¡Publicación creada con éxito!');
+
+    // ✅ ¡CAMBIO CLAVE! En lugar de redirigir, limpiamos el formulario
+    setFormData({
+      car_name: '',
+      description: '',
+      image_url: '',
+      is_vehicle: true,
+      brand: '',
+      model: '',
+      year: new Date().getFullYear(),
+      fuel_type: '',
+      mileage: 0,
+      engine_spec: '',
+      horsepower: 0,
+      top_speed_kmh: 0,
+    });
+  } catch (error) {
+    console.error('Error creating gallery item:', error);
+    toast.error('Error al crear la publicación. Verifica los datos.');
+  } finally {
+    setLoading(false);
+  }
+};
+
+// ... resto del código ...
 
   return (
     <div className="min-h-screen bg-dark text-text p-6">

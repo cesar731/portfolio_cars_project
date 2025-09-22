@@ -1,94 +1,90 @@
 // frontend/src/pages/Profile.tsx
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import  api  from '../services/api';
+import api from '../services/api';
 import { UserCarGalleryItem } from '../types';
 import { toast } from 'react-hot-toast';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // ✅ ¡IMPORTANTE! Importar useNavigate
 
 const Profile = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate(); // ✅ ¡IMPORTANTE! Inicializar navigate
+
   const [userDetails, setUserDetails] = useState({
     username: '',
     email: '',
     avatar_url: '',
   });
+
   const [galleryItems, setGalleryItems] = useState<UserCarGalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     if (!user) {
+      navigate('/login'); // ✅ Redirigir si no hay usuario
       return;
     }
 
-    // Cargar datos del usuario
-    const fetchUser = async () => {
+    const loadData = async () => {
       try {
-        const res = await api.get(`/users/me`);
+        // Cargar datos del usuario
+        const userRes = await api.get(`/users/me`);
         setUserDetails({
-          username: res.data.username,
-          email: res.data.email,
-          avatar_url: res.data.avatar_url || '',
+          username: userRes.data.username,
+          email: userRes.data.email,
+          avatar_url: userRes.data.avatar_url || '',
         });
-      } catch (error) {
-        toast.error('Error al cargar tu perfil');
-      }
-    };
 
-    // Cargar galería del usuario
-    const fetchGallery = async () => {
-      try {
-        const res = await api.get(`/user-car-gallery`);
-        // Filtrar solo los items del usuario actual
-        const myItems = res.data.filter(
+        // Cargar galería del usuario
+        const galleryRes = await api.get(`/user-car-gallery`);
+        const myItems = galleryRes.data.filter(
           (item: UserCarGalleryItem) => item.user_id === user.id
         );
         setGalleryItems(myItems);
       } catch (error) {
-        toast.error('Error al cargar tu galería');
+        console.error('Error loading profile data:', error);
+        toast.error('Error al cargar tu perfil o galería');
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchUser();
-    fetchGallery();
-    setLoading(false);
-  }, [user]);
+    loadData();
+  }, [user, navigate]);
 
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      // ✅ Enviamos solo los campos que el backend espera
+      await api.put('/users/me', {
+        username: userDetails.username,
+        email: userDetails.email,
+        // Nota: Si quieres actualizar la contraseña, necesitas un campo separado
+      });
+      toast.success('Perfil actualizado con éxito');
+      setEditing(false);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Error al actualizar el perfil');
+    }
+  };
 
-const handleUpdateProfile = async (e: React.FormEvent) => {
-  e.preventDefault();
-  try {
-    // ✅ ¡CORREGIDO! Enviamos solo los campos que el esquema UserUpdate espera
-    await api.put('/users/me', {
-      username: userDetails.username,
-      email: userDetails.email,
-      // avatar_url no está en el esquema UserUpdate, así que lo omitimos
-      // avatar_url: userDetails.avatar_url || null, // ❌ ¡COMENTADO!
-    });
-    toast.success('Perfil actualizado con éxito');
-    setEditing(false);
-  } catch (error) {
-    toast.error('Error al actualizar el perfil');
-  }
-};
-
- 
-const handleDeleteAccount = async () => {
-  if (!window.confirm('¿Estás seguro? Esto eliminará tu cuenta permanentemente.')) {
-    return;
-  }
-  try {
-    // ✅ ¡CORREGIDO! La ruta es '/users/me', no '/api/users/me'
-    await api.delete('/users/me'); // ❌ ¡ELIMINADO! '/api/users/me'
-    toast.success('Cuenta eliminada correctamente');
-    logout();
-    window.location.href = '/login';
-  } catch (error) {
-    toast.error('Error al eliminar la cuenta');
-  }
-};
+  const handleDeleteAccount = async () => {
+    if (!window.confirm('¿Estás seguro? Esto eliminará tu cuenta permanentemente.')) {
+      return;
+    }
+    try {
+      // ✅ Ruta correcta
+      await api.delete('/users/me');
+      toast.success('Cuenta eliminada correctamente');
+      logout();
+      navigate('/login'); // ✅ Usamos navigate, no window.location
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      toast.error('Error al eliminar la cuenta');
+    }
+  };
 
   if (loading) {
     return (
@@ -238,7 +234,19 @@ const handleDeleteAccount = async () => {
 
           {/* GALERÍA DE AUTOS DEL USUARIO */}
           <div className="bg-dark-light rounded-xl shadow-card border border-border p-8">
-            <h2 className="text-2xl font-bold text-text mb-6">Mi Galería de Autos</h2>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-text">Mi Galería de Autos</h2>
+              {/* ✅ ¡AÑADIDO! Botón para publicar otro auto */}
+              <Link
+                to="/gallery/new"
+                className="px-4 py-2 bg-green-600 text-text rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 text-sm font-medium"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Publicar
+              </Link>
+            </div>
 
             {galleryItems.length === 0 ? (
               <div className="text-center py-12 text-text-secondary">
