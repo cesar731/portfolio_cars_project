@@ -78,6 +78,30 @@ const AdminDashboard = () => {
             <h2 className="text-3xl font-bold text-primary mb-2">{users.length}</h2>
             <p className="text-text-secondary">Usuarios Registrados</p>
           </div>
+          {/* --- NUEVA SECCIÓN: ACCIONES RÁPIDAS --- */}
+<div className="mb-12">
+  <h2 className="text-2xl font-bold text-text mb-6">Acciones Rápidas</h2>
+  <div className="flex flex-col sm:flex-row gap-4">
+    <Link
+      to="/cars/new"
+      className="flex-1 py-4 px-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-300 text-center flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+      </svg>
+      Crear Nuevo Auto
+    </Link>
+    <Link
+      to="/accessories/new"
+      className="flex-1 py-4 px-6 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg font-medium hover:from-green-700 hover:to-green-800 transition-all duration-300 text-center flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+      </svg>
+      Crear Nuevo Accesorio
+    </Link>
+  </div>
+</div>
           <div className="bg-dark-light rounded-xl shadow-card border border-border p-6 text-center">
             <h2 className="text-3xl font-bold text-primary mb-2">{cars.filter(c => c.is_published).length}</h2>
             <p className="text-text-secondary">Autos Publicados</p>

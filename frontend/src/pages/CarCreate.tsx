@@ -7,29 +7,28 @@ import { Car } from '../types';
 const CarCreate = () => {
   const navigate = useNavigate();
   const [car, setCar] = useState<Partial<Car>>({
-    brand: '',
-    model: '',
-    year: 2024,
-    price: 0,
-    description: '',
-    image_url: [''],
-    fuel_type: '',
-    mileage: 0,
-    color: '',
-    engine: '',
-    horsepower: 0,
-    top_speed: 0,
-    transmission: '',
-    drive_train: '',
-    weight: '',
-    production_years: '',
-    is_published: true,
-  });
-
+  brand: '',
+  model: '',
+  year: new Date().getFullYear(), // Valor por defecto más lógico
+  price: 0,
+  description: '',
+  image_url: ['https://via.placeholder.com/300x200?text=Auto+Nuevo'], // URL por defecto válida
+  fuel_type: '',
+  mileage: 0,
+  color: '',
+  engine: '',
+  horsepower: 0,
+  top_speed: 0,
+  transmission: '',
+  drive_train: '',
+  weight: '',
+  production_years: '',
+  is_published: true,
+});
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/api/cars', car);
+      await api.post('/cars', car);
       navigate('/cars');
     } catch (error) {
       alert('Error al crear el auto. Verifica los datos.');

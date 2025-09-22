@@ -50,20 +50,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const handleLogin = async (email: string, password: string) => {
-    try {
-      const response: LoginResponse = await loginApi(email, password);
-      localStorage.setItem('token', response.access_token);
+  try {
+    const response: LoginResponse = await loginApi(email, password);
+    localStorage.setItem('token', response.access_token);
+    setUser({
+      id: response.user.id,
+      username: response.user.username,
+      email: response.user.email,
+      role_id: response.user.role_id,
+      is_active: response.user.is_active ?? true,
+    });
+    console.log('Usuario logueado:', response.user);
 
-      setUser({
-        id: response.user.id,
-        username: response.user.username,
-        email: response.user.email,
-        role_id: response.user.role_id,
-        is_active: response.user.is_active ?? true,
-      });
-
-      console.log('Usuario logueado:', response.user); // ✅ CORREGIDO: response.user, no data.user
-
+    // Forzar una actualización del estado antes de navegar
+    // y usar un setTimeout para asegurar que la navegación ocurra después
+    // de que el componente se haya actualizado con el nuevo estado del usuario.
+    setTimeout(() => {
       if (response.user.role_id === 1) {
         navigate('/admin');
       } else if (response.user.role_id === 2) {
@@ -71,10 +73,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         navigate('/');
       }
-    } catch (error) {
-      throw error;
-    }
-  };
+    }, 0);
+  } catch (error) {
+    throw error;
+  }
+};
 
   const handleRegister = async (username: string, email: string, password: string) => {
     try {

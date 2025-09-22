@@ -16,6 +16,7 @@ import UserGalleryDetail from './pages/UserGalleryDetail';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import CarCreate from './pages/CarCreate';
+import AccessoryCreate from './pages/AccessoryCreate';
 import AdvisorPanel from './pages/AdvisorPanel';
 import NotFound from './pages/NotFound';
 import { AuthProvider } from './context/AuthContext';
@@ -44,6 +45,7 @@ function App() {
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/cars/new" element={<CarCreate />} />
+                <Route path="/accessories/new" element={<AccessoryCreate />} />
                 <Route path="/advisor" element={<AdvisorPanel />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
