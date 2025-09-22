@@ -4,11 +4,11 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { UserCarGalleryItem } from '../types';
 import { toast } from 'react-hot-toast';
-import { Link, useNavigate } from 'react-router-dom'; // ✅ ¡IMPORTANTE! Importar useNavigate
+import { Link, useNavigate } from 'react-router-dom';
 
 const Profile = () => {
   const { user, logout } = useAuth();
-  const navigate = useNavigate(); // ✅ ¡IMPORTANTE! Inicializar navigate
+  const navigate = useNavigate();
 
   const [userDetails, setUserDetails] = useState({
     username: '',
@@ -22,7 +22,7 @@ const Profile = () => {
 
   useEffect(() => {
     if (!user) {
-      navigate('/login'); // ✅ Redirigir si no hay usuario
+      navigate('/login');
       return;
     }
 
@@ -56,11 +56,10 @@ const Profile = () => {
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // ✅ Enviamos solo los campos que el backend espera
       await api.put('/users/me', {
         username: userDetails.username,
         email: userDetails.email,
-        // Nota: Si quieres actualizar la contraseña, necesitas un campo separado
+        avatar_url: userDetails.avatar_url || null,
       });
       toast.success('Perfil actualizado con éxito');
       setEditing(false);
@@ -75,14 +74,29 @@ const Profile = () => {
       return;
     }
     try {
-      // ✅ Ruta correcta
-      await api.delete('/users/me');
+      await api.delete('/users/me'); // ✅ ¡CORREGIDO! Ruta sin /api/
       toast.success('Cuenta eliminada correctamente');
       logout();
-      navigate('/login'); // ✅ Usamos navigate, no window.location
+      navigate('/login');
     } catch (error) {
       console.error('Error deleting account:', error);
       toast.error('Error al eliminar la cuenta');
+    }
+  };
+
+  // ✅ ¡NUEVA FUNCIÓN! Para eliminar una publicación
+  const handleDeleteGalleryItem = async (itemId: number) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar esta publicación?')) {
+      return;
+    }
+    try {
+      await api.delete(`/user-car-gallery/${itemId}`);
+      toast.success('Publicación eliminada con éxito');
+      // Actualizar la lista de publicaciones
+      setGalleryItems(galleryItems.filter(item => item.id !== itemId));
+    } catch (error) {
+      console.error('Error deleting gallery item:', error);
+      toast.error('Error al eliminar la publicación');
     }
   };
 
@@ -236,7 +250,6 @@ const Profile = () => {
           <div className="bg-dark-light rounded-xl shadow-card border border-border p-8">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-text">Mi Galería de Autos</h2>
-              {/* ✅ ¡AÑADIDO! Botón para publicar otro auto */}
               <Link
                 to="/gallery/new"
                 className="px-4 py-2 bg-green-600 text-text rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 text-sm font-medium"
@@ -284,6 +297,21 @@ const Profile = () => {
                             {item.likes} likes
                           </span>
                         </div>
+                      </div>
+                      {/* ✅ ¡AÑADIDO! Botones de Editar y Eliminar */}
+                      <div className="flex flex-col gap-2 ml-4">
+                        <Link
+                          to={`/gallery/edit/${item.id}`}
+                          className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+                        >
+                          Editar
+                        </Link>
+                        <button
+                          onClick={() => handleDeleteGalleryItem(item.id)}
+                          className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors"
+                        >
+                          Eliminar
+                        </button>
                       </div>
                     </div>
                   </div>

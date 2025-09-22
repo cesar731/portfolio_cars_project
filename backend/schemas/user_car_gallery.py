@@ -1,8 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
-from .user import UserOut
-
+from .user import UserOut # ✅ ¡IMPORTANTE!
 
 class UserCarGalleryCreate(BaseModel):
     user_id: int
