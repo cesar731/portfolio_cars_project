@@ -1,6 +1,5 @@
-from database.database import SessionLocal, engine, Base
-from models.role import Role
-
+from backend.database.database import SessionLocal, engine, Base
+from backend.models.role import Role
 Base.metadata.create_all(bind=engine)
 
 db = SessionLocal()
