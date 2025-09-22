@@ -4,8 +4,7 @@ from datetime import datetime
 
 class UserCarGalleryCreate(BaseModel):
     user_id: int
-    car_id: Optional[int] = None
-    car_name: str  # ✅ Changed from title to car_name
+    car_name: str  
     image_url: str
 
 class UserCarGalleryOut(UserCarGalleryCreate):

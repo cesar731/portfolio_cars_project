@@ -136,11 +136,7 @@ const AccessoriesShop = () => {
         </div>
       </div>
 
-      <footer className="bg-dark-light border-t border-border px-6 py-4 mt-16">
-        <p className="text-text-secondary text-center text-sm">
-          © 2025 Portfolio de Autos - Proyecto ADSO
-        </p>
-      </footer>
+
     </div>
   );
 };

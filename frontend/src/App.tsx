@@ -13,6 +13,7 @@ import AccessoryDetail from './pages/AccessoryDetail';
 import Consultation from './pages/Consultation';
 import UserGallery from './pages/UserGallery';
 import UserGalleryDetail from './pages/UserGalleryDetail';
+import UserGalleryCreate from './pages/UserGalleryCreate';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import CarCreate from './pages/CarCreate';
@@ -44,6 +45,7 @@ function App() {
                 <Route path="/consultation" element={<Consultation />} />
                 <Route path="/gallery" element={<UserGallery />} />
                 <Route path="/gallery/:id" element={<UserGalleryDetail />} />
+                <Route path="/gallery/new" element={<UserGalleryCreate />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/cars/new" element={<CarCreate />} />

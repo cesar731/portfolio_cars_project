@@ -148,11 +148,20 @@ const AdminDashboard = () => {
                     <p className="font-medium text-text">{car.brand} {car.model}</p>
                     <p className="text-text-secondary text-sm">{car.year} - ${car.price.toLocaleString()}</p>
                   </div>
-                  <span className={`inline-block px-2 py-1 text-xs rounded-full ${
-                    car.is_published ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
-                  }`}>
-                    {car.is_published ? 'Publicado' : 'No publicado'}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`inline-block px-2 py-1 text-xs rounded-full ${
+                      car.is_published ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
+                    }`}>
+                      {car.is_published ? 'Publicado' : 'No publicado'}
+                    </span>
+                    {/* ✅ ¡AÑADIDO! Botón de Editar */}
+                    <Link
+                      to={`/cars/edit/${car.id}`}
+                      className="text-blue-400 hover:text-blue-300 text-xs font-medium"
+                    >
+                      Editar
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>
@@ -171,11 +180,20 @@ const AdminDashboard = () => {
                     <p className="font-medium text-text">{acc.name}</p>
                     <p className="text-text-secondary text-sm">{acc.category} - ${acc.price.toLocaleString()}</p>
                   </div>
-                  <span className={`inline-block px-2 py-1 text-xs rounded-full ${
-                    acc.is_published ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
-                  }`}>
-                    {acc.is_published ? 'Disponible' : 'No disponible'}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`inline-block px-2 py-1 text-xs rounded-full ${
+                      acc.is_published ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
+                    }`}>
+                      {acc.is_published ? 'Disponible' : 'No disponible'}
+                    </span>
+                    {/* ✅ ¡AÑADIDO! Botón de Editar */}
+                    <Link
+                      to={`/accessories/edit/${acc.id}`}
+                      className="text-blue-400 hover:text-blue-300 text-xs font-medium"
+                    >
+                      Editar
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>

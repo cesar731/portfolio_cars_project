@@ -56,35 +56,39 @@ const Profile = () => {
     setLoading(false);
   }, [user]);
 
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await api.put('/users/me', {
-        username: userDetails.username,
-        email: userDetails.email,
-        avatar_url: userDetails.avatar_url || null,
-      });
-      toast.success('Perfil actualizado con éxito');
-      setEditing(false);
-    } catch (error) {
-      toast.error('Error al actualizar el perfil');
-    }
-  };
 
-  const handleDeleteAccount = async () => {
-    if (!window.confirm('¿Estás seguro? Esto eliminará tu cuenta permanentemente.')) {
-      return;
-    }
+const handleUpdateProfile = async (e: React.FormEvent) => {
+  e.preventDefault();
+  try {
+    // ✅ ¡CORREGIDO! Enviamos solo los campos que el esquema UserUpdate espera
+    await api.put('/users/me', {
+      username: userDetails.username,
+      email: userDetails.email,
+      // avatar_url no está en el esquema UserUpdate, así que lo omitimos
+      // avatar_url: userDetails.avatar_url || null, // ❌ ¡COMENTADO!
+    });
+    toast.success('Perfil actualizado con éxito');
+    setEditing(false);
+  } catch (error) {
+    toast.error('Error al actualizar el perfil');
+  }
+};
 
-    try {
-      await api.delete('/api/users/me');
-      toast.success('Cuenta eliminada correctamente');
-      logout();
-      window.location.href = '/login';
-    } catch (error) {
-      toast.error('Error al eliminar la cuenta');
-    }
-  };
+ 
+const handleDeleteAccount = async () => {
+  if (!window.confirm('¿Estás seguro? Esto eliminará tu cuenta permanentemente.')) {
+    return;
+  }
+  try {
+    // ✅ ¡CORREGIDO! La ruta es '/users/me', no '/api/users/me'
+    await api.delete('/users/me'); // ❌ ¡ELIMINADO! '/api/users/me'
+    toast.success('Cuenta eliminada correctamente');
+    logout();
+    window.location.href = '/login';
+  } catch (error) {
+    toast.error('Error al eliminar la cuenta');
+  }
+};
 
   if (loading) {
     return (
