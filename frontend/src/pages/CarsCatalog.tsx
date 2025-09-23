@@ -24,16 +24,22 @@ const CarsCatalog = () => {
     fetchCars();
   }, []);
 
-  const handleAddToCompare = (id: number) => {
-    if (selectedForComparison.length >= 3) return;
-    if (!selectedForComparison.includes(id)) {
-      setSelectedForComparison([...selectedForComparison, id]);
-    }
-  };
+ const handleAddToCompare = (id: number) => {
+  if (selectedForComparison.length >= 3) return;
+  if (!selectedForComparison.includes(id)) {
+    const newSelection = [...selectedForComparison, id];
+    setSelectedForComparison(newSelection);
+    // ✅ ¡CLAVE! Guardar en localStorage
+    localStorage.setItem('selectedCars', JSON.stringify(newSelection));
+  }
+};
 
-  const handleRemoveFromCompare = (id: number) => {
-    setSelectedForComparison(selectedForComparison.filter(item => item !== id));
-  };
+ const handleRemoveFromCompare = (id: number) => {
+  const newSelection = selectedForComparison.filter(item => item !== id);
+  setSelectedForComparison(newSelection);
+  // ✅ ¡CLAVE! Actualizar localStorage
+  localStorage.setItem('selectedCars', JSON.stringify(newSelection));
+};
 
   if (loading) {
     return (

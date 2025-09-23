@@ -1,29 +1,43 @@
 // frontend/src/pages/CompareCars.tsx
-
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import  api  from '../services/api';
+import { Link} from 'react-router-dom';
+import api from '../services/api';
+import { Car } from '../types';
 
 const CompareCars = () => {
-  const [selectedCars, setSelectedCars] = useState<any[]>([]);
+  const [selectedCars, setSelectedCars] = useState<Car[]>([]);
+  const [loading, setLoading] = useState(true);
+  
 
   useEffect(() => {
     const loadSelectedCars = async () => {
       const saved = localStorage.getItem('selectedCars');
       if (saved) {
-        const ids = JSON.parse(saved);
         try {
-          const promises = ids.map((id: number) => api.get(`/cars/${id}`));
-          const responses = await Promise.all(promises);
-          const cars = responses.map(res => res.data);
+          const ids: number[] = JSON.parse(saved);
+          if (ids.length === 0) {
+            setSelectedCars([]);
+            setLoading(false);
+            return;
+          }
+          // ✅ ¡CORREGIDO! Hacemos una solicitud por cada ID
+          const cars: Car[] = [];
+          for (const id of ids) {
+            try {
+              const response = await api.get<Car>(`/cars/${id}`);
+              cars.push(response.data);
+            } catch (error) {
+              console.warn(`Auto con ID ${id} no encontrado.`);
+            }
+          }
           setSelectedCars(cars);
         } catch (error) {
-          console.error('Error loading selected cars:', error);
-          // Si falla, limpia el localStorage
+          console.error('Error parsing selected cars:', error);
           localStorage.removeItem('selectedCars');
           setSelectedCars([]);
         }
       }
+      setLoading(false);
     };
 
     loadSelectedCars();
@@ -40,18 +54,34 @@ const CompareCars = () => {
     localStorage.removeItem('selectedCars');
   };
 
+  // ✅ ¡DEFINICIÓN DE ESPECIFICACIONES! — Solo campos que existen en tu modelo
   const specs = [
-    { label: 'Potencia', key: 'horsepower', unit: ' HP' },
-    { label: 'Aceleración 0-100 km/h', key: 'acceleration', unit: '' },
-    { label: 'Velocidad Máxima', key: 'top_speed', unit: ' km/h' },
-    { label: 'Motor', key: 'engine', unit: '' },
-    { label: 'Transmisión', key: 'transmission', unit: '' },
-    { label: 'Tracción', key: 'drive_train', unit: '' },
-    { label: 'Peso', key: 'weight', unit: ' kg' },
-    { label: 'Combustible', key: 'fuel_type', unit: '' },
-    { label: 'Año de Producción', key: 'production_years', unit: '' },
-    { label: 'Precio Estimado', key: 'price', unit: '' },
+    { label: 'Marca', key: 'brand', render: (car: Car) => car.brand },
+    { label: 'Modelo', key: 'model', render: (car: Car) => car.model },
+    { label: 'Año', key: 'year', render: (car: Car) => car.year },
+    { label: 'Precio', key: 'price', render: (car: Car) => `$${car.price.toLocaleString()}` },
+    { label: 'Combustible', key: 'fuel_type', render: (car: Car) => car.fuel_type || '-' },
+    { label: 'Kilometraje', key: 'mileage', render: (car: Car) => car.mileage ? `${car.mileage.toLocaleString()} km` : '-' },
+    { label: 'Color', key: 'color', render: (car: Car) => car.color || '-' },
+    { label: 'Motor', key: 'engine', render: (car: Car) => car.engine || '-' },
+    { label: 'Potencia (HP)', key: 'horsepower', render: (car: Car) => car.horsepower ? `${car.horsepower} HP` : '-' },
+    { label: 'Velocidad Máxima', key: 'top_speed', render: (car: Car) => car.top_speed ? `${car.top_speed} km/h` : '-' },
+    { label: 'Transmisión', key: 'transmission', render: (car: Car) => car.transmission || '-' },
+    { label: 'Tracción', key: 'drive_train', render: (car: Car) => car.drive_train || '-' },
+    { label: 'Peso', key: 'weight', render: (car: Car) => car.weight || '-' },
+    { label: 'Años de Producción', key: 'production_years', render: (car: Car) => car.production_years || '-' },
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-dark text-text flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mb-4"></div>
+          <p className="text-text-secondary">Cargando comparación...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (selectedCars.length === 0) {
     return (
@@ -60,7 +90,6 @@ const CompareCars = () => {
         <header className="bg-dark-light border-b border-border px-6 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-light text-text">📊 Comparar Autos</h1>
         </header>
-
         {/* Hero */}
         <section className="relative h-[300px] bg-cover bg-center bg-no-repeat mt-4" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1549073953-5d821c29b3e8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')" }}>
           <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
@@ -68,7 +97,6 @@ const CompareCars = () => {
             <p className="text-xl text-gray-200">Selecciona hasta 3 vehículos en el catálogo para comparar sus especificaciones técnicas.</p>
           </div>
         </section>
-
         {/* Main */}
         <main className="container mx-auto px-6 py-12 text-center">
           <p className="text-text-secondary text-lg max-w-3xl mx-auto mb-8">
@@ -81,13 +109,6 @@ const CompareCars = () => {
             🚗 Ir al Catálogo de Autos
           </Link>
         </main>
-
-        {/* Footer */}
-        <footer className="bg-dark-light border-t border-border px-6 py-4 mt-16">
-          <p className="text-text-secondary text-center text-sm">
-            © 2025 Portfolio de Autos - Proyecto ADSO
-          </p>
-        </footer>
       </div>
     );
   }
@@ -117,11 +138,11 @@ const CompareCars = () => {
             <div key={car.id} className="bg-dark-light rounded-xl p-6 border border-border flex flex-col items-center text-center">
               <img
                 src={car.image_url?.[0] || 'https://via.placeholder.com/120x80?text=Auto'}
-                alt={car.name}
+                alt={`${car.brand} ${car.model}`}
                 className="w-24 h-16 object-cover rounded-lg mb-4 shadow-md"
               />
-              <h3 className="text-xl font-bold text-text">{car.name}</h3>
-              <p className="text-text-secondary text-sm">{car.year}</p>
+              <h3 className="text-xl font-bold text-text">{car.model}</h3>
+              <p className="text-text-secondary text-sm">{car.brand} • {car.year}</p>
               <button
                 onClick={() => removeCar(car.id)}
                 className="mt-4 text-red-400 hover:text-red-300 text-sm font-medium underline flex items-center gap-1"
@@ -140,11 +161,11 @@ const CompareCars = () => {
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-border/20">
-                <th className="py-4 px-6 font-medium text-text min-w-[180px]">Especificación</th>
+                <th className="py-4 px-6 font-medium text-text min-w-[200px]">Especificación</th>
                 {selectedCars.map(car => (
-                  <th key={car.id} className="py-4 px-6 font-medium text-text text-center min-w-[150px]">
+                  <th key={car.id} className="py-4 px-6 font-medium text-text text-center min-w-[180px]">
                     <div className="font-bold text-sm">{car.brand}</div>
-                    <div className="text-text-secondary text-xs">{car.name}</div>
+                    <div className="text-text-secondary text-xs">{car.model}</div>
                     <div className="text-text-secondary text-xs">{car.year}</div>
                   </th>
                 ))}
@@ -153,16 +174,12 @@ const CompareCars = () => {
             <tbody>
               {specs.map(spec => (
                 <tr key={spec.label} className="border-b border-border/10 hover:bg-dark/50 transition-colors">
-                  <td className="py-4 px-6 font-medium text-text min-w-[180px]">{spec.label}</td>
+                  <td className="py-4 px-6 font-medium text-text min-w-[200px]">{spec.label}</td>
                   {selectedCars.map(car => (
-                    <td key={`${car.id}-${spec.key}`} className="py-4 px-6 text-center text-text min-w-[150px]">
-                      {spec.key === 'price' ? (
-                        <span className="font-semibold text-primary">{car[spec.key]}</span>
-                      ) : (
-                        <span className="font-medium">
-                          {car[spec.key]}{spec.unit}
-                        </span>
-                      )}
+                    <td key={`${car.id}-${spec.key}`} className="py-4 px-6 text-center text-text min-w-[180px]">
+                      <span className="font-medium">
+                        {spec.render(car)}
+                      </span>
                     </td>
                   ))}
                 </tr>

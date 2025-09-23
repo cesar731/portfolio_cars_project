@@ -34,7 +34,7 @@ const Home = () => {
           {/* Catálogo */}
           <div className="group cursor-pointer">
             <div className="relative overflow-hidden rounded-xl border border-border">
-              <img src="https://images.unsplash.com/photo-1549073953-5d821c29b3e8?auto=format&fit=crop&w=600&q=80" alt="Catálogo de Autos" className="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-105" />
+              <img src="https://tse1.mm.bing.net/th/id/OIP.fs3B4FhX4L0n-pI7BS2UBAHaF7?rs=1&pid=ImgDetMain&o=7&rm=3" alt="Catálogo de Autos" className="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-105" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               <div className="absolute bottom-0 left-0 right-0 p-8 text-white transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
                 <h3 className="text-2xl font-light text-secondary">Catálogo de Autos</h3>
@@ -49,7 +49,7 @@ const Home = () => {
           {/* Accesorios */}
           <div className="group cursor-pointer">
             <div className="relative overflow-hidden rounded-xl border border-border">
-              <img src="https://images.unsplash.com/photo-1557598853-d41249562155?auto=format&fit=crop&w=600&q=80" alt="Accesorios" className="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-105" />
+              <img src="https://img.freepik.com/premium-vector/tire-tread-vector-elements-clip-art-illustration-tire-tread-cartoon-isolated_609667-858.jpg?w=2000" alt="Accesorios" className="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-105" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               <div className="absolute bottom-0 left-0 right-0 p-8 text-white transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
                 <h3 className="text-2xl font-light text-secondary">Accesorios Premium</h3>
@@ -64,7 +64,7 @@ const Home = () => {
           {/* Asesoría */}
           <div className="group cursor-pointer">
             <div className="relative overflow-hidden rounded-xl border border-border">
-              <img src="https://images.unsplash.com/photo-1560056849-353e71596962?auto=format&fit=crop&w=600&q=80" alt="Asesoría" className="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-105" />
+              <img src="https://img.freepik.com/premium-vector/customer-comment-icon_192037-5726.jpg" alt="Asesoría" className="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-105" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               <div className="absolute bottom-0 left-0 right-0 p-8 text-white transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
                 <h3 className="text-2xl font-light text-secondary">Asesoría Personalizada</h3>
