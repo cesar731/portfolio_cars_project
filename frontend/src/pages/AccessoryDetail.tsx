@@ -1,12 +1,16 @@
 // frontend/src/pages/AccessoryDetail.tsx
-
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import  api  from '../services/api';
+import { useAuth } from '../context/AuthContext'; // ✅ ¡IMPORTADO!
+import { useCart } from '../context/CartContext'; // ✅ ¡IMPORTADO!
+import { toast } from 'react-hot-toast'; // ✅ ¡IMPORTADO!
+import api from '../services/api';
 
 const AccessoryDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth(); // ✅ ¡OBTENIDO!
+  const { addToCart } = useCart(); // ✅ ¡OBTENIDO!
   const [accessory, setAccessory] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -117,12 +121,23 @@ const AccessoryDetail = () => {
 
         {/* Acción: Agregar al carrito */}
         <div className="flex flex-col sm:flex-row gap-4 mb-12">
+          {/* ✅ ¡BOTÓN CORREGIDO! */}
           <button
-            onClick={() => navigate('/cart')}
+            onClick={() => {
+              if (!user) {
+                toast.error('Debes iniciar sesión para agregar productos al carrito.');
+                navigate('/login');
+                return;
+              }
+              if (accessory) {
+                addToCart(accessory.id);
+                toast.success('¡Producto agregado al carrito!');
+              }
+            }}
             className="py-3 px-8 bg-primary text-text rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-7H5.4M12 16v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m......" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-7H5.4M12 16v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m......" />
             </svg>
             Agregar al Carrito
           </button>
@@ -138,8 +153,6 @@ const AccessoryDetail = () => {
           </button>
         </div>
       </main>
-
-   
     </div>
   );
 };

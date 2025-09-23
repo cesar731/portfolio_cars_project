@@ -1,10 +1,11 @@
 // frontend/src/components/Header.tsx
-
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext'; // ✅ ¡IMPORTADO!
 
 const Header = () => {
   const { user, logout } = useAuth();
+  const { cartItems } = useCart(); // ✅ ¡OBTENIDO!
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -40,6 +41,19 @@ const Header = () => {
       <div className="flex items-center gap-4">
         {user ? (
           <>
+            {/* 🛒 ¡NUEVO! Botón del Carrito */}
+            <Link to="/cart" className="relative p-2 text-text hover:text-primary transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-7H5.4M12 16v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v......" />
+              </svg>
+              {/* Badge con contador */}
+              {cartItems.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {cartItems.length}
+                </span>
+              )}
+            </Link>
+
             {/* 🟢 Mostrar nombre de usuario y menú desplegable */}
             <div className="relative group">
               <button className="flex items-center gap-2 text-text hover:text-primary transition-colors">
