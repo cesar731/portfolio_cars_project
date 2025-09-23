@@ -62,6 +62,9 @@ export interface Consultation {
   answered_at: string | null;
   created_at: string;
   updated_at: string;
+  is_read?: boolean; // ✅ ¡AÑADIDO! Para las notificaciones
+  advisor?: User;    // ✅ ¡AÑADIDO! Para mostrar quién respondió
+  user?: User;  
 }
 
 export interface UserCarGalleryItem {
@@ -104,3 +107,14 @@ export interface RegisterResponse {
 }
 
 export type Nullable<T> = T | null;
+
+
+export interface Notification {
+  id: number;
+  user_id: number;
+  title: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+  updated_at: string;
+}

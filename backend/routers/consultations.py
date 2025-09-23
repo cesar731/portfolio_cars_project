@@ -97,7 +97,7 @@ def respond_consultation(
 
     db_consultation = db.query(models.consultation.Consultation).filter(
         models.consultation.Consultation.id == consultation_id,
-        models.consultation.Consultation.advisor_id == current_user.id  # Solo puede responder sus propias consultas
+        models.consultation.Consultation.advisor_id == current_user.id
     ).first()
 
     if not db_consultation:
@@ -105,11 +105,21 @@ def respond_consultation(
 
     # Actualizar campos
     if response.message is not None:
-        db_consultation.message = response.message  # Puedes decidir si el asesor puede modificar el mensaje original
+        db_consultation.message = response.message
     db_consultation.status = "responded"
     db_consultation.answered_at = dt.utcnow()
     db_consultation.updated_at = dt.utcnow()
 
     db.commit()
     db.refresh(db_consultation)
+
+    # ✅ ¡NUEVO! Crear notificación para el usuario
+    notification = models.notification.Notification(
+        user_id=db_consultation.user_id,
+        title="¡Tu consulta ha sido respondida!",
+        message=f"El asesor {current_user.username} ha respondido tu consulta: '{db_consultation.subject or 'Sin asunto'}'"
+    )
+    db.add(notification)
+    db.commit()
+
     return db_consultation

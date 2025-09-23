@@ -7,3 +7,4 @@ from .accessory import Accessory
 from .consultation import Consultation
 from .user_car_gallery import UserCarGallery  
 from .cart_item import CartItem
+from .notification import Notification  
