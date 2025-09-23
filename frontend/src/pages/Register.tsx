@@ -1,15 +1,15 @@
 // frontend/src/pages/Register.tsx
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { register } from '../services/authApi';
-import { toast } from 'react-hot-toast'; // ✅ Importado
+import { toast } from 'react-hot-toast';
 
 const Register = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false); // ✅ ¡NUEVO! Estado para el checkbox
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -20,10 +20,16 @@ const Register = () => {
       return;
     }
 
+    // ✅ ¡NUEVO! Validar que el checkbox esté marcado
+    if (!acceptedTerms) {
+      toast.error('Debes aceptar los Términos y Condiciones y la Política de Privacidad.');
+      return;
+    }
+
     setLoading(true);
     try {
       await register(username, email, password);
-      toast.success('¡Registro exitoso! Ahora puedes iniciar sesión.');
+      toast.success('¡Registro exitoso! Revisa tu correo para confirmar tu cuenta.');
       navigate('/login');
     } catch (error) {
       toast.error('Error al registrar. Verifica tus datos.');
@@ -84,6 +90,29 @@ const Register = () => {
               className="w-full px-4 py-2 bg-dark border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary"
               placeholder="Repite tu contraseña"
             />
+          </div>
+
+          {/* ✅ ¡NUEVO! Checkbox de Términos y Condiciones */}
+          <div className="flex items-start">
+            <input
+              type="checkbox"
+              id="privacy"
+              checked={acceptedTerms}
+              onChange={(e) => setAcceptedTerms(e.target.checked)}
+              required
+              className="mt-1 mr-2 h-4 w-4 text-primary focus:ring-primary border-border rounded"
+            />
+            <label htmlFor="privacy" className="text-sm text-text-secondary">
+              Acepto los{' '}
+              <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                Términos y Condiciones
+              </a>{' '}
+              y la{' '}
+              <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                Política de Privacidad
+              </a>
+              .
+            </label>
           </div>
 
           <button

@@ -13,6 +13,10 @@ router = APIRouter()
 
 def get_user_by_email(db: Session, email: str):
     return db.query(models.user.User).filter(models.user.User.email == email).first()
+# --- AÑADE ESTO AL INICIO DEL ARCHIVO ---
+from backend.utils.email import send_confirmation_email
+import secrets
+from datetime import datetime, timedelta
 
 @router.post("/register", response_model=schemas.UserOut)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
@@ -24,11 +28,17 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
         username=user.username,
         email=user.email,
         password_hash=hashed_password,
-        role_id=3  # usuario por defecto
+        role_id=3,  # usuario por defecto
+        avatar_url=user.avatar_url,  # ✅ ¡AÑADIDO! Asignar el avatar_url
+        is_active=False,  # ✅ ¡IMPORTANTE! El usuario no está activo hasta que confirme su email
     )
     db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    try:
+        db.commit()
+        db.refresh(new_user)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al crear el usuario: {str(e)}")
     return new_user
 
 @router.post("/login")

@@ -111,3 +111,20 @@ def delete_current_user(
     db.delete(current_user)
     db.commit()
     return
+
+
+# --- NUEVO ENDPOINT: Confirmar Email ---
+@router.get("/confirm-email/{user_id}")
+def confirm_email(user_id: int, token: str, db: Session = Depends(get_db)):
+    user = db.query(models.user.User).filter(models.user.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    # Verificar que el token coincida (guardado en avatar_url)
+    if user.avatar_url != token:
+        raise HTTPException(status_code=400, detail="Token de confirmación inválido o expirado")
+    # Activar la cuenta
+    user.is_active = True
+    # Limpiar el token
+    user.avatar_url = None
+    db.commit()
+    return {"msg": "¡Cuenta confirmada con éxito! Ahora puedes iniciar sesión."}

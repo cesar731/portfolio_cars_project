@@ -7,6 +7,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    avatar_url: Optional[str] = None  # ✅ ¡AÑADIDO! Para que coincida con el modelo
 
 class UserUpdate(BaseModel):
     username: Optional[str] = None

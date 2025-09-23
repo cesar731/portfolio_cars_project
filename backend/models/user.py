@@ -17,7 +17,7 @@ class User(Base):
     role_id = Column(Integer, ForeignKey("roles.id"), nullable=False, default=3)
     created_at = Column(DateTime, default=datetime.utcnow)
     is_active = Column(Boolean, default=True)
-    avatar_url = Column(String, nullable=True)  # ✅ ¡AÑADIDO! Para que coincida con la DB
+    avatar_url = Column(String, nullable=True, default=None) 
     notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
 
     # Relaciones
