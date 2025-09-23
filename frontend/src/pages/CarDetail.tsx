@@ -158,26 +158,9 @@ const CarDetail = () => {
             Ver Otros Autos
           </button>
         </div>
-
-        {/* Imagen Adicional */}
-        {car.image_url && (
-          <div className="mt-12">
-            <h3 className="text-xl font-bold text-text mb-4">Imagen del Vehículo</h3>
-            <img 
-              src={car.image_url[0]} 
-              alt={car.name} 
-              className="w-full h-80 object-cover rounded-xl shadow-card"
-            />
-          </div>
-        )}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-dark-light border-t border-border px-6 py-4 mt-16">
-        <p className="text-text-secondary text-center text-sm">
-          © 2025 Portfolio de Autos - Proyecto ADSO
-        </p>
-      </footer>
+     
     </div>
   );
 };

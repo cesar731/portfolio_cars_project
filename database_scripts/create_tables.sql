@@ -130,7 +130,7 @@ INSERT INTO users (username, email, password_hash, role_id, is_active)
 VALUES (
   'cesar_admin',
   'cesar@admin.com',
-  '$2b$12$VUswWK3WxiOeocDg2kS6Oep/Yz9wN0kVK1hM03DXA6vx1oAcG0DJa', 
+  '$2b$12$XNUCS9UrsO0ZKiKwnqw/meFZHLTA57fHEtItvC7DR5/GLy86VV6t2', 
   1,
   true
 );

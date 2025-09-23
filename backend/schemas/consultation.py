@@ -1,30 +1,23 @@
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
-from .user import UserOut 
 
 class ConsultationCreate(BaseModel):
-    # user_id: int  # ✅ ¡ELIMINADO! Lo obtendremos del token
-    subject: Optional[str] = None  # ✅ ¡HECHO OPCIONAL! Ya que el frontend lo envía
+    subject: Optional[str] = None
     message: str
-    advisor_id: Optional[int] = None  # ✅ ¡AÑADIDO! Para que coincida con el frontend
-    status: str = "pending"
-
-    class Config:
-        from_attributes = True  # Para Pydantic v2
-
-
+    advisor_id: Optional[int] = None  # El frontend ya no lo envía, lo asigna el backend
 
 class ConsultationOut(ConsultationCreate):
     id: int
     user_id: int
+    status: str
     created_at: datetime
-    updated_at: Optional[datetime] = None  # ✅ ¡CAMBIADO! Ahora es opcional
+    updated_at: Optional[datetime] = None
     answered_at: Optional[datetime] = None  # ✅ ¡AÑADIDO!
+    user: Optional["UserOut"] = None  # ✅ ¡AÑADIDO! Para mostrar datos del usuario
 
     class Config:
         from_attributes = True
-
 
 class ConsultationUpdate(BaseModel):
     subject: Optional[str] = None
@@ -32,3 +25,7 @@ class ConsultationUpdate(BaseModel):
     advisor_id: Optional[int] = None
     status: Optional[str] = None
     answered_at: Optional[datetime] = None  # ✅ ¡AÑADIDO!
+
+# ✅ ¡IMPORTANTE! Importar UserOut al final para evitar referencia circular
+from .user import UserOut
+ConsultationOut.update_forward_refs()

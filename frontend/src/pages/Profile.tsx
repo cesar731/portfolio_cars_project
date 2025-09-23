@@ -264,12 +264,6 @@ const Profile = () => {
             {galleryItems.length === 0 ? (
               <div className="text-center py-12 text-text-secondary">
                 <p>Aún no has publicado ningún auto en tu galería.</p>
-                <Link
-                  to="/gallery/new"
-                  className="mt-4 px-6 py-2 bg-primary text-text rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                  Publicar un Auto →
-                </Link>
               </div>
             ) : (
               <div className="space-y-6">

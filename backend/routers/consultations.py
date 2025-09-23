@@ -4,22 +4,28 @@ from backend.database.database import get_db
 from backend import models, schemas
 from backend.schemas.consultation import ConsultationCreate, ConsultationOut, ConsultationUpdate
 from backend.security.oauth2 import get_current_user  # ✅ ¡IMPORTANTE! Para obtener el usuario actual
+from datetime import datetime as dt
+
+
 
 router = APIRouter()
-
 @router.post("/", response_model=ConsultationOut, status_code=status.HTTP_201_CREATED)
 def create_consultation(
     consultation: ConsultationCreate,
     db: Session = Depends(get_db),
-    current_user: models.user.User = Depends(get_current_user)  # ✅ ¡OBTENEMOS EL USUARIO ACTUAL!
+    current_user: models.user.User = Depends(get_current_user)
 ):
-    # ✅ ¡CORREGIDO! Creamos la consulta con el user_id del usuario autenticado
+    # ✅ ¡CORREGIDO! Buscamos al primer asesor disponible (role_id = 2)
+    advisor = db.query(models.user.User).filter(models.user.User.role_id == 2).first()
+    if not advisor:
+        raise HTTPException(status_code=500, detail="No hay asesores disponibles para asignar la consulta.")
+
     db_consultation = models.consultation.Consultation(
-        user_id=current_user.id,  # <-- ¡CLAVE! El ID viene del token, no del frontend
+        user_id=current_user.id,
         subject=consultation.subject,
         message=consultation.message,
-        advisor_id=consultation.advisor_id,  # <-- ¡CLAVE! Se mantiene si el frontend lo envía
-        status=consultation.status
+        advisor_id=advisor.id,  # <-- ¡CLAVE!
+        status="pending"
     )
     db.add(db_consultation)
     db.commit()
@@ -74,3 +80,36 @@ def delete_consultation(consultation_id: int, db: Session = Depends(get_db)):
     db.delete(consultation)
     db.commit()
     return {"message": "Consulta eliminada correctamente"}
+
+
+
+
+@router.put("/{consultation_id}/respond", response_model=ConsultationOut)
+def respond_consultation(
+    consultation_id: int,
+    response: ConsultationUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.user.User = Depends(get_current_user)
+):
+    # Verificar que el usuario actual es un asesor
+    if current_user.role_id != 2:
+        raise HTTPException(status_code=403, detail="Solo los asesores pueden responder consultas.")
+
+    db_consultation = db.query(models.consultation.Consultation).filter(
+        models.consultation.Consultation.id == consultation_id,
+        models.consultation.Consultation.advisor_id == current_user.id  # Solo puede responder sus propias consultas
+    ).first()
+
+    if not db_consultation:
+        raise HTTPException(status_code=404, detail="Consulta no encontrada o no asignada a ti.")
+
+    # Actualizar campos
+    if response.message is not None:
+        db_consultation.message = response.message  # Puedes decidir si el asesor puede modificar el mensaje original
+    db_consultation.status = "responded"
+    db_consultation.answered_at = dt.utcnow()
+    db_consultation.updated_at = dt.utcnow()
+
+    db.commit()
+    db.refresh(db_consultation)
+    return db_consultation

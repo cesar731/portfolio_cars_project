@@ -137,26 +137,9 @@ const AccessoryDetail = () => {
             Ver Otros Accesorios
           </button>
         </div>
-
-        {/* Imagen Adicional */}
-        {accessory.image_url && (
-          <div className="mt-12">
-            <h3 className="text-xl font-bold text-text mb-4">Imagen del Accesorio</h3>
-            <img 
-              src={accessory.image_url} 
-              alt={accessory.name} 
-              className="w-full h-80 object-cover rounded-xl shadow-card"
-            />
-          </div>
-        )}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-dark-light border-t border-border px-6 py-4 mt-16">
-        <p className="text-text-secondary text-center text-sm">
-          © 2025 Portfolio de Autos - Proyecto ADSO
-        </p>
-      </footer>
+   
     </div>
   );
 };
