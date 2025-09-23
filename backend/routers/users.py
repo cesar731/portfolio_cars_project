@@ -1,11 +1,12 @@
 # backend/routers/users.py
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.orm import Session
 from backend.database.database import get_db
 from backend import models, schemas
 from backend.security.password import get_password_hash
 from backend.security.oauth2 import get_current_user
+from fastapi import Body
 
 router = APIRouter()
 
@@ -99,10 +100,13 @@ def update_current_user(
     db.refresh(current_user)
     return current_user
 
+
+
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
 def delete_current_user(
     db: Session = Depends(get_db),
-    current_user: models.user.User = Depends(get_current_user)
+    current_user: models.user.User = Depends(get_current_user),
+    empty_body: dict = Body(None)  # ✅ Acepta un body opcional y lo ignora
 ):
     db.delete(current_user)
     db.commit()

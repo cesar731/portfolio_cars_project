@@ -10,8 +10,9 @@ class UserCreate(UserBase):
 
 class UserUpdate(BaseModel):
     username: Optional[str] = None
-    email: Optional[EmailStr] = None
+    email: Optional[EmailStr] = None  # ✅ Usa EmailStr para validación de email
     password: Optional[str] = None
+    avatar_url: Optional[str] = None  # ✅ ¡AÑADIDO! Si tu frontend lo envía, el backend debe aceptarlo
 
 class UserOut(UserBase):
     id: int
@@ -19,3 +20,4 @@ class UserOut(UserBase):
 
     class Config:
         from_attributes = True
+        extra = "ignore"
