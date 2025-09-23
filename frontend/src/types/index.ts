@@ -94,6 +94,7 @@ export interface CartItem {
   accessory_id: number;
   quantity: number;
   added_at: string;
+  accessory: Accessory;
 }
 
 export interface LoginResponse {

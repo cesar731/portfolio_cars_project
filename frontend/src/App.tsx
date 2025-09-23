@@ -9,6 +9,7 @@ import CarsCatalog from './pages/CarsCatalog';
 import CarDetail from './pages/CarDetail';
 import CompareCars from './pages/CompareCars';
 import AccessoriesShop from './pages/AccessoriesShop';
+import Cart from './pages/Cart';      
 import AccessoryDetail from './pages/AccessoryDetail';
 import Consultation from './pages/Consultation';
 import UserGallery from './pages/UserGallery';
@@ -41,6 +42,7 @@ function App() {
                 <Route path="/cars/:id" element={<CarDetail />} />
                 <Route path="/compare" element={<CompareCars />} />
                 <Route path="/accessories" element={<AccessoriesShop />} />
+                <Route path="/cart" element={<Cart />} />
                 <Route path="/accessories/:id" element={<AccessoryDetail />} />
                 <Route path="/consultation" element={<Consultation />} />
                 <Route path="/gallery" element={<UserGallery />} />

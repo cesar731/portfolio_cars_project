@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, joinedload
 from sqlalchemy.orm import Session
 from backend.database.database import get_db
 from backend import models, schemas
@@ -10,7 +10,10 @@ router = APIRouter()
 def get_cart_items(user_id: int, db: Session = Depends(get_db), current_user: models.user.User = Depends(get_current_user)):
     if current_user.id != user_id:
         raise HTTPException(status_code=403, detail="No autorizado")
-    items = db.query(models.cart_item.CartItem).filter(models.cart_item.CartItem.user_id == user_id).all()
+    # ✅ ¡CORREGIDO! Cargamos la relación con el accesorio
+    items = db.query(models.cart_item.CartItem).options(
+        joinedload(models.cart_item.CartItem.accessory)
+    ).filter(models.cart_item.CartItem.user_id == user_id).all()
     return items
 
 @router.post("/", response_model=schemas.CartItemOut, status_code=status.HTTP_201_CREATED)
