@@ -1,18 +1,20 @@
 // frontend/src/pages/AccessoryDetail.tsx
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; // ✅ ¡IMPORTADO!
-import { useCart } from '../context/CartContext'; // ✅ ¡IMPORTADO!
-import { toast } from 'react-hot-toast'; // ✅ ¡IMPORTADO!
+import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
+import { toast } from 'react-hot-toast';
 import api from '../services/api';
 
 const AccessoryDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth(); // ✅ ¡OBTENIDO!
-  const { addToCart } = useCart(); // ✅ ¡OBTENIDO!
+  const { user } = useAuth();
+  const { addToCart } = useCart();
   const [accessory, setAccessory] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [comments, setComments] = useState<{ id: number; user: string; text: string; date: string }[]>([]);
+  const [newComment, setNewComment] = useState('');
 
   useEffect(() => {
     const fetchAccessory = async () => {
@@ -23,6 +25,11 @@ const AccessoryDetail = () => {
       try {
         const response = await api.get(`/accessories/${id}`);
         setAccessory(response.data);
+        // Simular comentarios (reemplaza esto con una llamada real a /comments cuando lo tengas)
+        setComments([
+          { id: 1, user: 'Carlos_Racing', text: '¡Excelente calidad! Lo instalé en mi Porsche y quedó perfecto.', date: 'hace 2 días' },
+          { id: 2, user: 'AutoFan99', text: '¿Es compatible con modelos anteriores al 2020?', date: 'hace 5 días' },
+        ]);
       } catch (error) {
         console.error('Error fetching accessory:', error);
         navigate('/accessories');
@@ -30,17 +37,31 @@ const AccessoryDetail = () => {
         setLoading(false);
       }
     };
-
     fetchAccessory();
   }, [id, navigate]);
+
+  const handleAddComment = () => {
+    if (!user) {
+      toast.error('Debes iniciar sesión para comentar.');
+      navigate('/login');
+      return;
+    }
+    if (!newComment.trim()) return;
+    const comment = {
+      id: comments.length + 1,
+      user: user.username,
+      text: newComment,
+      date: 'ahora',
+    };
+    setComments([comment, ...comments]);
+    setNewComment('');
+    toast.success('Comentario publicado.');
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-dark text-text flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mb-4"></div>
-          <p className="text-text-secondary">Cargando accesorio...</p>
-        </div>
+        <p className="text-text-secondary">Cargando accesorio...</p>
       </div>
     );
   }
@@ -49,12 +70,12 @@ const AccessoryDetail = () => {
     return (
       <div className="min-h-screen bg-dark text-text flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl text-red-400 font-medium mb-4">Accesorio no encontrado</h2>
+          <h2 className="text-xl text-red-400 mb-4">Accesorio no encontrado</h2>
           <button
             onClick={() => navigate('/accessories')}
-            className="px-6 py-3 bg-primary text-text rounded-lg font-medium hover:bg-primary/90 transition-colors"
+            className="px-6 py-3 bg-primary text-text rounded-lg hover:bg-primary/90"
           >
-            🛒 Volver a la Tienda
+            Volver a la tienda
           </button>
         </div>
       </div>
@@ -64,95 +85,128 @@ const AccessoryDetail = () => {
   return (
     <div className="min-h-screen bg-dark text-text">
       {/* Header */}
-      <header className="bg-dark-light border-b border-border px-6 py-4 flex items-center justify-between">
+      <header className="bg-dark-light border-b border-border px-6 py-4">
         <button
           onClick={() => navigate('/accessories')}
-          className="flex items-center gap-2 text-primary hover:text-primary/80"
+          className="text-primary hover:text-primary/80 flex items-center gap-2"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Volver a Accesorios
+          ← Volver a Accesorios
         </button>
-        <h1 className="text-xl font-light text-text">Detalles del Accesorio</h1>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative h-[400px] bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${accessory.image_url || 'https://via.placeholder.com/1200x600?text=Accesorio+No+Disponible'})` }}>
-        <div className="absolute inset-0 bg-black/60 flex items-end p-8">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-bold text-white">{accessory.name}</h1>
-            <p className="text-xl text-gray-200 mt-2">{accessory.category}</p>
+      {/* Contenido principal */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Imagen más pequeña */}
+          <div className="lg:col-span-2">
+            <img
+              src={accessory.image_url || 'https://via.placeholder.com/800x600?text=Accesorio'}
+              alt={accessory.name}
+              className="w-full max-h-96 object-cover rounded-lg border border-border"
+            />
+          </div>
+
+          {/* Información del producto */}
+          <div className="lg:col-span-1">
+            <h1 className="text-2xl font-bold text-text">{accessory.name}</h1>
+            <p className="text-text-secondary mt-1">{accessory.category || '—'}</p>
+
+            <div className="mt-6">
+              <p className="text-3xl font-bold text-primary">${accessory.price.toLocaleString()}</p>
+            </div>
+
+            <div className="mt-6 space-y-3">
+              <div className="flex justify-between">
+                <span className="text-text-secondary">Stock disponible</span>
+                <span className={accessory.stock > 0 ? 'text-green-400' : 'text-red-400'}>
+                  {accessory.stock > 0 ? `${accessory.stock} unidades` : 'Agotado'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-text-secondary">Estado</span>
+                <span className={accessory.is_published ? 'text-green-400' : 'text-red-400'}>
+                  {accessory.is_published ? 'Disponible' : 'No disponible'}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-8">
+              <h2 className="text-lg font-semibold text-text mb-2">Descripción</h2>
+              <p className="text-text-secondary">{accessory.description || 'Sin descripción.'}</p>
+            </div>
+
+            <div className="mt-8">
+              <button
+                disabled={accessory.stock <= 0}
+                onClick={() => {
+                  if (!user) {
+                    toast.error('Debes iniciar sesión para agregar productos al carrito.');
+                    navigate('/login');
+                    return;
+                  }
+                  addToCart(accessory.id);
+                  toast.success('¡Producto agregado al carrito!');
+                }}
+                className={`w-full py-3 rounded-lg font-medium ${
+                  accessory.stock > 0
+                    ? 'bg-primary text-text hover:bg-primary/90'
+                    : 'bg-gray-600 text-white cursor-not-allowed'
+                }`}
+              >
+                {accessory.stock > 0 ? 'Agregar al carrito' : 'Agotado'}
+              </button>
+              <button
+                onClick={() => navigate('/accessories')}
+                className="w-full mt-3 py-3 text-primary border border-primary rounded-lg hover:bg-primary/10"
+              >
+                Seguir comprando
+              </button>
+            </div>
           </div>
         </div>
-      </section>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-6 py-12">
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-text mb-4">Descripción</h2>
-          <p className="text-text-secondary text-lg leading-relaxed">{accessory.description}</p>
-        </div>
+        {/* ✅ SECCIÓN DE COMENTARIOS */}
+        <div className="mt-16">
+          <h2 className="text-2xl font-bold text-text mb-6">Comentarios ({comments.length})</h2>
 
-        {/* Especificaciones Técnicas */}
-        <div className="bg-dark-light rounded-2xl shadow-card border border-border p-8 mb-12">
-          <h2 className="text-2xl font-bold text-text mb-6">Especificaciones Técnicas</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="border-b border-border/20 pb-4">
-              <span className="text-text-secondary text-sm block">Precio</span>
-              <span className="text-white font-bold text-lg">${accessory.price.toLocaleString()}</span>
-            </div>
-            <div className="border-b border-border/20 pb-4">
-              <span className="text-text-secondary text-sm block">Categoría</span>
-              <span className="text-white font-bold text-lg">{accessory.category}</span>
-            </div>
-            <div className="border-b border-border/20 pb-4">
-              <span className="text-text-secondary text-sm block">Stock Disponible</span>
-              <span className="text-white font-bold text-lg">{accessory.stock} unidades</span>
-            </div>
-            <div className="border-b border-border/20 pb-4">
-              <span className="text-text-secondary text-sm block">Estado</span>
-              <span className={`font-bold text-lg ${accessory.is_published ? 'text-green-400' : 'text-red-400'}`}>
-                {accessory.is_published ? 'Disponible' : 'No disponible'}
-              </span>
+          {/* Formulario para nuevo comentario */}
+          <div className="bg-dark-light p-4 rounded-lg mb-6">
+            <textarea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Escribe tu comentario..."
+              className="w-full bg-dark border border-border rounded-lg px-3 py-2 text-text placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
+              rows={3}
+            />
+            <div className="mt-3 flex justify-end">
+              <button
+                onClick={handleAddComment}
+                className="px-4 py-2 bg-primary text-text rounded-lg hover:bg-primary/90 text-sm font-medium"
+              >
+                Publicar
+              </button>
             </div>
           </div>
-        </div>
 
-        {/* Acción: Agregar al carrito */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-12">
-          {/* ✅ ¡BOTÓN CORREGIDO! */}
-          <button
-            onClick={() => {
-              if (!user) {
-                toast.error('Debes iniciar sesión para agregar productos al carrito.');
-                navigate('/login');
-                return;
-              }
-              if (accessory) {
-                addToCart(accessory.id);
-                toast.success('¡Producto agregado al carrito!');
-              }
-            }}
-            className="py-3 px-8 bg-primary text-text rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-7H5.4M12 16v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m0 8v-2m0 0V8m......" />
-            </svg>
-            Agregar al Carrito
-          </button>
-
-          <button
-            onClick={() => navigate('/accessories')}
-            className="py-3 px-8 bg-dark border border-primary text-primary rounded-lg font-medium hover:bg-primary/10 transition-colors flex items-center justify-center gap-2"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18z" />
-            </svg>
-            Ver Otros Accesorios
-          </button>
+          {/* Lista de comentarios */}
+          <div className="space-y-6">
+            {comments.map((comment) => (
+              <div key={comment.id} className="bg-dark-light p-4 rounded-lg border border-border/20">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    {comment.user.charAt(0)}
+                  </div>
+                  <div>
+                    <span className="font-medium text-text">{comment.user}</span>
+                    <span className="text-text-secondary text-sm ml-2">· {comment.date}</span>
+                  </div>
+                </div>
+                <p className="text-text-secondary">{comment.text}</p>
+              </div>
+            ))}
+          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };

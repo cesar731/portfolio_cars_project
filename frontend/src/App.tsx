@@ -33,7 +33,7 @@ function App() {
         <CartProvider>
           <div className="flex flex-col min-h-screen bg-gray-50">
             <Header />
-            <main className="flex-grow ">
+            <main className="flex-grow  ">
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />

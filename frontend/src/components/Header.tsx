@@ -64,20 +64,37 @@ const Header = () => {
               </button>
 
               {/* Menú desplegable */}
-              <div className="absolute right-0 mt-2 w-48 bg-dark-light border border-border rounded-lg shadow-lg z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                <Link
-                  to="/profile"
-                  className="block px-4 py-2 text-text hover:bg-primary/10 transition-colors"
-                >
-                  Mi Perfil
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 text-red-400 hover:bg-red-500/10 transition-colors"
-                >
-                  Cerrar Sesión
-                </button>
-              </div>
+<div className="absolute right-0 mt-2 w-48 bg-dark-light border border-border rounded-lg shadow-lg z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+  <Link
+    to="/profile"
+    className="block px-4 py-2 text-text hover:bg-primary/10 transition-colors"
+  >
+    Mi Perfil
+  </Link>
+  {/* ✅ ¡ENLACE CONDICIONAL AL PANEL! */}
+  {user?.role_id === 1 && (
+    <Link
+      to="/admin"
+      className="block px-4 py-2 text-text hover:bg-primary/10 transition-colors"
+    >
+      Panel de Administrador
+    </Link>
+  )}
+  {user?.role_id === 2 && (
+    <Link
+      to="/advisor"
+      className="block px-4 py-2 text-text hover:bg-primary/10 transition-colors"
+    >
+      Panel de Asesor
+    </Link>
+  )}
+  <button
+    onClick={handleLogout}
+    className="w-full text-left px-4 py-2 text-red-400 hover:bg-red-500/10 transition-colors border-t border-border/30 mt-1 pt-1"
+  >
+    Cerrar Sesión
+  </button>
+</div>
             </div>
           </>
         ) : (
