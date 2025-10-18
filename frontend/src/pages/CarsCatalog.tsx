@@ -88,14 +88,16 @@ const CarsCatalog = () => {
   return (
     <div className="min-h-screen bg-dark text-text">
       {/* Hero Section */}
-      <section className="relative h-[300px] md:h-[350px] bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1549073953-5d821c29b3e8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')" }}>
-        <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
-          <h1 className="text-5xl md:text-6xl font-light text-white mb-2">Catálogo de Autos</h1>
-          <p className="text-xl md:text-2xl text-gray-200 max-w-3xl text-center">
-            Explora vehículos de élite: desde clásicos legendarios hasta hypercars eléctricos del futuro.
-          </p>
-        </div>
-      </section>
+      <section className="relative h-[350px] md:h-[400px] bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1549073953-5d821c29b3e8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')" }}>
+  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent flex flex-col items-center justify-center text-center px-6">
+    <h1 className="text-4xl md:text-6xl font-thin text-white tracking-tight mb-4">
+      Colección Exclusiva de Automóviles
+    </h1>
+    <p className="text-lg md:text-xl text-gray-200 max-w-3xl leading-relaxed">
+      Donde la historia, la ingeniería y la pasión se funden en máquinas sobre ruedas. Descubre íconos del pasado y visiones del futuro.
+    </p>
+  </div>
+</section>
 
       {/* Filtros Avanzados */}
       <div className="container mx-auto px-6 py-8">
@@ -200,68 +202,69 @@ const CarsCatalog = () => {
           </Link>
         </div>
 
-        {/* Grid de Autos */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {cars.length > 0 ? (
-            cars.map((car) => (
-              <div key={car.id} className="group cursor-pointer">
-                <div className="relative overflow-hidden rounded-2xl shadow-card bg-dark-light border border-border h-full flex flex-col">
-                  <img 
-                    src={car.image_url?.[0] || 'https://via.placeholder.com/300x200?text=Auto+No+Disponible'} 
-                    alt={`${car.brand} ${car.model}`} 
-                    className="w-full h-56 md:h-64 object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div className="p-4 text-center bg-dark-light border-t border-border">
-                    <h3 className="font-bold text-text text-sm">{car.brand} {car.model}</h3>
-                    <p className="text-text-secondary text-xs mt-1">{car.year}</p>
-                  </div>
-                  <div className="p-4 bg-dark-light border-t border-border flex flex-col gap-2">
-                    <Link
-                      to={`/cars/${car.id}`}
-                      className="block w-full py-2 px-4 text-center text-sm bg-primary/10 text-primary border border-primary/30 rounded-lg hover:bg-primary/20 transition-colors font-medium"
-                    >
-                      Ver Detalles →
-                    </Link>
-                    <button
-                      onClick={
-                        selectedForComparison.includes(car.id)
-                          ? () => handleRemoveFromCompare(car.id)
-                          : () => handleAddToCompare(car.id)
-                      }
-                      disabled={selectedForComparison.length >= 3}
-                      className={`py-2 px-4 text-xs font-medium rounded-lg flex items-center justify-center gap-1 transition-colors ${
-                        selectedForComparison.includes(car.id)
-                          ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                          : 'bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20'
-                      }`}
-                      title={selectedForComparison.length >= 3 ? 'Máximo 3 autos' : 'Agregar a comparación'}
-                    >
-                      {selectedForComparison.includes(car.id) ? (
-                        <>
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                          Eliminar
-                        </>
-                      ) : (
-                        <>
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                          </svg>
-                          Comparar
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
+     {/* Grid de Autos */}
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+  {cars.length > 0 ? (
+    cars.map((car) => (
+      <div
+        key={car.id}
+        className="group cursor-pointer bg-dark-light rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-300 shadow-card hover:shadow-elevated"
+      >
+        <div className="relative h-60 md:h-72 overflow-hidden">
+          <img
+            src={car.image_url?.[0] || 'https://via.placeholder.com/600x300?text=Auto+Premium'}
+            alt={`${car.brand} ${car.model}`}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="absolute bottom-4 left-4 right-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="inline-block px-2 py-1 bg-primary/80 text-xs font-medium rounded">
+                  {car.year}
+                </span>
+                <h3 className="text-lg font-light mt-1">{car.brand}</h3>
+                <p className="text-sm opacity-90">{car.model}</p>
               </div>
-            ))
-          ) : (
-            <div className="col-span-full text-center py-12">
-              <p className="text-text-secondary">No hay autos disponibles con los filtros seleccionados.</p>
+              <span className="text-xl font-bold bg-black/50 px-3 py-1 rounded">
+                ${car.price.toLocaleString()}
+              </span>
             </div>
-          )}
+          </div>
         </div>
+        <div className="p-5">
+          <div className="flex gap-2">
+            <Link
+              to={`/cars/${car.id}`}
+              className="flex-1 py-2 px-3 text-center text-sm bg-primary text-text rounded-lg font-medium hover:bg-primary/90 transition-colors"
+            >
+              Ver
+            </Link>
+            <button
+              onClick={
+                selectedForComparison.includes(car.id)
+                  ? () => handleRemoveFromCompare(car.id)
+                  : () => handleAddToCompare(car.id)
+              }
+              disabled={selectedForComparison.length >= 3}
+              className={`flex-1 py-2 px-3 text-center text-sm rounded-lg font-medium transition-colors ${
+                selectedForComparison.includes(car.id)
+                  ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                  : 'bg-gray-700 text-text hover:bg-gray-600'
+              }`}
+            >
+              {selectedForComparison.includes(car.id) ? '✓ Seleccionado' : 'Comparar'}
+            </button>
+          </div>
+        </div>
+      </div>
+    ))
+  ) : (
+    <div className="col-span-full text-center py-12">
+      <p className="text-text-secondary">No hay autos disponibles con los filtros seleccionados.</p>
+    </div>
+  )}
+</div>
       </div>
 
       {/* Notificación flotante para móviles */}

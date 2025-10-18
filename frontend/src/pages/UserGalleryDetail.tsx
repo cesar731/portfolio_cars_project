@@ -1,7 +1,7 @@
 // frontend/src/pages/UserGalleryDetail.tsx
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getUserGalleryItem, likeGalleryItem } from '../services/userCarGalleryApi';
+import { getUserGalleryItem } from '../services/userCarGalleryApi';
 import { toast } from 'react-hot-toast';
 
 const UserGalleryDetail = () => {
@@ -9,6 +9,8 @@ const UserGalleryDetail = () => {
   const [item, setItem] = useState<any>(null);
   const [likes, setLikes] = useState(0);
   const [liked, setLiked] = useState(false);
+  const [comments, setComments] = useState<{ id: number; text: string; user: string; timestamp: string }[]>([]);
+  const [newComment, setNewComment] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,43 +19,40 @@ const UserGalleryDetail = () => {
         const data = await getUserGalleryItem(Number(id));
         setItem(data);
         setLikes(data.likes);
-        // Verificar si el usuario ya dio like (simulado por ahora)
-        // En producción, esto se haría con el usuario autenticado
-        setLiked(false); 
+        setLiked(false);
+
+        // Simular comentarios (como no hay backend, los generamos)
+        setComments([
+          { id: 1, text: "¡Increíble auto! ¿Dónde lo conseguiste?", user: "Carlos_Racing", timestamp: "2h" },
+          { id: 2, text: "Ese color es espectacular. ¿Es original?", user: "AutoFan99", timestamp: "5h" },
+        ]);
       } catch (error) {
         console.error('Error fetching gallery item:', error);
         navigate('/gallery');
       }
     };
-
     fetchItem();
   }, [id, navigate]);
 
-  const handleLike = async () => {
+  const handleLike = () => {
     if (!liked) {
-      try {
-        const response = await likeGalleryItem(Number(id));
-        setLikes(response.likes);
-        setLiked(true);
-      } catch (error) {
-        console.error('Error liking item:', error);
-      }
-    } else {
-      // En producción, aquí se desactivaría el like.
-      // Por simplicidad, lo dejamos como solo "like" sin deslike.
-      // Puedes implementar un toggle más adelante.
+      setLikes(likes + 1);
+      setLiked(true);
+      toast.success('¡Te gusta esta publicación!');
     }
   };
 
-  // ✅ ¡NUEVA FUNCIÓN! Para copiar el enlace al portapapeles
-  const handleShare = async () => {
-    const url = window.location.href;
-    try {
-      await navigator.clipboard.writeText(url);
-      toast.success('¡Enlace copiado al portapapeles!');
-    } catch (err) {
-      toast.error('Error al copiar el enlace.');
-    }
+  const handleAddComment = () => {
+    if (newComment.trim() === '') return;
+    const comment = {
+      id: comments.length + 1,
+      text: newComment,
+      user: "Tú", // En producción, sería el nombre del usuario logueado
+      timestamp: "Ahora",
+    };
+    setComments([comment, ...comments]);
+    setNewComment('');
+    toast.success('Comentario publicado');
   };
 
   if (!item) {
@@ -99,134 +98,141 @@ const UserGalleryDetail = () => {
       </section>
 
       {/* Main Content */}
-      <div className="container mx-auto px-6 py-12">
-        <div className="max-w-4xl mx-auto">
+      <div className="container mx-auto px-6 py-8">
+        <div className="max-w-2xl mx-auto">
           {/* Autor y Fecha */}
-          <div className="flex items-center justify-between mb-8 border-b border-border pb-6">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center text-sm font-bold text-text-secondary">
-                {item.user?.username?.charAt(0).toUpperCase() || '?'}
-              </div>
-              <div>
-                <p className="font-medium text-white">{item.user?.username || 'Usuario anónimo'}</p>
-                <p className="text-text-secondary text-sm">{createdAt}</p>
-              </div>
+          <div className="flex items-start gap-4 mb-6 p-4 bg-dark-light rounded-xl border border-border">
+            <div className="w-12 h-12 bg-gradient-to-br from-primary to-blue-500 rounded-full flex items-center justify-center text-sm font-bold text-white">
+              {item.user?.username?.charAt(0).toUpperCase() || '?'}
             </div>
-
-            {/* Like Button */}
-            <button
-              onClick={handleLike}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-colors ${
-                liked ? 'text-red-500' : 'text-text-secondary hover:text-red-500'
-              }`}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${liked ? 'fill-current' : ''}`} viewBox="0 0 20 20" fill="currentColor">
-                <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM10 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM14 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6z" />
-              </svg>
-              <span className="font-medium">{likes} likes</span>
-            </button>
+            <div className="flex-1">
+              <div className="flex items-baseline gap-2">
+                <h3 className="font-bold text-white">{item.user?.username || 'Usuario anónimo'}</h3>
+                <span className="text-text-secondary text-sm">@{item.user?.username?.toLowerCase() || 'usuario'}</span>
+              </div>
+              <p className="text-text-secondary text-sm">{createdAt}</p>
+            </div>
           </div>
 
           {/* Especificaciones Técnicas (SOLO SI ES UN AUTO) */}
           {item.is_vehicle && (
-            <div className="bg-dark-light p-8 rounded-xl border border-border mb-8">
-              <h2 className="text-2xl font-bold text-white mb-6">Especificaciones Técnicas</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {item.brand && (
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Marca</span>
-                    <span className="text-white font-bold">{item.brand}</span>
-                  </div>
-                )}
-                {item.model && (
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Modelo</span>
-                    <span className="text-white font-bold">{item.model}</span>
-                  </div>
-                )}
-                {item.year && (
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Año</span>
-                    <span className="text-white font-bold">{item.year}</span>
-                  </div>
-                )}
-                {item.fuel_type && (
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Combustible</span>
-                    <span className="text-white font-bold">{item.fuel_type}</span>
-                  </div>
-                )}
-                {item.mileage && (
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Kilometraje</span>
-                    <span className="text-white font-bold">{item.mileage.toLocaleString()} km</span>
-                  </div>
-                )}
-                {item.engine_spec && (
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Motor</span>
-                    <span className="text-white font-bold">{item.engine_spec}</span>
-                  </div>
-                )}
-                {item.horsepower && (
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Potencia</span>
-                    <span className="text-white font-bold">{item.horsepower} HP</span>
-                  </div>
-                )}
-                {item.top_speed_kmh && (
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Velocidad Máxima</span>
-                    <span className="text-white font-bold">{item.top_speed_kmh} km/h</span>
-                  </div>
-                )}
+            <div className="bg-dark-light p-6 rounded-xl border border-border mb-6">
+              <h2 className="text-xl font-bold text-white mb-4">Especificaciones Técnicas</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                {item.brand && <SpecRow label="Marca" value={item.brand} />}
+                {item.model && <SpecRow label="Modelo" value={item.model} />}
+                {item.year && <SpecRow label="Año" value={item.year.toString()} />}
+                {item.fuel_type && <SpecRow label="Combustible" value={item.fuel_type} />}
+                {item.mileage && <SpecRow label="Kilometraje" value={`${item.mileage.toLocaleString()} km`} />}
+                {item.engine_spec && <SpecRow label="Motor" value={item.engine_spec} />}
+                {item.horsepower && <SpecRow label="Potencia" value={`${item.horsepower} HP`} />}
+                {item.top_speed_kmh && <SpecRow label="Velocidad Máxima" value={`${item.top_speed_kmh} km/h`} />}
               </div>
             </div>
           )}
 
-          {/* Descripción General (siempre visible) */}
-          {item.description && !item.is_vehicle && (
-            <div className="bg-dark-light p-8 rounded-xl border border-border mb-8">
-              <h3 className="text-xl font-semibold text-white mb-4">Descripción</h3>
-              <p className="text-text-secondary leading-relaxed">{item.description}</p>
+          {/* Sección de Interacción (Like + Comentar) */}
+          <div className="flex items-center justify-between py-3 border-y border-border my-6">
+            <button
+              onClick={handleLike}
+              className={`flex items-center space-x-2 group`}
+            >
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className={`h-6 w-6 ${liked ? 'text-red-500 fill-current' : 'text-text-secondary group-hover:text-red-500'}`} 
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+              <span className="font-medium">{likes}</span>
+            </button>
+
+            {/* ✅ ¡BOTÓN CAMBIADO A COMENTAR! */}
+            <button className="flex items-center space-x-2 text-text-secondary hover:text-primary group">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 group-hover:text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              <span className="font-medium">{comments.length}</span>
+            </button>
+          </div>
+
+          {/* ✅ ¡NUEVA SECCIÓN DE COMENTARIOS! */}
+          <div className="space-y-6 mt-8">
+            <h3 className="text-xl font-bold text-text">Comentarios</h3>
+
+            {/* Formulario para nuevo comentario */}
+            <div className="flex gap-3">
+              <div className="w-10 h-10 bg-gray-700 rounded-full flex-shrink-0"></div>
+              <div className="flex-1">
+                <textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Escribe un comentario..."
+                  className="w-full bg-dark-light border border-border rounded-2xl px-4 py-3 text-text placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                  rows={2}
+                />
+                <div className="flex justify-end mt-2">
+                  <button
+                    onClick={handleAddComment}
+                    disabled={!newComment.trim()}
+                    className="px-4 py-2 bg-primary text-text rounded-full text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Comentar
+                  </button>
+                </div>
+              </div>
             </div>
-          )}
+
+            {/* Lista de comentarios */}
+            <div className="space-y-5">
+              {comments.map((comment) => (
+                <div key={comment.id} className="flex gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-teal-500 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold text-sm">
+                    {comment.user.charAt(0)}
+                  </div>
+                  <div className="flex-1">
+                    <div className="bg-dark-light rounded-2xl p-4 border border-border">
+                      <div className="flex items-baseline gap-2 mb-1">
+                        <span className="font-bold text-white">{comment.user}</span>
+                        <span className="text-text-secondary text-sm">@{comment.user.toLowerCase()}</span>
+                        <span className="text-text-secondary text-sm">·</span>
+                        <span className="text-text-secondary text-sm">{comment.timestamp}</span>
+                      </div>
+                      <p className="text-text">{comment.text}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
           {/* Acciones */}
-          <div className="flex justify-between mt-8 pt-8 border-t border-border">
+          <div className="flex justify-between mt-12 pt-6 border-t border-border">
             <Link
               to="/gallery"
               className="px-6 py-3 border border-text-secondary text-text-secondary hover:bg-text-secondary/10 rounded-lg transition-colors"
             >
               ← Volver a la Galería
             </Link>
-            <div className="flex gap-4">
-              {/* ✅ ¡BOTÓN DE COMPARTIR FUNCIONAL! */}
-              <button
-                onClick={handleShare}
-                className="px-6 py-3 bg-primary text-text rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                </svg>
-                Compartir
-              </button>
-              {/* ✅ ¡BOTÓN PARA PUBLICAR OTRO AUTO! */}
-              <Link
-                to="/gallery/new"
-                className="px-6 py-3 bg-green-600 text-text rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Publicar Automovil
-              </Link>
-            </div>
+            <Link
+              to="/gallery/new"
+              className="px-6 py-3 bg-green-600 text-text rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+            >
+              Publicar Automóvil
+            </Link>
           </div>
         </div>
       </div>
     </div>
   );
 };
+
+// Componente reutilizable para las filas de especificaciones
+const SpecRow = ({ label, value }: { label: string; value: string }) => (
+  <div className="flex justify-between">
+    <span className="text-text-secondary">{label}</span>
+    <span className="text-white font-medium">{value}</span>
+  </div>
+);
 
 export default UserGalleryDetail;

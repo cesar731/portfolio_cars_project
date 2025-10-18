@@ -1,7 +1,7 @@
 // frontend/src/pages/CarDetail.tsx
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import  api  from '../services/api';
+import api from '../services/api';
 
 const CarDetail = () => {
   const { id } = useParams();
@@ -25,7 +25,6 @@ const CarDetail = () => {
         setLoading(false);
       }
     };
-
     fetchCar();
   }, [id, navigate]);
 
@@ -56,6 +55,62 @@ const CarDetail = () => {
     );
   }
 
+  // Velocímetro interactivo
+  const Speedometer = ({ value }: { value: number }) => {
+    const [animatedSpeed, setAnimatedSpeed] = useState(0);
+    const maxSpeed = 300;
+    const radius = 90;
+    const strokeWidth = 10;
+    const normalizedRadius = radius - strokeWidth / 2;
+    const circumference = normalizedRadius * 2 * Math.PI;
+    const strokeDashoffset = circumference - (animatedSpeed / maxSpeed) * circumference;
+
+    useEffect(() => {
+      const duration = 1500;
+      const frames = 60;
+      const increment = value / frames;
+      let current = 0;
+      const intervalId = setInterval(() => {
+        current += increment;
+        if (current >= value) {
+          setAnimatedSpeed(value);
+          clearInterval(intervalId);
+        } else {
+          setAnimatedSpeed(current);
+        }
+      }, duration / frames);
+      return () => clearInterval(intervalId);
+    }, [value]);
+
+    return (
+      <div className="relative flex flex-col items-center">
+        <svg height={200} width={200} className="transform -rotate-90">
+          <circle
+            cx={100}
+            cy={100}
+            r={normalizedRadius}
+            fill="#1a1a1a"
+            stroke="#333"
+            strokeWidth={strokeWidth}
+          />
+          <circle
+            cx={100}
+            cy={100}
+            r={normalizedRadius}
+            stroke="#0066cc"
+            strokeWidth={strokeWidth}
+            strokeDasharray={circumference + ' ' + circumference}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+          />
+        </svg>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-2xl font-bold">
+          {Math.round(animatedSpeed)} km/h
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-dark text-text">
       {/* Header */}
@@ -73,7 +128,16 @@ const CarDetail = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative h-[400px] bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${car.image_url?.[0] || 'https://via.placeholder.com/1200x600?text=Auto+No+Disponible'})` }}>
+      <section 
+        className="relative h-[400px] bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `url(${
+            car.image_url && car.image_url.length > 0
+              ? car.image_url[0]
+              : 'https://via.placeholder.com/1200x600?text=Auto+No+Disponible'
+          })`
+        }}
+      >
         <div className="absolute inset-0 bg-black/60 flex items-end p-8">
           <div>
             <h1 className="text-4xl md:text-5xl font-bold text-white">{car.brand} {car.model}</h1>
@@ -84,6 +148,7 @@ const CarDetail = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-12">
+        {/* Descripción */}
         <div className="mb-12">
           <h2 className="text-2xl font-bold text-text mb-4">Descripción</h2>
           <p className="text-text-secondary text-lg leading-relaxed">{car.description}</p>
@@ -92,46 +157,50 @@ const CarDetail = () => {
         {/* Especificaciones Técnicas */}
         <div className="bg-dark-light rounded-2xl shadow-card border border-border p-8 mb-12">
           <h2 className="text-2xl font-bold text-text mb-6">Especificaciones Técnicas</h2>
+
+          {/* Velocímetro */}
+          <div className="flex flex-col items-center mb-8">
+            <Speedometer value={car.top_speed || 0} />
+            <span className="text-text-secondary mt-2">Velocidad máxima</span>
+          </div>
+
+          {/* Lista de especificaciones */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="border-b border-border/20 pb-4">
               <span className="text-text-secondary text-sm block">Potencia</span>
-              <span className="text-white font-bold text-lg">{car.horsepower} HP</span>
+              <span className="text-white font-bold">{car.horsepower} HP</span>
             </div>
             <div className="border-b border-border/20 pb-4">
               <span className="text-text-secondary text-sm block">Aceleración 0-100 km/h</span>
-              <span className="text-white font-bold text-lg">{car.acceleration}</span>
-            </div>
-            <div className="border-b border-border/20 pb-4">
-              <span className="text-text-secondary text-sm block">Velocidad Máxima</span>
-              <span className="text-white font-bold text-lg">{car.top_speed} km/h</span>
+              <span className="text-white font-bold">{car.acceleration}</span>
             </div>
             <div className="border-b border-border/20 pb-4">
               <span className="text-text-secondary text-sm block">Motor</span>
-              <span className="text-white font-bold text-lg">{car.engine}</span>
+              <span className="text-white font-bold">{car.engine}</span>
             </div>
             <div className="border-b border-border/20 pb-4">
               <span className="text-text-secondary text-sm block">Transmisión</span>
-              <span className="text-white font-bold text-lg">{car.transmission}</span>
+              <span className="text-white font-bold">{car.transmission}</span>
             </div>
             <div className="border-b border-border/20 pb-4">
               <span className="text-text-secondary text-sm block">Tracción</span>
-              <span className="text-white font-bold text-lg">{car.drive_train}</span>
+              <span className="text-white font-bold">{car.drive_train}</span>
             </div>
             <div className="border-b border-border/20 pb-4">
               <span className="text-text-secondary text-sm block">Peso</span>
-              <span className="text-white font-bold text-lg">{car.weight}</span>
+              <span className="text-white font-bold">{car.weight}</span>
             </div>
             <div className="border-b border-border/20 pb-4">
               <span className="text-text-secondary text-sm block">Combustible</span>
-              <span className="text-white font-bold text-lg">{car.fuel_type}</span>
+              <span className="text-white font-bold">{car.fuel_type}</span>
             </div>
             <div className="border-b border-border/20 pb-4">
               <span className="text-text-secondary text-sm block">Año de Producción</span>
-              <span className="text-white font-bold text-lg">{car.production_years}</span>
+              <span className="text-white font-bold">{car.production_years}</span>
             </div>
             <div className="border-b border-border/20 pb-4">
               <span className="text-text-secondary text-sm block">Precio Estimado</span>
-              <span className="text-primary font-bold text-lg">{car.price}</span>
+              <span className="text-primary font-bold">${car.price.toLocaleString()}</span>
             </div>
           </div>
         </div>
@@ -142,25 +211,16 @@ const CarDetail = () => {
             onClick={() => navigate('/compare')}
             className="py-3 px-8 bg-primary text-text rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
-            </svg>
             Comparar este Auto
           </button>
-
           <button
             onClick={() => navigate('/cars')}
             className="py-3 px-8 bg-dark border border-primary text-primary rounded-lg font-medium hover:bg-primary/10 transition-colors flex items-center justify-center gap-2"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18z" />
-            </svg>
             Ver Otros Autos
           </button>
         </div>
       </main>
-
-     
     </div>
   );
 };

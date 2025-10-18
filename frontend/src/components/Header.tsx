@@ -14,7 +14,7 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-dark-light border-b border-border px-6 py-4 flex items-center justify-between">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-dark-light border-b border-border px-6 py-4 flex items-center justify-between">
       <div className="flex items-center gap-8">
         <Link to="/" className="text-xl font-bold text-text hover:text-primary transition-colors">
           Viaggio Velogge
