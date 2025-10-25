@@ -1,5 +1,6 @@
 // frontend/src/App.tsx
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -27,13 +28,42 @@ import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 
 function App() {
+  // Estado para controlar la visibilidad del Header
+  const [showHeader, setShowHeader] = useState(false);
+
+  // Efecto para detectar el scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      // Obtenemos la altura de la primera sección (Hero)
+      // Esta es una estimación basada en la altura de pantalla (h-screen)
+      // Puedes ajustar este valor si tu Hero tiene una altura fija diferente.
+      const heroSectionHeight = window.innerHeight; // Asume que la Hero ocupa toda la pantalla
+
+      // Si el usuario ha hecho scroll más allá de la altura de la Hero, muestra el Header
+      if (window.scrollY > heroSectionHeight * 0.5) { // ✅ ¡Ajustado! Mostrarlo cuando haya bajado la mitad de la pantalla
+        setShowHeader(true);
+      } else {
+        setShowHeader(false);
+      }
+    };
+
+    // Añadir el listener al evento scroll
+    window.addEventListener('scroll', handleScroll);
+
+    // Limpiar el listener cuando el componente se desmonte
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
   return (
     <Router>
       <AuthProvider>
         <CartProvider>
           <div className="flex flex-col min-h-screen bg-gray-50">
-            <Header />
-            <main className="flex-grow  ">
+            {/* Renderizar el Header condicionalmente */}
+            {showHeader && <Header />}
+            <main className="flex-grow">
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />

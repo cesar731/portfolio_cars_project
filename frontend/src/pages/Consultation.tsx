@@ -53,7 +53,7 @@ const Consultation = () => {
   };
 
   return (
-    <div className="min-h-screen bg-dark text-text">br br br br br br br br br br
+    <div className="min-h-screen bg-dark text-text">
       <div className="container mx-auto px-6 py-12 max-w-3xl">
         <h1 className="text-4xl font-light text-white mb-8">Solicitar Asesoría</h1>
         <p className="text-text-secondary text-lg mb-12">

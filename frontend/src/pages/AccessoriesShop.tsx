@@ -1,8 +1,7 @@
 // frontend/src/pages/AccessoriesShop.tsx
-
 import { useState, useEffect } from 'react';
 import { Accessory } from '../types';
-import  api  from '../services/api';
+import api from '../services/api';
 import { Link } from 'react-router-dom';
 
 const AccessoriesShop = () => {
@@ -12,27 +11,26 @@ const AccessoriesShop = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [loading, setLoading] = useState(true);
 
+  // Categorías disponibles
   const categories = ['all', 'Rines', 'Escapes', 'Amortiguadores', 'Luces', 'Interior'];
 
   useEffect(() => {
     const fetchAccessories = async () => {
       try {
         const response = await api.get<Accessory[]>('/accessories');
-        setAccessories(response.data);     
-        setFilteredAccessories(response.data); 
+        setAccessories(response.data);
+        setFilteredAccessories(response.data);
       } catch (error) {
         console.error('Error fetching accessories:', error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchAccessories();
   }, []);
 
   useEffect(() => {
     let result = accessories;
-
     if (searchTerm) {
       result = result.filter(
         (acc) =>
@@ -40,11 +38,9 @@ const AccessoriesShop = () => {
           acc.description?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-
     if (selectedCategory !== 'all') {
       result = result.filter((acc) => acc.category === selectedCategory);
     }
-
     setFilteredAccessories(result);
   }, [searchTerm, selectedCategory, accessories]);
 
@@ -61,17 +57,27 @@ const AccessoriesShop = () => {
 
   return (
     <div className="min-h-screen bg-dark text-text">
-      {/* Hero Section */}
-      <section className="relative h-[300px] md:h-[350px] bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1557598853-d41249562155?auto=format&fit=crop&w=1920&q=80')" }}>
-        <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
-          <h1 className="text-5xl md:text-6xl font-light text-white mb-2">Tienda de Accesorios</h1>
-          <p className="text-xl md:text-2xl text-gray-200 max-w-3xl text-center">
+      {/* HERO SECTION - Ocupa toda la pantalla */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Imagen de fondo */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1557598853-d41249562155?auto=format&fit=crop&w=1920&q=80')" }}
+        >
+          <div className="absolute inset-0 bg-black/70"></div> {/* Overlay oscuro */}
+        </div>
+        {/* Contenido centrado */}
+        <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
+          <h1 className="text-5xl md:text-6xl font-light text-white mb-4">
+            Tienda de Accesorios
+          </h1>
+          <p className="text-xl md:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto leading-relaxed">
             Encuentra los accesorios perfectos para tu vehículo: rines, escapes, amortiguadores y más.
           </p>
         </div>
       </section>
 
-      {/* Filtros */}
+      {/* Filtros Avanzados */}
       <div className="container mx-auto px-6 py-8">
         <div className="flex flex-col md:flex-row gap-6 mb-8">
           <div className="flex-1">
@@ -135,8 +141,6 @@ const AccessoriesShop = () => {
           )}
         </div>
       </div>
-
-
     </div>
   );
 };

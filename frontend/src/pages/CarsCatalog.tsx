@@ -7,7 +7,6 @@ const CarsCatalog = () => {
   const [selectedForComparison, setSelectedForComparison] = useState<number[]>([]);
   const [cars, setCars] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
   // Estados para los filtros
   const [filters, setFilters] = useState({
     brand: '',
@@ -87,17 +86,28 @@ const CarsCatalog = () => {
 
   return (
     <div className="min-h-screen bg-dark text-text">
-      {/* Hero Section */}
-      <section className="relative h-[350px] md:h-[400px] bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1549073953-5d821c29b3e8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')" }}>
-  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent flex flex-col items-center justify-center text-center px-6">
-    <h1 className="text-4xl md:text-6xl font-thin text-white tracking-tight mb-4">
-      Colección Exclusiva de Automóviles
-    </h1>
-    <p className="text-lg md:text-xl text-gray-200 max-w-3xl leading-relaxed">
-      Donde la historia, la ingeniería y la pasión se funden en máquinas sobre ruedas. Descubre íconos del pasado y visiones del futuro.
-    </p>
-  </div>
-</section>
+      {/* HERO SECTION - Ocupa toda la pantalla */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Imagen de fondo */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1549073953-5d821c29b3e8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')" }}
+        >
+          <div className="absolute inset-0 bg-black/60"></div> {/* Overlay oscuro */}
+        </div>
+        {/* Contenido centrado */}
+        <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
+          <h1 className="text-4xl md:text-6xl font-thin text-white leading-none tracking-tight mb-4">
+            Colección Exclusiva de Automóviles
+          </h1>
+          <p className="text-lg md:text-xl text-gray-200 mb-6 max-w-3xl mx-auto leading-relaxed">
+            Donde la historia, la ingeniería y la pasión se funden en máquinas sobre ruedas.
+          </p>
+          <p className="text-lg md:text-xl text-gray-200 mb-12 max-w-3xl mx-auto leading-relaxed">
+            Descubre íconos del pasado y visiones del futuro.
+          </p>
+        </div>
+      </section>
 
       {/* Filtros Avanzados */}
       <div className="container mx-auto px-6 py-8">
@@ -191,7 +201,6 @@ const CarsCatalog = () => {
             </div>
           </div>
         </div>
-
         {/* Botón Comparar (opcional en móvil) */}
         <div className="md:hidden mb-6">
           <Link
@@ -201,7 +210,6 @@ const CarsCatalog = () => {
             📊 Comparar Autos ({selectedForComparison.length})
           </Link>
         </div>
-
      {/* Grid de Autos */}
 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8">
   {cars.length > 0 ? (
@@ -266,7 +274,6 @@ const CarsCatalog = () => {
   )}
 </div>
       </div>
-
       {/* Notificación flotante para móviles */}
       {selectedForComparison.length > 0 && (
         <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-lg z-50 flex items-center gap-3">
@@ -283,6 +290,6 @@ const CarsCatalog = () => {
       )}
     </div>
   );
-}; 
+};
 
 export default CarsCatalog;
