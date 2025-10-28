@@ -98,7 +98,7 @@ const AccessoryDetail = () => {
     }
 
     // Llamada a la función del contexto CartContext
-    addToCart(accessory.id, quantity); // ✅ ¡CORREGIDO! Pasamos la cantidad
+    addToCart(accessory.id); // ✅ ¡CORREGIDO! Pasamos la cantidad
     toast.success(`¡${quantity} unidad(es) de ${accessory.name} agregadas al carrito!`);
     setQuantity(1); // Reiniciar la cantidad después de agregar
   };

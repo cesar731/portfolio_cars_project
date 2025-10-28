@@ -62,7 +62,7 @@ const AccessoriesShop = () => {
         {/* Imagen de fondo */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1557598853-d41249562155?auto=format&fit=crop&w=1920&q=80')" }}
+          style={{ backgroundImage: "url('../public/images/seccion_accesory_car3.jpg')" }}
         >
           <div className="absolute inset-0 bg-black/70"></div> {/* Overlay oscuro */}
         </div>

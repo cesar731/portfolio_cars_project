@@ -1,13 +1,14 @@
 // frontend/src/types/index.ts
 
+
 export interface User {
   id: number;
   username: string;
   email: string;
   role_id: number;
-  is_active: boolean; // ✅ ¡AÑADIDO! El backend lo envía siempre
+  is_active: boolean;
   created_at: string;
-  updated_at?: string;           // ✅ Opcional, si lo usas
+  updated_at?: string;           
   avatar_url?: string | null; 
 }
 
@@ -62,8 +63,8 @@ export interface Consultation {
   answered_at: string | null;
   created_at: string;
   updated_at: string;
-  is_read?: boolean; // ✅ ¡AÑADIDO! Para las notificaciones
-  advisor?: User;    // ✅ ¡AÑADIDO! Para mostrar quién respondió
+  is_read?: boolean; 
+  advisor?: User;    
   user?: User;  
 }
 
@@ -86,6 +87,7 @@ export interface UserCarGalleryItem {
   engine_spec?: string;
   horsepower?: number;
   top_speed_kmh?: number;
+  user?: User; 
 }
 
 export interface CartItem {

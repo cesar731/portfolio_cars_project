@@ -86,27 +86,28 @@ const CarsCatalog = () => {
 
   return (
     <div className="min-h-screen bg-dark text-text">
-      {/* HERO SECTION - Ocupa toda la pantalla */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Imagen de fondo */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1549073953-5d821c29b3e8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')" }}
-        >
-          <div className="absolute inset-0 bg-black/60"></div> {/* Overlay oscuro */}
-        </div>
-        {/* Contenido centrado */}
-        <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
-          <h1 className="text-4xl md:text-6xl font-thin text-white leading-none tracking-tight mb-4">
-            Colección Exclusiva de Automóviles
-          </h1>
-          <p className="text-lg md:text-xl text-gray-200 mb-6 max-w-3xl mx-auto leading-relaxed">
-            Donde la historia, la ingeniería y la pasión se funden en máquinas sobre ruedas.
-          </p>
-          <p className="text-lg md:text-xl text-gray-200 mb-12 max-w-3xl mx-auto leading-relaxed">
-            Descubre íconos del pasado y visiones del futuro.
-          </p>
-        </div>
+     {/* HERO SECTION - Texto superpuesto sobre imagen de fondo */}
+<section className="relative h-screen flex items-center justify-center overflow-hidden">
+  {/* Imagen de fondo */}
+  <div 
+    className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+    style={{ backgroundImage: "url('../public/images/seccion_catalog_car2.jpg')" }}
+  >
+    <div className="absolute inset-0 bg-black/60"></div> {/* Overlay oscuro */}
+  </div>
+  {/* Contenido centrado (superpuesto) */}
+  <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
+    <h1 className="text-4xl md:text-6xl font-thin text-white leading-none tracking-tight mb-6">
+      Colección Exclusiva de Automóviles
+    </h1>
+    <p className="text-lg md:text-xl text-gray-200 mb-4 max-w-3xl mx-auto leading-relaxed">
+      Donde la historia, la ingeniería y la pasión se funden en máquinas sobre ruedas.
+    </p>
+    <p className="text-lg md:text-xl text-gray-200 mb-12 max-w-3xl mx-auto leading-relaxed">
+      Descubre íconos del pasado y visiones del futuro.
+    </p>
+  </div>
+
       </section>
 
       {/* Filtros Avanzados */}

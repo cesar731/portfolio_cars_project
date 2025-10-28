@@ -1,436 +1,387 @@
-// frontend/src/pages/Cart.tsx
-import { useState, useEffect } from 'react';
+// frontend/src/pages/AccessoryDetail.tsx
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { Link, useNavigate } from 'react-router-dom';
-import { getCartItems, removeFromCart } from '../services/cartApi';
-import { CartItem } from '../types';
 import { toast } from 'react-hot-toast';
+import api from '../services/api';
 
-const Cart = () => {
-  const { user } = useAuth();
-  const { cartItems, clearCart } = useCart();
+const AccessoryDetail = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { addToCart } = useCart();
+  const [accessory, setAccessory] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
-
-  // Modal
-  const [showModal, setShowModal] = useState(false);
-  const [step, setStep] = useState<'personal' | 'card'>('personal');
-
-  // Datos personales
-  const [name, setName] = useState('');
-  const [address, setAddress] = useState('');
-  const [municipality, setMunicipality] = useState('');
-  const [country, setCountry] = useState('');
-  const [postalCode, setPostalCode] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-
-  // Datos de tarjeta
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardName, setCardName] = useState('');
-  const [expiry, setExpiry] = useState('');
-  const [cvv, setCvv] = useState('');
+  // Estado para la cantidad a agregar al carrito
+  const [quantity, setQuantity] = useState(1);
+  // Estado para los comentarios
+  const [comments, setComments] = useState<{ id: number; user: string; text: string; date: string; replies?: any[] }[]>([]);
+  // Estado para el nuevo comentario o respuesta
+  const [newComment, setNewComment] = useState('');
+  // Estado para manejar qué comentario está siendo respondido
+  const [replyingTo, setReplyingTo] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-    const fetchCart = async () => {
+    const fetchAccessory = async () => {
+      if (!id) {
+        navigate('/accessories');
+        return;
+      }
       try {
-        const items = await getCartItems(user.id);
-        // El contexto ya lo maneja
+        const response = await api.get(`/accessories/${id}`);
+        setAccessory(response.data);
+        // Simular comentarios (reemplaza esto con una llamada real a /comments cuando lo tengas)
+        setComments([
+          {
+            id: 1,
+            user: 'Carlos_Racing',
+            text: '¡Excelente calidad! Lo instalé en mi Porsche y quedó perfecto.',
+            date: 'hace 2 días',
+            replies: [
+              {
+                id: 101,
+                user: 'AleronShop',
+                text: '¡Gracias por tu comentario, Carlos! Nos alegra saber que te gustó.',
+                date: 'hace 1 día'
+              }
+            ]
+          },
+          {
+            id: 2,
+            user: 'AutoFan99',
+            text: '¿Es compatible con modelos anteriores al 2020?',
+            date: 'hace 5 días',
+            replies: []
+          },
+        ]);
       } catch (error) {
-        console.error('Error fetching cart:', error);
-        toast.error('Error al cargar el carrito.');
+        console.error('Error fetching accessory:', error);
+        navigate('/accessories');
       } finally {
         setLoading(false);
       }
     };
-    fetchCart();
-  }, [user, navigate]);
+    fetchAccessory();
+  }, [id, navigate]);
 
-  const handleRemoveFromCart = async (itemId: number) => {
+  const handleAddComment = () => {
+    if (!user) {
+      toast.error('Debes iniciar sesión para comentar.');
+      navigate('/login');
+      return;
+    }
+    if (!newComment.trim()) return;
+
+    const comment = {
+      id: comments.length + 1,
+      user: user.username,
+      text: newComment,
+      date: 'ahora',
+      replies: [],
+    };
+
+    setComments([comment, ...comments]);
+    setNewComment('');
+    toast.success('Comentario publicado.');
+  };
+
+  const handleAddToCart = () => {
+    if (!user) {
+      toast.error('Debes iniciar sesión para agregar productos al carrito.');
+      navigate('/login');
+      return;
+    }
+    if (quantity < 1 || quantity > accessory.stock) {
+      toast.error(`La cantidad debe estar entre 1 y ${accessory.stock}.`);
+      return;
+    }
+
+    // Llamada a la función del contexto CartContext
+    addToCart(accessory.id); // ✅ ¡CORREGIDO! Pasamos la cantidad
+    toast.success(`¡${quantity} unidad(es) de ${accessory.name} agregadas al carrito!`);
+    setQuantity(1); // Reiniciar la cantidad después de agregar
+  };
+
+  const handleReply = (commentId: number) => {
+    if (!user) {
+      toast.error('Debes iniciar sesión para responder.');
+      navigate('/login');
+      return;
+    }
+    setReplyingTo(commentId);
+  };
+
+  const handlePostReply = (parentCommentId: number) => {
     if (!user) return;
-    try {
-      await removeFromCart(user.id, itemId);
-      toast.success('Producto eliminado del carrito.');
-    } catch (error) {
-      console.error('Error removing from cart:', error);
-      toast.error('Error al eliminar el producto.');
-    }
-  };
+    if (!newComment.trim()) return;
 
-  const openModal = () => {
-    if (cartItems.length === 0) {
-      toast.error('Tu carrito está vacío.');
-      return;
-    }
-    setName(user?.username || '');
-    setEmail(user?.email || '');
-    setShowModal(true);
-    setStep('personal');
-  };
+    setComments(prev =>
+      prev.map(comment => {
+        if (comment.id === parentCommentId) {
+          return {
+            ...comment,
+            replies: [
+              ...(comment.replies || []),
+              {
+                id: (comment.replies?.length || 0) + 1,
+                user: user.username,
+                text: newComment,
+                date: 'ahora',
+              },
+            ],
+          };
+        }
+        return comment;
+      })
+    );
 
-  const handleNext = () => {
-    if (!name.trim() || !address.trim() || !municipality.trim() || !country.trim() || !postalCode.trim() || !email.trim() || !phone.trim()) {
-      toast.error('Por favor completa todos los campos.');
-      return;
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast.error('Por favor ingresa un correo válido.');
-      return;
-    }
-    setStep('card');
-  };
-
-  const handleBack = () => {
-    setStep('personal');
-  };
-
-  const cardType = (number: string): string => {
-    const num = number.replace(/\s+/g, '');
-    if (/^4/.test(num)) return 'Visa';
-    if (/^5[1-5]/.test(num) || /^2[2-7]/.test(num)) return 'Mastercard';
-    if (/^3[47]/.test(num)) return 'American Express';
-    if (/^6011|^6[45]/.test(num)) return 'Discover';
-    return 'Desconocida';
-  };
-
-  const handleCheckout = async () => {
-    if (!cardNumber || !cardName || !expiry || !cvv) {
-      toast.error('Por favor completa todos los campos de la tarjeta.');
-      return;
-    }
-    if (cardType(cardNumber) === 'Desconocida') {
-      toast.error('Tipo de tarjeta no soportada.');
-      return;
-    }
-
-    setCheckoutLoading(true);
-    try {
-      // Simular pago
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // Limpiar carrito
-      clearCart();
-
-      // Cerrar modal
-      setShowModal(false);
-
-      // Mostrar notificación de éxito
-      toast.success(
-        <>
-          <div className="text-center">
-            <div className="text-2xl">🎉 ¡Gracias por tu compra!</div>
-            <div className="mt-2 text-sm">
-              Tu pedido está en camino y la factura llegará a <strong>{email}</strong> en los próximos minutos.
-            </div>
-            <div className="mt-2 text-xs text-gray-300">
-              ¡Disfruta tu nueva experiencia automotriz!
-            </div>
-          </div>
-        </>,
-        { duration: 6000 }
-      );
-
-      // Redirigir a accesorios
-      setTimeout(() => navigate('/accessories'), 2500);
-    } catch (error) {
-      console.error('Error during checkout:', error);
-      toast.error('Error al procesar el pago. Inténtalo nuevamente.');
-    } finally {
-      setCheckoutLoading(false);
-    }
+    setNewComment('');
+    setReplyingTo(null);
+    toast.success('Respuesta publicada.');
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-dark text-text flex items-center justify-center">
+        <p className="text-text-secondary">Cargando accesorio...</p>
+      </div>
+    );
+  }
+
+  if (!accessory) {
+    return (
+      <div className="min-h-screen bg-dark text-text flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mb-4"></div>
-          <p className="text-text-secondary">Cargando carrito...</p>
+          <h2 className="text-xl text-red-400 mb-4">Accesorio no encontrado</h2>
+          <button
+            onClick={() => navigate('/accessories')}
+            className="px-6 py-3 bg-primary text-text rounded-lg hover:bg-primary/90"
+          >
+            Volver a la tienda
+          </button>
         </div>
       </div>
     );
   }
 
-  if (cartItems.length === 0) {
-    return (
-      <div className="min-h-screen bg-dark text-text flex flex-col items-center justify-center p-12">
-        <h2 className="text-2xl font-light text-text mb-4">Tu carrito está vacío</h2>
-        <Link to="/accessories" className="px-6 py-3 bg-primary text-text rounded-lg font-medium hover:bg-primary/90 transition-colors">
-          🛒 Ver Accesorios
-        </Link>
-      </div>
-    );
-  }
-
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.accessory?.price || 0) * item.quantity, 0);
-  const tax = subtotal * 0.19;
-  const total = subtotal + tax;
+  // Generar una lista de imágenes para la galería (simulación)
+  const galleryImages = [
+    accessory.image_url || 'https://via.placeholder.com/800x600?text=Accesorio+Principal',
+    'https://via.placeholder.com/800x600?text=Accesorio+Perspectiva+1',
+    'https://via.placeholder.com/800x600?text=Accesorio+Perspectiva+2',
+    'https://via.placeholder.com/800x600?text=Accesorio+Instalado',
+  ];
 
   return (
     <div className="min-h-screen bg-dark text-text">
+      {/* Header */}
+      <header className="bg-dark-light border-b border-border px-6 py-4">
+        <button
+          onClick={() => navigate('/accessories')}
+          className="text-primary hover:text-primary/80 flex items-center gap-2"
+        >
+          ← Volver a Accesorios
+        </button>
+      </header>
+
+      {/* Contenido principal */}
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-white mb-8">Carrito de compras</h1>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Lista de Productos */}
+          {/* Imagen Principal y Galería */}
           <div className="lg:col-span-2">
-            <div className="space-y-6">
-              {cartItems.map((item) => (
-                <div key={item.id} className="bg-dark-light rounded-lg border border-border p-4 flex items-center">
-                  <img
-                    src={item.accessory?.image_url || 'https://via.placeholder.com/100x100?text=Accesorio'}
-                    alt={item.accessory?.name || 'Accesorio'}
-                    className="w-24 h-24 object-cover rounded-md"
-                  />
-                  <div className="ml-4 flex-1">
-                    <h3 className="font-semibold text-text">{item.accessory?.name}</h3>
-                    <p className="text-text-secondary text-sm mt-1">
-                      ${item.accessory?.price?.toLocaleString()}
-                    </p>
-                    <button
-                      onClick={() => handleRemoveFromCart(item.id)}
-                      className="mt-3 text-red-400 hover:text-red-300 text-sm font-medium"
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-primary font-bold">
-                      ${(item.accessory?.price || 0) * item.quantity}
-                    </p>
-                  </div>
-                </div>
+            <div className="mb-6">
+              <img
+                src={accessory.image_url || 'https://via.placeholder.com/800x600?text=Accesorio'}
+                alt={accessory.name}
+                className="w-full max-h-96 object-cover rounded-lg border border-border"
+              />
+            </div>
+            {/* Mini Galería */}
+            <div className="flex space-x-2 overflow-x-auto pb-2">
+              {galleryImages.map((img, index) => (
+                <img
+                  key={index}
+                  src={img}
+                  alt={`Perspectiva ${index + 1}`}
+                  className="w-20 h-20 object-cover rounded-lg border border-border cursor-pointer hover:border-primary transition-colors"
+                />
               ))}
             </div>
           </div>
 
-          {/* Resumen */}
+          {/* Información del producto */}
           <div className="lg:col-span-1">
-            <div className="bg-dark-light rounded-lg border border-border p-6 sticky top-24">
-              <h2 className="text-xl font-bold text-text mb-4">Resumen de la compra</h2>
-              <div className="space-y-3 mb-6">
-                <div className="flex justify-between">
-                  <span className="text-text-secondary">Subtotal</span>
-                  <span className="text-white">${subtotal.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-text-secondary">IVA (19%)</span>
-                  <span className="text-white">${tax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                </div>
-                <div className="border-t border-border pt-3 flex justify-between text-lg font-bold">
-                  <span>Total</span>
-                  <span className="text-primary">${total.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                </div>
-              </div>
-
-              <button
-                onClick={openModal}
-                className="w-full mt-4 py-3 bg-primary text-text rounded-lg font-medium hover:bg-primary/90 transition-colors"
-              >
-                Comprar ahora
-              </button>
-
-              <Link
-                to="/accessories"
-                className="block w-full mt-3 py-2 text-center text-primary hover:text-primary/80 font-medium"
-              >
-                ← Seguir comprando
-              </Link>
+            <h1 className="text-2xl font-bold text-text">{accessory.name}</h1>
+            <p className="text-text-secondary mt-1">{accessory.category || '—'}</p>
+            <div className="mt-6">
+              <p className="text-3xl font-bold text-primary">${accessory.price.toLocaleString()}</p>
             </div>
+            <div className="mt-6 space-y-3">
+              <div className="flex justify-between">
+                <span className="text-text-secondary">Stock disponible</span>
+                <span className={accessory.stock > 0 ? 'text-green-400' : 'text-red-400'}>
+                  {accessory.stock > 0 ? `${accessory.stock} unidades` : 'Agotado'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-text-secondary">Estado</span>
+                <span className={accessory.is_published ? 'text-green-400' : 'text-red-400'}>
+                  {accessory.is_published ? 'Disponible' : 'No disponible'}
+                </span>
+              </div>
+            </div>
+            <div className="mt-8">
+              <h2 className="text-lg font-semibold text-text mb-2">Descripción</h2>
+              <p className="text-text-secondary">{accessory.description || 'Sin descripción.'}</p>
+            </div>
+
+            {/* Sección de Cantidad y Botones */}
+            <div className="mt-8">
+              <label className="block text-text-secondary mb-2">Cantidad:</label>
+              <div className="flex items-center gap-2 mb-4">
+                <button
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="w-8 h-8 flex items-center justify-center bg-dark border border-border rounded-md text-text hover:bg-gray-700"
+                >
+                  -
+                </button>
+                <input
+                  type="number"
+                  value={quantity}
+                  onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                  min="1"
+                  max={accessory.stock}
+                  className="w-12 text-center bg-dark border border-border rounded-md text-text focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <button
+                  onClick={() => setQuantity(Math.min(accessory.stock, quantity + 1))}
+                  className="w-8 h-8 flex items-center justify-center bg-dark border border-border rounded-md text-text hover:bg-gray-700"
+                >
+                  +
+                </button>
+              </div>
+              <button
+                disabled={accessory.stock <= 0}
+                onClick={handleAddToCart}
+                className={`w-full py-3 rounded-lg font-medium ${
+                  accessory.stock > 0
+                    ? 'bg-primary text-text hover:bg-primary/90'
+                    : 'bg-gray-600 text-white cursor-not-allowed'
+                }`}
+              >
+                {accessory.stock > 0 ? 'Agregar al carrito' : 'Agotado'}
+              </button>
+              <button
+                onClick={() => navigate('/accessories')}
+                className="w-full mt-3 py-3 text-primary border border-primary rounded-lg hover:bg-primary/10"
+              >
+                Seguir comprando
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ✅ SECCIÓN DE COMENTARIOS */}
+        <div className="mt-16">
+          <h2 className="text-2xl font-bold text-text mb-6">Comentarios ({comments.length})</h2>
+
+          {/* Formulario para nuevo comentario */}
+          <div className="bg-dark-light p-4 rounded-lg mb-6">
+            <textarea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Escribe tu comentario..."
+              className="w-full bg-dark border border-border rounded-lg px-3 py-2 text-text placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
+              rows={3}
+            />
+            <div className="mt-3 flex justify-end">
+              <button
+                onClick={handleAddComment}
+                className="px-4 py-2 bg-primary text-text rounded-lg hover:bg-primary/90 text-sm font-medium"
+              >
+                Publicar
+              </button>
+            </div>
+          </div>
+
+          {/* Lista de comentarios */}
+          <div className="space-y-6">
+            {comments.map((comment) => (
+              <div key={comment.id} className="bg-dark-light p-4 rounded-lg border border-border/20">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    {comment.user.charAt(0)}
+                  </div>
+                  <div>
+                    <span className="font-medium text-text">{comment.user}</span>
+                    <span className="text-text-secondary text-sm ml-2">· {comment.date}</span>
+                  </div>
+                </div>
+                <p className="text-text-secondary mb-4">{comment.text}</p>
+
+                {/* Botón de Respuesta */}
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => handleReply(comment.id)}
+                    className="text-primary hover:text-primary/80 text-sm font-medium"
+                  >
+                    Responder
+                  </button>
+                </div>
+
+                {/* Campo de respuesta si se está respondiendo a este comentario */}
+                {replyingTo === comment.id && (
+                  <div className="mt-4 p-3 bg-dark/50 rounded-lg">
+                    <textarea
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      placeholder={`Responde a ${comment.user}...`}
+                      className="w-full bg-dark border border-border rounded-lg px-3 py-2 text-text placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
+                      rows={2}
+                    />
+                    <div className="mt-2 flex justify-end">
+                      <button
+                        onClick={() => setReplyingTo(null)}
+                        className="mr-2 px-3 py-1 text-text-secondary text-xs font-medium hover:text-text"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        onClick={() => handlePostReply(comment.id)}
+                        className="px-3 py-1 bg-primary text-text rounded-lg text-xs font-medium hover:bg-primary/90"
+                      >
+                        Enviar
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Respuestas */}
+                {comment.replies && comment.replies.length > 0 && (
+                  <div className="mt-4 pl-6 border-l-2 border-border/30 space-y-4">
+                    <h4 className="text-sm font-medium text-text">Respuestas ({comment.replies.length})</h4>
+                    {comment.replies.map((reply) => (
+                      <div key={reply.id} className="bg-dark/50 p-3 rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-teal-500 rounded-full flex items-center justify-center text-white font-bold text-xs">
+                            {reply.user.charAt(0)}
+                          </div>
+                          <span className="font-medium text-text">{reply.user}</span>
+                          <span className="text-text-secondary text-xs">· {reply.date}</span>
+                        </div>
+                        <p className="text-text-secondary">{reply.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </div>
-
-      {/* Modal de pago */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-dark-light rounded-xl border border-border w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-text">
-                  {step === 'personal' ? 'Información de envío' : 'Método de pago'}
-                </h2>
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="text-text-secondary hover:text-text"
-                >
-                  ✕
-                </button>
-              </div>
-
-              {step === 'personal' ? (
-                <div className="space-y-4">
-                  {/* Nombre completo */}
-                  <div>
-                    <label className="block text-sm text-text-secondary mb-1">Nombre completo *</label>
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="w-full px-3 py-2 bg-dark border border-border rounded text-text focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="Ej: Juan Pérez"
-                    />
-                  </div>
-                  {/* Dirección de envío */}
-                  <div>
-                    <label className="block text-sm text-text-secondary mb-1">Dirección de envío *</label>
-                    <textarea
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      rows={2}
-                      className="w-full px-3 py-2 bg-dark border border-border rounded text-text focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="Calle, número, ciudad, país"
-                    />
-                  </div>
-                  {/* Municipio y País en dos columnas */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-sm text-text-secondary mb-1">Municipio *</label>
-                      <input
-                        type="text"
-                        value={municipality}
-                        onChange={(e) => setMunicipality(e.target.value)}
-                        className="w-full px-3 py-2 bg-dark border border-border rounded text-text focus:outline-none focus:ring-2 focus:ring-primary"
-                        placeholder="Ej: Medellín"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm text-text-secondary mb-1">País *</label>
-                      <input
-                        type="text"
-                        value={country}
-                        onChange={(e) => setCountry(e.target.value)}
-                        className="w-full px-3 py-2 bg-dark border border-border rounded text-text focus:outline-none focus:ring-2 focus:ring-primary"
-                        placeholder="Ej: Colombia"
-                      />
-                    </div>
-                  </div>
-                  {/* Código postal */}
-                  <div>
-                    <label className="block text-sm text-text-secondary mb-1">Código postal *</label>
-                    <input
-                      type="text"
-                      value={postalCode}
-                      onChange={(e) => setPostalCode(e.target.value)}
-                      className="w-full px-3 py-2 bg-dark border border-border rounded text-text focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="Ej: 050001"
-                    />
-                  </div>
-                  {/* Correo electrónico */}
-                  <div>
-                    <label className="block text-sm text-text-secondary mb-1">Correo electrónico * (para tu factura)</label>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-3 py-2 bg-dark border border-border rounded text-text focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="tu@email.com"
-                    />
-                  </div>
-                  {/* Teléfono */}
-                  <div>
-                    <label className="block text-sm text-text-secondary mb-1">Teléfono *</label>
-                    <input
-                      type="text"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                      className="w-full px-3 py-2 bg-dark border border-border rounded text-text focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="3001234567"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {/* Número de tarjeta */}
-                  <div>
-                    <label className="block text-sm text-text-secondary mb-1">Número de tarjeta *</label>
-                    <input
-                      type="text"
-                      value={cardNumber}
-                      onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim())}
-                      placeholder="1234 5678 9012 3456"
-                      className="w-full px-3 py-2 bg-dark border border-border rounded text-text focus:outline-none focus:ring-2 focus:ring-primary"
-                      maxLength={19}
-                    />
-                    <p className="text-xs text-text-secondary mt-1">
-                      {cardNumber ? `Tipo: ${cardType(cardNumber)}` : 'Ingresa tu número'}
-                    </p>
-                  </div>
-                  {/* Nombre en tarjeta y vencimiento */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-sm text-text-secondary mb-1">Nombre en tarjeta *</label>
-                      <input
-                        type="text"
-                        value={cardName}
-                        onChange={(e) => setCardName(e.target.value)}
-                        className="w-full px-3 py-2 bg-dark border border-border rounded text-text focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm text-text-secondary mb-1">Vencimiento *</label>
-                      <input
-                        type="text"
-                        value={expiry}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, '');
-                          if (val.length >= 2) {
-                            setExpiry(`${val.slice(0, 2)}/${val.slice(2, 4)}`);
-                          } else {
-                            setExpiry(val);
-                          }
-                        }}
-                        placeholder="MM/AA"
-                        className="w-full px-3 py-2 bg-dark border border-border rounded text-text focus:outline-none focus:ring-2 focus:ring-primary"
-                        maxLength={5}
-                      />
-                    </div>
-                  </div>
-                  {/* CVV */}
-                  <div>
-                    <label className="block text-sm text-text-secondary mb-1">CVV *</label>
-                    <input
-                      type="text"
-                      value={cvv}
-                      onChange={(e) => setCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                      placeholder="123"
-                      className="w-full px-3 py-2 bg-dark border border-border rounded text-text focus:outline-none focus:ring-2 focus:ring-primary"
-                      maxLength={4}
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="mt-8 flex gap-3">
-                {step === 'card' && (
-                  <button
-                    type="button"
-                    onClick={handleBack}
-                    className="px-4 py-2 text-text hover:text-primary"
-                  >
-                    ← Atrás
-                  </button>
-                )}
-                <button
-                  onClick={step === 'personal' ? handleNext : handleCheckout}
-                  disabled={checkoutLoading}
-                  className="ml-auto px-6 py-2 bg-primary text-text rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50"
-                >
-                  {checkoutLoading ? 'Procesando...' : step === 'personal' ? 'Continuar' : 'Confirmar pago'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
 
-export default Cart;
+export default AccessoryDetail;

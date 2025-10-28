@@ -1,21 +1,18 @@
-// frontend/src/pages/Home.tsx
+
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
 
 const Home = () => {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const images = [
-    'https://github.com/J0S3S1T0/ViaggioVelogge/blob/developer/frontend/my-app/public/otros/inicioGaleria.png?raw=true',
-];
-
-
+  
+  const quienesSomosImage = '/images/quienes somos car.jpg';
 
   return (
     <div className="min-h-screen bg-dark text-text">
-      {/* HERO SECTION - Sin Header */}
+    
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        {/* Imagen de fondo */}
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center bg-no-repeat opacity-90"></div>
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-90"
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')" }}
+        ></div>
         <div className="absolute inset-0 bg-black/60"></div>
         <div className="relative text-center max-w-4xl mx-auto px-6">
           <h1 className="text-6xl md:text-8xl font-light text-white leading-none tracking-tight mb-6">
@@ -41,11 +38,11 @@ const Home = () => {
         </div>
       </section>
 
-      {/* SECCIÓN "QUIÉNES SOMOS" - Con Header visible */}
+      {/* SECCIÓN "QUIÉNES SOMOS" */}
       <section className="py-20 bg-dark-light border-t border-border">
         <div className="container mx-auto px-6 max-w-6xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Columna Izquierda: Texto */}
+            {/* Texto */}
             <div className="pr-8">
               <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">Viaggio Velogge</h1>
               <p className="text-primary font-light mb-8">
@@ -62,29 +59,18 @@ const Home = () => {
                   Ya seas coleccionista, entusiasta o futuro propietario de tu primer superdeportivo, aquí encontrarás más que un auto: encontrarás una experiencia.
                 </p>
               </div>
-              {/* ✅ BOTONES ELIMINADOS AQUÍ */}
             </div>
 
-            {/* Columna Derecha: Imagen/Galería */}
+            {/* Imagen optimizada */}
             <div className="hidden lg:block w-full h-full relative overflow-hidden rounded-2xl shadow-2xl">
               <div className="absolute inset-0 bg-black/60"></div>
               <img
-                src={images[currentImageIndex]}
-                alt="Auto de lujo"
-                className="w-full h-full object-cover transition-opacity duration-1000"
+                src={quienesSomosImage}
+                alt="Viaggio Velogge - Colección de autos de lujo"
+                className="w-full h-full object-cover"
+                loading="eager"
+                fetchPriority="high"
               />
-              {/* Indicadores de imagen */}
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                {images.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentImageIndex(index)}
-                    className={`w-3 h-3 rounded-full ${
-                      index === currentImageIndex ? 'bg-white' : 'bg-white/50'
-                    }`}
-                  ></button>
-                ))}
-              </div>
             </div>
           </div>
         </div>

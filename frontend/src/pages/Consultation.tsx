@@ -1,22 +1,19 @@
 // frontend/src/pages/Consultation.tsx
-
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import  api  from '../services/api';
+import { useNavigate, useLocation } from 'react-router-dom';
+import api from '../services/api';
+import { toast } from 'react-hot-toast';
 
 const Consultation = () => {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  
   const { user } = useAuth();
   const navigate = useNavigate();
-
-  if (!user) {
-    navigate('/login');
-    return null;
-  }
+  const location = useLocation(); // 👈 Para recordar la ruta actual
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,15 +28,20 @@ const Consultation = () => {
       return;
     }
 
-    setLoading(true);
+    // ✅ Si no está autenticado, redirigir al login y guardar la ruta actual
+    if (!user) {
+      // Guardar la ruta actual en el estado de navegación
+      navigate('/login', { state: { from: location } });
+      return;
+    }
 
+    setLoading(true);
     try {
       await api.post('/consultations', {
         subject: subject.trim(),
         message: message.trim(),
-        advisor_id: 1, // Asignado por defecto a admin
       });
-      alert('Consulta enviada con éxito. Nos pondremos en contacto contigo pronto.');
+      toast.success('Consulta enviada con éxito. Nos pondremos en contacto contigo pronto.');
       navigate('/');
     } catch (err: any) {
       if (err.response?.data?.detail) {
@@ -81,7 +83,6 @@ const Consultation = () => {
               required
             />
           </div>
-
           <div>
             <label htmlFor="message" className="block text-sm font-medium text-text mb-2">
               Mensaje *
@@ -96,7 +97,6 @@ const Consultation = () => {
               required
             ></textarea>
           </div>
-
           <div className="flex justify-end">
             <button
               type="submit"
