@@ -1,6 +1,6 @@
 // frontend/src/pages/UserGalleryCreate.tsx
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { toast } from 'react-hot-toast';
@@ -8,10 +8,18 @@ import { toast } from 'react-hot-toast';
 const UserGalleryCreate = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation(); // 👈 Para saber de dónde vino
 
-  // Validación: Si no hay usuario, redirigir al login
+  // ✅ Verificar autenticación al montar el componente
+  useEffect(() => {
+    if (!user) {
+      // Guardar la ruta actual para redirigir después del login
+      navigate('/login', { state: { from: location } });
+    }
+  }, [user, navigate, location]);
+
+  // Si no hay usuario, no renderices nada (evita el "en blanco")
   if (!user) {
-    navigate('/login');
     return null;
   }
 
@@ -40,55 +48,48 @@ const UserGalleryCreate = () => {
     }));
   };
 
-
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
-
-  try {
-    const payload = {
-      ...formData,
-      user_id: user.id,
-      year: parseInt(formData.year as any),
-      mileage: parseInt(formData.mileage as any),
-      horsepower: parseInt(formData.horsepower as any),
-      top_speed_kmh: parseInt(formData.top_speed_kmh as any),
-    };
-
-    await api.post('/user-car-gallery', payload);
-    toast.success('¡Publicación creada con éxito!');
-
-    // ✅ ¡CAMBIO CLAVE! En lugar de redirigir, limpiamos el formulario
-    setFormData({
-      car_name: '',
-      description: '',
-      image_url: '',
-      is_vehicle: true,
-      brand: '',
-      model: '',
-      year: new Date().getFullYear(),
-      fuel_type: '',
-      mileage: 0,
-      engine_spec: '',
-      horsepower: 0,
-      top_speed_kmh: 0,
-    });
-  } catch (error) {
-    console.error('Error creating gallery item:', error);
-    toast.error('Error al crear la publicación. Verifica los datos.');
-  } finally {
-    setLoading(false);
-  }
-};
-
-// ... resto del código ...
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const payload = {
+        ...formData,
+        user_id: user.id,
+        year: parseInt(String(formData.year)),
+        mileage: parseInt(String(formData.mileage)),
+        horsepower: parseInt(String(formData.horsepower)),
+        top_speed_kmh: parseInt(String(formData.top_speed_kmh)),
+      };
+      await api.post('/user-car-gallery', payload);
+      toast.success('¡Publicación creada con éxito!');
+      setFormData({
+        car_name: '',
+        description: '',
+        image_url: '',
+        is_vehicle: true,
+        brand: '',
+        model: '',
+        year: new Date().getFullYear(),
+        fuel_type: '',
+        mileage: 0,
+        engine_spec: '',
+        horsepower: 0,
+        top_speed_kmh: 0,
+      });
+    } catch (error) {
+      console.error('Error creating gallery item:', error);
+      toast.error('Error al crear la publicación. Verifica los datos.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-dark text-text p-6">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-light text-white mb-8">Publicar en Mi Galería</h1>
         <form onSubmit={handleSubmit} className="bg-dark-light p-8 rounded-xl shadow-card border border-border space-y-6">
-          {/* Tipo de Publicación */}
+          {/* ... resto del formulario igual ... */}
           <div>
             <label className="flex items-center">
               <input
@@ -101,8 +102,6 @@ const handleSubmit = async (e: React.FormEvent) => {
               <span className="text-text-secondary">Esta publicación es de un vehículo (no un accesorio)</span>
             </label>
           </div>
-
-          {/* Nombre del Auto/Accesorio */}
           <div>
             <label className="block text-text-secondary mb-1">Nombre *</label>
             <input
@@ -115,8 +114,6 @@ const handleSubmit = async (e: React.FormEvent) => {
               placeholder="Ej: Mi Ferrari F40"
             />
           </div>
-
-          {/* URL de la Imagen */}
           <div>
             <label className="block text-text-secondary mb-1">URL de la Imagen *</label>
             <input
@@ -129,8 +126,6 @@ const handleSubmit = async (e: React.FormEvent) => {
               placeholder="https://ejemplo.com/mi-auto.jpg"
             />
           </div>
-
-          {/* Descripción */}
           <div>
             <label className="block text-text-secondary mb-1">Descripción</label>
             <textarea
@@ -143,7 +138,6 @@ const handleSubmit = async (e: React.FormEvent) => {
             ></textarea>
           </div>
 
-          {/* --- Sección de Especificaciones Técnicas (Solo si es un vehículo) --- */}
           {formData.is_vehicle && (
             <div className="border-t border-border pt-6">
               <h2 className="text-2xl font-bold text-text mb-4">Especificaciones Técnicas</h2>
@@ -242,7 +236,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             </button>
             <button
               type="button"
-              onClick={() => navigate('/profile')}
+              onClick={() => navigate('/gallery')}
               className="px-8 py-3 bg-dark border border-primary text-primary rounded-lg font-medium hover:bg-primary/10 transition-colors"
             >
               Cancelar

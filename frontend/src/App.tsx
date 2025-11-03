@@ -25,6 +25,7 @@ import AdvisorPanel from './pages/AdvisorPanel';
 import NotFound from './pages/NotFound';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import ScrollToTop from './components/ScrollToTop';
 
 function App() {
   
@@ -37,6 +38,7 @@ function App() {
             {/* Renderizar el Header condicionalmente */}
             {<Header />}
             <main className="flex-grow">
+              <ScrollToTop />
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />

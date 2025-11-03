@@ -10,8 +10,9 @@ const AccessoriesShop = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9; // Mostrar 9 accesorios por página
 
-  // Categorías disponibles
   const categories = ['all', 'Rines', 'Escapes', 'Amortiguadores', 'Luces', 'Interior'];
 
   useEffect(() => {
@@ -31,6 +32,7 @@ const AccessoriesShop = () => {
 
   useEffect(() => {
     let result = accessories;
+
     if (searchTerm) {
       result = result.filter(
         (acc) =>
@@ -38,11 +40,19 @@ const AccessoriesShop = () => {
           acc.description?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
+
     if (selectedCategory !== 'all') {
       result = result.filter((acc) => acc.category === selectedCategory);
     }
+
     setFilteredAccessories(result);
+    setCurrentPage(1); // Reiniciar a la primera página al filtrar
   }, [searchTerm, selectedCategory, accessories]);
+
+  // 🔹 Al cambiar de página, hacer scroll al inicio
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
 
   if (loading) {
     return (
@@ -55,18 +65,23 @@ const AccessoriesShop = () => {
     );
   }
 
+  // Calcular los accesorios que se mostrarán según la página actual
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentAccessories = filteredAccessories.slice(startIndex, startIndex + itemsPerPage);
+
+  // Calcular número total de páginas
+  const totalPages = Math.ceil(filteredAccessories.length / itemsPerPage);
+
   return (
     <div className="min-h-screen bg-dark text-text">
-      {/* HERO SECTION - Ocupa toda la pantalla */}
+      {/* HERO */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Imagen de fondo */}
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: "url('../public/images/seccion_accesory_car3.jpg')" }}
         >
-          <div className="absolute inset-0 bg-black/70"></div> {/* Overlay oscuro */}
+          <div className="absolute inset-0 bg-black/70"></div>
         </div>
-        {/* Contenido centrado */}
         <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
           <h1 className="text-5xl md:text-6xl font-light text-white mb-4">
             Tienda de Accesorios
@@ -77,11 +92,13 @@ const AccessoriesShop = () => {
         </div>
       </section>
 
-      {/* Filtros Avanzados */}
+      {/* FILTROS */}
       <div className="container mx-auto px-6 py-8">
         <div className="flex flex-col md:flex-row gap-6 mb-8">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-text mb-2">Buscar por nombre o descripción</label>
+            <label className="block text-sm font-medium text-text mb-2">
+              Buscar por nombre o descripción
+            </label>
             <input
               type="text"
               value={searchTerm}
@@ -106,10 +123,10 @@ const AccessoriesShop = () => {
           </div>
         </div>
 
-        {/* Resultados */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredAccessories.length > 0 ? (
-            filteredAccessories.map((acc) => (
+        {/* RESULTADOS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {currentAccessories.length > 0 ? (
+            currentAccessories.map((acc) => (
               <div key={acc.id} className="group cursor-pointer">
                 <div className="relative overflow-hidden rounded-xl shadow-card bg-dark-light border border-border h-full flex flex-col">
                   <img
@@ -120,8 +137,12 @@ const AccessoriesShop = () => {
                   <div className="p-4 flex-grow flex flex-col">
                     <h3 className="font-bold text-text text-sm">{acc.name}</h3>
                     <p className="text-text-secondary text-xs mt-1">{acc.category}</p>
-                    <p className="text-text-secondary text-xs mt-2 line-clamp-2">{acc.description}</p>
-                    <span className="mt-auto text-primary font-bold">${acc.price.toLocaleString()}</span>
+                    <p className="text-text-secondary text-xs mt-2 line-clamp-2">
+                      {acc.description}
+                    </p>
+                    <span className="mt-auto text-primary font-bold">
+                      ${acc.price.toLocaleString()}
+                    </span>
                   </div>
                   <div className="p-4 border-t border-border">
                     <Link
@@ -140,6 +161,41 @@ const AccessoriesShop = () => {
             </div>
           )}
         </div>
+
+        {/* PAGINACIÓN */}
+        {totalPages > 1 && (
+          <div className="flex justify-center mt-10 space-x-2">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              className="px-4 py-2 bg-dark-light border border-border rounded-lg text-text hover:bg-primary/10 disabled:opacity-50"
+            >
+              ← Anterior
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`px-4 py-2 border rounded-lg ${
+                  currentPage === page
+                    ? 'bg-primary text-white border-primary'
+                    : 'bg-dark-light text-text border-border hover:bg-primary/10'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              className="px-4 py-2 bg-dark-light border border-border rounded-lg text-text hover:bg-primary/10 disabled:opacity-50"
+            >
+              Siguiente →
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

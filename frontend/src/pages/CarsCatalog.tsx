@@ -7,6 +7,9 @@ const CarsCatalog = () => {
   const [selectedForComparison, setSelectedForComparison] = useState<number[]>([]);
   const [cars, setCars] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9;
+
   // Estados para los filtros
   const [filters, setFilters] = useState({
     brand: '',
@@ -40,6 +43,19 @@ const CarsCatalog = () => {
     };
     fetchCars();
   }, [filters]);
+
+  // Lógica de paginación
+  const totalPages = Math.ceil(cars.length / itemsPerPage);
+  const indexOfLast = currentPage * itemsPerPage;
+  const indexOfFirst = indexOfLast - itemsPerPage;
+  const currentCars = cars.slice(indexOfFirst, indexOfLast);
+
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   const handleAddToCompare = (id: number) => {
     if (selectedForComparison.length >= 3) return;
@@ -211,10 +227,10 @@ const CarsCatalog = () => {
             📊 Comparar Autos ({selectedForComparison.length})
           </Link>
         </div>
-     {/* Grid de Autos */}
+     {/* Grid de Autos (solo los de la página actual) */}
 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-  {cars.length > 0 ? (
-    cars.map((car) => (
+  {currentCars.length > 0 ? (
+    currentCars.map((car) => (
       <div
         key={car.id}
         className="group cursor-pointer bg-dark-light rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-300 shadow-card hover:shadow-elevated"
@@ -274,6 +290,40 @@ const CarsCatalog = () => {
     </div>
   )}
 </div>
+
+        {/* Controles de paginación */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-10">
+            <button
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1 bg-dark border border-border text-text rounded disabled:opacity-40"
+            >
+              ← Anterior
+            </button>
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => goToPage(i + 1)}
+                className={`px-3 py-1 rounded ${
+                  currentPage === i + 1
+                    ? 'bg-primary text-text'
+                    : 'bg-dark border border-border text-text hover:bg-primary/10'
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 bg-dark border border-border text-text rounded disabled:opacity-40"
+            >
+              Siguiente →
+            </button>
+          </div>
+        )}
+
       </div>
       {/* Notificación flotante para móviles */}
       {selectedForComparison.length > 0 && (

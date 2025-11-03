@@ -1,4 +1,3 @@
-// frontend/src/pages/Consultation.tsx
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -10,10 +9,10 @@ const Consultation = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   const { user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation(); // 👈 Para recordar la ruta actual
+  const location = useLocation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,9 +27,7 @@ const Consultation = () => {
       return;
     }
 
-    // ✅ Si no está autenticado, redirigir al login y guardar la ruta actual
     if (!user) {
-      // Guardar la ruta actual en el estado de navegación
       navigate('/login', { state: { from: location } });
       return;
     }
@@ -55,22 +52,44 @@ const Consultation = () => {
   };
 
   return (
-    <div className="min-h-screen bg-dark text-text">
-      <div className="container mx-auto px-6 py-12 max-w-3xl">
-        <h1 className="text-4xl font-light text-white mb-8">Solicitar Asesoría</h1>
-        <p className="text-text-secondary text-lg mb-12">
-          ¿Tienes dudas sobre qué auto o accesorio elegir? Nuestro equipo de expertos está listo para ayudarte.
-        </p>
+    <div className="min-h-screen bg-dark text-text flex flex-col justify-center">
+      {/* Hero Section más compacta */}
+      <section className="relative h-[30vh] flex flex-col items-center justify-center text-center overflow-hidden mb-6">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: "url('../public/images/consult_banner.jpg')",
+          }}
+        >
+          <div className="absolute inset-0 bg-black/70"></div>
+        </div>
+        <div className="relative z-10 px-4">
+          <h1 className="text-3xl md:text-4xl font-light text-white mb-2">
+            Solicitar Asesoría
+          </h1>
+          <p className="text-sm md:text-base text-gray-200 max-w-xl mx-auto leading-snug">
+            ¿Tienes dudas sobre qué auto o accesorio elegir? Nuestro equipo de expertos está listo para ayudarte.
+          </p>
+        </div>
+      </section>
 
+      {/* Formulario con menos espacio */}
+      <div className="container mx-auto px-4 pb-8 max-w-md">
         {error && (
-          <div className="mb-6 p-3 bg-red-500/10 border border-red-500/30 text-red-300 rounded-lg text-sm">
+          <div className="mb-3 p-2.5 bg-red-500/10 border border-red-500/30 text-red-300 rounded-lg text-sm text-center shadow-md">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-dark-lighter p-5 rounded-xl shadow-md border border-border backdrop-blur-md space-y-4"
+        >
           <div>
-            <label htmlFor="subject" className="block text-sm font-medium text-text mb-2">
+            <label
+              htmlFor="subject"
+              className="block text-sm font-medium text-text mb-1.5"
+            >
               Asunto *
             </label>
             <input
@@ -79,12 +98,16 @@ const Consultation = () => {
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Ej: ¿Cuál es el mejor auto para uso diario?"
-              className="w-full px-4 py-3 bg-dark border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+              className="w-full px-3 py-2 bg-dark border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary transition-all text-sm"
               required
             />
           </div>
+
           <div>
-            <label htmlFor="message" className="block text-sm font-medium text-text mb-2">
+            <label
+              htmlFor="message"
+              className="block text-sm font-medium text-text mb-1.5"
+            >
               Mensaje *
             </label>
             <textarea
@@ -92,16 +115,17 @@ const Consultation = () => {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Describe tus necesidades, preferencias y presupuesto..."
-              rows={6}
-              className="w-full px-4 py-3 bg-dark border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors resize-none"
+              rows={4}
+              className="w-full px-3 py-2 bg-dark border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary transition-all resize-none text-sm"
               required
             ></textarea>
           </div>
+
           <div className="flex justify-end">
             <button
               type="submit"
               disabled={loading}
-              className="px-8 py-3 bg-primary text-text font-medium rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-5 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-colors shadow-md shadow-primary/30 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             >
               {loading ? 'Enviando...' : 'Enviar Solicitud'}
             </button>
