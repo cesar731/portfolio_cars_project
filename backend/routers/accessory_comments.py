@@ -8,20 +8,18 @@ from backend.security.oauth2 import get_current_user
 
 router = APIRouter()
 
-@router.post("/accessories/{accessory_id}/comments", response_model=AccessoryCommentOut)
+@router.post("/{accessory_id}/comments", response_model=AccessoryCommentOut)
 def create_comment(
     accessory_id: int,
     comment: AccessoryCommentCreate,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    # Verificar que el accesorio exista
     accessory = db.query(models.accessory.Accessory).filter(
         models.accessory.Accessory.id == accessory_id
     ).first()
     if not accessory:
         raise HTTPException(status_code=404, detail="Accesorio no encontrado")
-
     db_comment = models.accessory_comment.AccessoryComment(
         accessory_id=accessory_id,
         user_id=current_user.id,
@@ -31,20 +29,15 @@ def create_comment(
     db.add(db_comment)
     db.commit()
     db.refresh(db_comment)
-
-    # Cargar relaciones para el esquema de salida
-    db.refresh(db_comment, attribute_names=["user"])
     return db_comment
 
-@router.get("/accessories/{accessory_id}/comments", response_model=list[AccessoryCommentOut])
+@router.get("/{accessory_id}/comments", response_model=list[AccessoryCommentOut])
 def get_comments(accessory_id: int, db: Session = Depends(get_db)):
-    # Verificar que el accesorio exista
     accessory = db.query(models.accessory.Accessory).filter(
         models.accessory.Accessory.id == accessory_id
     ).first()
     if not accessory:
         raise HTTPException(status_code=404, detail="Accesorio no encontrado")
-
     comments = (
         db.query(models.accessory_comment.AccessoryComment)
         .filter(
