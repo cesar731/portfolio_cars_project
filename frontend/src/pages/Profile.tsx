@@ -9,14 +9,12 @@ import { UserCarGalleryItem as UserCarGallery } from '../types';
 const Profile = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
     avatar_url: '',
   });
-
   const [galleryPosts, setGalleryPosts] = useState<UserCarGallery[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -26,7 +24,6 @@ const Profile = () => {
       navigate('/login');
       return;
     }
-
     const fetchProfile = async () => {
       try {
         const userRes = await api.get(`/users/${user.id}`);
@@ -38,7 +35,6 @@ const Profile = () => {
           avatar_url: userData.avatar_url || '',
         });
 
-        // ✅ Usar el nuevo endpoint seguro
         const galleryRes = await api.get('/user-car-gallery/me');
         setGalleryPosts(galleryRes.data);
       } catch (err) {
@@ -48,7 +44,6 @@ const Profile = () => {
         setLoading(false);
       }
     };
-
     fetchProfile();
   }, [user, navigate]);
 
@@ -64,13 +59,12 @@ const Profile = () => {
       const updateData: any = {
         username: formData.username,
         email: formData.email,
-        avatar_url: formData.avatar_url || null, // ✅ null si vacío
+        avatar_url: formData.avatar_url.trim() || null,
       };
       if (formData.password) {
         updateData.password = formData.password;
       }
-
-      await api.patch('/users/me', updateData);
+      await api.put('/users/me', updateData);
       toast.success('Perfil actualizado con éxito');
     } catch (err: any) {
       toast.error(err.response?.data?.detail || 'Error al guardar cambios');
@@ -90,6 +84,17 @@ const Profile = () => {
       navigate('/');
     } catch (err: any) {
       toast.error(err.response?.data?.detail || 'Error al desactivar la cuenta');
+    }
+  };
+
+  const handleDeletePost = async (postId: number) => {
+    if (!window.confirm('¿Eliminar esta publicación?')) return;
+    try {
+      await api.delete(`/user-car-gallery/${postId}`);
+      setGalleryPosts((prev) => prev.filter((p) => p.id !== postId));
+      toast.success('Publicación eliminada');
+    } catch (err: any) {
+      toast.error('Error al eliminar la publicación');
     }
   };
 
@@ -169,7 +174,7 @@ const Profile = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {galleryPosts.map((post) => (
-              <div key={post.id} className="bg-dark-light p-4 rounded border border-border">
+              <div key={post.id} className="bg-dark-light p-4 rounded border border-border relative">
                 <img
                   src={post.image_url}
                   alt={post.car_name}
@@ -177,6 +182,21 @@ const Profile = () => {
                 />
                 <h3 className="font-medium text-text">{post.car_name}</h3>
                 <p className="text-sm text-text-secondary line-clamp-2">{post.description}</p>
+
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={() => navigate(`/gallery/edit/${post.id}`)}
+                    className="text-blue-400 hover:text-blue-300 text-xs font-medium"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => handleDeletePost(post.id)}
+                    className="text-red-400 hover:text-red-300 text-xs font-medium"
+                  >
+                    Eliminar
+                  </button>
+                </div>
               </div>
             ))}
           </div>

@@ -26,6 +26,7 @@ import NotFound from './pages/NotFound';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import ScrollToTop from './components/ScrollToTop';
+import UserGalleryEdit from './pages/UserGalleryEdit';
 
 function App() {
   
@@ -53,6 +54,7 @@ function App() {
                 <Route path="/gallery" element={<UserGallery />} />
                 <Route path="/gallery/:id" element={<UserGalleryDetail />} />
                 <Route path="/gallery/new" element={<UserGalleryCreate />} />
+                <Route path="/gallery/edit/:id" element={<UserGalleryEdit />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/cars/new" element={<CarCreate />} />
