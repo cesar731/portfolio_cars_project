@@ -1,9 +1,11 @@
+# backend/routers/user_car_gallery.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 from typing import List
 from backend.database.database import get_db
 from backend import models
 from backend.schemas.user_car_gallery import UserCarGalleryCreate, UserCarGalleryOut
+from backend.security.oauth2 import get_current_user  # 🔑 IMPORTANTE
 
 router = APIRouter()
 
@@ -20,6 +22,20 @@ def get_all_user_car_gallery_entries(db: Session = Depends(get_db)):
     entries = db.query(models.user_car_gallery.UserCarGallery).options(
         joinedload(models.user_car_gallery.UserCarGallery.user)
     ).all()
+    return entries
+
+# ✅ NUEVO ENDPOINT: Solo las publicaciones del usuario autenticado
+@router.get("/me", response_model=List[UserCarGalleryOut])
+def get_current_user_gallery(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    entries = (
+        db.query(models.UserCarGallery)
+        .filter(models.UserCarGallery.user_id == current_user.id)
+        .options(joinedload(models.UserCarGallery.user))
+        .all()
+    )
     return entries
 
 @router.get("/{entry_id}", response_model=UserCarGalleryOut)
@@ -45,10 +61,7 @@ def like_gallery_entry(entry_id: int, db: Session = Depends(get_db)):
     entry = db.query(models.user_car_gallery.UserCarGallery).filter(models.user_car_gallery.UserCarGallery.id == entry_id).first()
     if not entry:
         raise HTTPException(status_code=404, detail="Entrada no encontrada")
-    
-    # Incrementar el contador de likes
     entry.likes = (entry.likes or 0) + 1
     db.commit()
     db.refresh(entry)
-    
     return {"likes": entry.likes}

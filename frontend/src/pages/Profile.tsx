@@ -1,25 +1,25 @@
 // frontend/src/pages/Profile.tsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import { UserCarGalleryItem, Consultation } from '../types';
 import { toast } from 'react-hot-toast';
-import { Link, useNavigate } from 'react-router-dom';
+import { UserCarGalleryItem as UserCarGallery } from '../types';
 
 const Profile = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const [userDetails, setUserDetails] = useState({
+  const [formData, setFormData] = useState({
     username: '',
     email: '',
+    password: '',
     avatar_url: '',
   });
 
-  const [galleryItems, setGalleryItems] = useState<UserCarGalleryItem[]>([]);
-  const [notifications, setNotifications] = useState<Consultation[]>([]);
+  const [galleryPosts, setGalleryPosts] = useState<UserCarGallery[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -27,275 +27,174 @@ const Profile = () => {
       return;
     }
 
-    const loadData = async () => {
+    const fetchProfile = async () => {
       try {
-        const userRes = await api.get(`/users/me`);
-        setUserDetails({
-          username: userRes.data.username,
-          email: userRes.data.email,
-          avatar_url: userRes.data.avatar_url || '',
+        const userRes = await api.get(`/users/${user.id}`);
+        const userData = userRes.data;
+        setFormData({
+          username: userData.username,
+          email: userData.email,
+          password: '',
+          avatar_url: userData.avatar_url || '',
         });
 
-        const galleryRes = await api.get(`/user-car-gallery`);
-        const myItems = galleryRes.data.filter(
-          (item: UserCarGalleryItem) => Number(item.user_id) === Number(user.id)
-        );
-        setGalleryItems(myItems);
-
-        const notificationsRes = await api.get(`/consultations/user/${user.id}/notifications`);
-        setNotifications(notificationsRes.data);
-      } catch (error) {
-        console.error('Error loading profile data:', error);
-        toast.error('Error al cargar tu perfil o notificaciones');
+        // ✅ Usar el nuevo endpoint seguro
+        const galleryRes = await api.get('/user-car-gallery/me');
+        setGalleryPosts(galleryRes.data);
+      } catch (err) {
+        toast.error('Error al cargar el perfil');
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
 
-    loadData();
+    fetchProfile();
   }, [user, navigate]);
 
-  const handleUpdateProfile = async (e: React.FormEvent) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaving(true);
     try {
-      await api.put('/users/me', userDetails);
-      toast.success('Perfil actualizado');
-      setEditing(false);
-    } catch (error) {
-      toast.error('Error al actualizar el perfil');
+      const updateData: any = {
+        username: formData.username,
+        email: formData.email,
+        avatar_url: formData.avatar_url || null, // ✅ null si vacío
+      };
+      if (formData.password) {
+        updateData.password = formData.password;
+      }
+
+      await api.patch('/users/me', updateData);
+      toast.success('Perfil actualizado con éxito');
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'Error al guardar cambios');
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleDeleteAccount = async () => {
-    if (!window.confirm('¿Seguro que quieres eliminar tu cuenta?')) return;
+  const handleDeactivate = async () => {
+    if (!window.confirm('¿Estás seguro de que deseas desactivar tu cuenta?')) {
+      return;
+    }
     try {
-      await api.delete('/users/me');
-      toast.success('Cuenta eliminada');
+      await api.patch('/users/me/deactivate');
+      toast.success('Cuenta desactivada');
       logout();
-      navigate('/login');
-    } catch {
-      toast.error('Error al eliminar la cuenta');
-    }
-  };
-
-  const handleDeleteGalleryItem = async (itemId: number) => {
-    if (!window.confirm('¿Eliminar esta publicación?')) return;
-    try {
-      await api.delete(`/user-car-gallery/${itemId}`);
-      setGalleryItems(galleryItems.filter(i => i.id !== itemId));
-      toast.success('Publicación eliminada');
-    } catch {
-      toast.error('Error al eliminar');
+      navigate('/');
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'Error al desactivar la cuenta');
     }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-dark text-text flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-dark text-text flex flex-col items-center justify-center">
-        <h2 className="text-xl text-red-400 mb-2">Acceso denegado</h2>
-        <p className="text-text-secondary mb-4">Inicia sesión para ver tu perfil.</p>
-        <Link to="/login" className="px-6 py-2 bg-primary text-text rounded-lg hover:bg-primary/90">
-          Iniciar Sesión
-        </Link>
+        <p>Cargando perfil...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-dark via-dark-light to-dark text-text">
-      {/* HEADER */}
-      <header className="px-6 py-5 border-b border-border/50 flex justify-between items-center bg-dark-light/70 backdrop-blur-sm sticky top-0 z-20">
-        <h1 className="text-3xl font-semibold tracking-tight">Mi Perfil</h1>
-        {notifications.filter(n => !n.is_read).length > 0 && (
-          <div className="bg-red-500 text-white px-3 py-1 text-xs rounded-full animate-pulse">
-            {notifications.filter(n => !n.is_read).length} nuevas
+    <div className="min-h-screen bg-dark text-text p-6">
+      <h1 className="text-3xl font-light text-white mb-8">Mi Perfil</h1>
+
+      {/* Formulario */}
+      <div className="max-w-2xl bg-dark-light p-6 rounded-xl border border-border mb-10">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-text-secondary mb-1">Nombre de usuario</label>
+            <input
+              type="text"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              className="w-full px-3 py-2 bg-dark border border-border rounded text-text"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-text-secondary mb-1">Email</label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full px-3 py-2 bg-dark border border-border rounded text-text"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-text-secondary mb-1">Contraseña (opcional)</label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              className="w-full px-3 py-2 bg-dark border border-border rounded text-text"
+            />
+          </div>
+          <div>
+            <label className="block text-text-secondary mb-1">URL de avatar (opcional)</label>
+            <input
+              type="url"
+              name="avatar_url"
+              value={formData.avatar_url}
+              onChange={handleChange}
+              placeholder="https://ejemplo.com/avatar.jpg"
+              className="w-full px-3 py-2 bg-dark border border-border rounded text-text"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={saving}
+            className="px-6 py-2 bg-primary text-text rounded hover:bg-primary/90 disabled:opacity-50"
+          >
+            {saving ? 'Guardando...' : 'Guardar Cambios'}
+          </button>
+        </form>
+      </div>
+
+      {/* Publicaciones */}
+      <div className="mb-10">
+        <h2 className="text-2xl font-bold text-text mb-4">Mis Publicaciones</h2>
+        {galleryPosts.length === 0 ? (
+          <p className="text-text-secondary">No has publicado nada en la galería aún.</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {galleryPosts.map((post) => (
+              <div key={post.id} className="bg-dark-light p-4 rounded border border-border">
+                <img
+                  src={post.image_url}
+                  alt={post.car_name}
+                  className="w-full h-40 object-cover rounded mb-2"
+                />
+                <h3 className="font-medium text-text">{post.car_name}</h3>
+                <p className="text-sm text-text-secondary line-clamp-2">{post.description}</p>
+              </div>
+            ))}
           </div>
         )}
-      </header>
+      </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-1 lg:grid-cols-3 gap-10">
-        {/* PERFIL */}
-        <div className="bg-dark-light rounded-2xl border border-border/50 p-6 shadow-lg hover:shadow-primary/20 transition-shadow">
-          <div className="flex flex-col items-center text-center">
-            {userDetails.avatar_url ? (
-              <img
-                src={userDetails.avatar_url}
-                alt="Avatar"
-                className="w-28 h-28 rounded-full object-cover border-2 border-primary shadow-md mb-4"
-              />
-            ) : (
-              <div className="w-28 h-28 rounded-full bg-border/30 flex items-center justify-center mb-4 text-text-secondary text-xl">
-                {userDetails.username.charAt(0).toUpperCase()}
-              </div>
-            )}
-            <h2 className="text-xl font-semibold">{userDetails.username}</h2>
-            <p className="text-sm text-text-secondary">{userDetails.email}</p>
-            <span
-              className={`mt-2 inline-block px-3 py-1 text-xs rounded-full ${
-                user.role_id === 1
-                  ? 'bg-red-500/20 text-red-400'
-                  : user.role_id === 2
-                  ? 'bg-blue-500/20 text-blue-400'
-                  : 'bg-green-500/20 text-green-400'
-              }`}
-            >
-              {user.role_id === 1 ? 'Admin' : user.role_id === 2 ? 'Asesor' : 'Usuario'}
-            </span>
-          </div>
-
-          {editing ? (
-            <form onSubmit={handleUpdateProfile} className="mt-8 space-y-4">
-              {['username', 'email', 'avatar_url'].map((field, i) => (
-                <div key={i}>
-                  <input
-                    type={field === 'email' ? 'email' : 'text'}
-                    placeholder={
-                      field === 'avatar_url' ? 'URL del avatar (opcional)' : field === 'email' ? 'Correo electrónico' : 'Nombre de usuario'
-                    }
-                    value={userDetails[field as keyof typeof userDetails]}
-                    onChange={(e) =>
-                      setUserDetails({ ...userDetails, [field]: e.target.value })
-                    }
-                    className="w-full px-4 py-2 rounded-lg bg-dark border border-border text-text focus:ring-2 focus:ring-primary outline-none"
-                  />
-                </div>
-              ))}
-              <div className="flex gap-4">
-                <button className="flex-1 bg-primary text-white py-2 rounded-lg hover:bg-primary/90">
-                  Guardar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEditing(false)}
-                  className="flex-1 bg-gray-700 text-white py-2 rounded-lg hover:bg-gray-600"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </form>
-          ) : (
-            <div className="flex flex-col gap-3 mt-8">
-              <button
-                onClick={() => setEditing(true)}
-                className="bg-primary/80 text-white py-2 rounded-lg hover:bg-primary transition-colors"
-              >
-                Editar perfil
-              </button>
-              <button
-                onClick={handleDeleteAccount}
-                className="bg-red-500/20 text-red-400 py-2 rounded-lg hover:bg-red-500/30 transition-colors"
-              >
-                Eliminar cuenta
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* GALERÍA */}
-        <div className="lg:col-span-2 bg-dark-light rounded-2xl border border-border/50 p-8 shadow-lg hover:shadow-primary/20 transition-shadow">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold">Mis Publicaciones</h2>
-            <Link
-              to="/gallery/new"
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-            >
-              + Nueva publicación
-            </Link>
-          </div>
-
-          {galleryItems.length === 0 ? (
-            <p className="text-text-secondary text-center py-6">
-              No tienes publicaciones aún.
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {galleryItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="border border-border/30 rounded-xl overflow-hidden bg-dark shadow-md hover:shadow-primary/10 transition-transform hover:-translate-y-1"
-                >
-                  <img
-                    src={item.image_url}
-                    alt={item.car_name}
-                    className="h-40 w-full object-cover"
-                  />
-                  <div className="p-4">
-                    <h3 className="font-semibold">{item.car_name}</h3>
-                    <p className="text-sm text-text-secondary">
-                      {item.brand} {item.model} • {item.year}
-                    </p>
-                    <p className="text-xs text-text-secondary mt-1 line-clamp-2">
-                      {item.description || 'Sin descripción'}
-                    </p>
-                    <div className="flex justify-between mt-3 text-xs">
-                      <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded">
-                        {item.is_vehicle ? 'Auto' : 'Accesorio'}
-                      </span>
-                      <span className="text-gray-400">{item.likes} likes</span>
-                    </div>
-                    <div className="flex gap-2 mt-4">
-                      <Link
-                        to={`/gallery/edit/${item.id}`}
-                        className="flex-1 bg-blue-600 text-white py-1 rounded text-xs hover:bg-blue-700"
-                      >
-                        Editar
-                      </Link>
-                      <button
-                        onClick={() => handleDeleteGalleryItem(item.id)}
-                        className="flex-1 bg-red-600 text-white py-1 rounded text-xs hover:bg-red-700"
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* NOTIFICACIONES */}
-        <div className="lg:col-span-3 bg-dark-light rounded-2xl border border-border/50 p-8 shadow-lg">
-          <h2 className="text-2xl font-semibold mb-6">Notificaciones</h2>
-          {notifications.length === 0 ? (
-            <p className="text-text-secondary">No tienes notificaciones nuevas.</p>
-          ) : (
-            <div className="space-y-4">
-              {notifications.map((notif) => (
-                <div
-                  key={notif.id}
-                  className={`rounded-xl border border-border/30 p-4 ${
-                    !notif.is_read ? 'bg-primary/5 border-primary/40' : 'bg-dark/40'
-                  }`}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-semibold">{notif.subject}</h3>
-                      <p className="text-sm text-text-secondary mt-1">{notif.message}</p>
-                    </div>
-                    {!notif.is_read && (
-                      <button className="text-primary text-xs hover:underline">
-                        Marcar leído
-                      </button>
-                    )}
-                  </div>
-                  <p className="text-xs text-text-secondary mt-2">
-                    Respondido por {notif.advisor?.username || 'Asesor'} el{' '}
-                    {new Date(notif.answered_at!).toLocaleString()}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      {/* Desactivar cuenta */}
+      <div className="bg-red-500/10 border border-red-500/30 p-4 rounded-lg max-w-md">
+        <h3 className="font-bold text-red-400 mb-2">Desactivar cuenta</h3>
+        <p className="text-sm text-text-secondary mb-3">
+          Tu cuenta quedará inactiva y no podrás iniciar sesión.
+        </p>
+        <button
+          onClick={handleDeactivate}
+          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
+        >
+          Desactivar Cuenta
+        </button>
       </div>
     </div>
   );

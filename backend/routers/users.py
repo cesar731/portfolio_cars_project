@@ -100,31 +100,51 @@ def update_current_user(
     db.refresh(current_user)
     return current_user
 
+# backend/routers/users.py
+from fastapi import APIRouter, Depends, HTTPException, status, Body
+from sqlalchemy.orm import Session
+from backend.database.database import get_db
+from backend import models, schemas
+from backend.security.password import get_password_hash
+from backend.security.oauth2 import get_current_user
 
+router = APIRouter()
 
-@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
-def delete_current_user(
+# ... (otros endpoints existentes) ...
+
+# === NUEVOS ENDPOINTS PARA USUARIO ACTUAL ===
+
+@router.get("/me", response_model=schemas.UserOut)
+def read_current_user(current_user: models.user.User = Depends(get_current_user)):
+    return current_user
+
+@router.patch("/me", response_model=schemas.UserOut)
+def update_current_user(
+    updated_user: schemas.UserUpdate,
     db: Session = Depends(get_db),
-    current_user: models.user.User = Depends(get_current_user),
-    empty_body: dict = Body(None)  # ✅ Acepta un body opcional y lo ignora
+    current_user: models.user.User = Depends(get_current_user)
 ):
-    db.delete(current_user)
+    if updated_user.username is not None:
+        current_user.username = updated_user.username
+    if updated_user.email is not None:
+        current_user.email = updated_user.email
+    if updated_user.password is not None:
+        current_user.password_hash = get_password_hash(updated_user.password)
+    if updated_user.avatar_url is not None:
+        current_user.avatar_url = updated_user.avatar_url
     db.commit()
-    return
+    db.refresh(current_user)
+    return current_user
 
-
-# --- NUEVO ENDPOINT: Confirmar Email ---
-@router.get("/confirm-email/{user_id}")
-def confirm_email(user_id: int, token: str, db: Session = Depends(get_db)):
-    user = db.query(models.user.User).filter(models.user.User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    # Verificar que el token coincida (guardado en avatar_url)
-    if user.avatar_url != token:
-        raise HTTPException(status_code=400, detail="Token de confirmación inválido o expirado")
-    # Activar la cuenta
-    user.is_active = True
-    # Limpiar el token
-    user.avatar_url = None
+# ✅ NUEVO: Desactivar en lugar de eliminar
+@router.patch("/me/deactivate", status_code=status.HTTP_200_OK)
+def deactivate_current_user(
+    db: Session = Depends(get_db),
+    current_user: models.user.User = Depends(get_current_user)
+):
+    current_user.is_active = False
     db.commit()
-    return {"msg": "¡Cuenta confirmada con éxito! Ahora puedes iniciar sesión."}
+    return {"message": "Cuenta desactivada correctamente"}
+
+# ❌ Elimina o comenta este endpoint si ya no lo usas:
+# @router.delete("/me", ...)
