@@ -7,9 +7,13 @@ import { useNavigate } from 'react-router-dom';
 export interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, redirectTo?: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
   logout: () => void;
+  comparedCars: number[];
+  addToComparison: (carId: number) => void;
+  removeFromComparison: (carId: number) => void;
+  clearComparison: () => void;
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -18,11 +22,16 @@ export const AuthContext = createContext<AuthContextType>({
   login: async () => {},
   register: async () => {},
   logout: () => {},
+  comparedCars: [],
+  addToComparison: () => {},
+  removeFromComparison: () => {},
+  clearComparison: () => {},
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [comparedCars, setComparedCars] = useState<number[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -49,35 +58,69 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkAuth();
   }, []);
 
-  const handleLogin = async (email: string, password: string) => {
-  try {
-    const response: LoginResponse = await loginApi(email, password);
-    localStorage.setItem('token', response.access_token);
-    setUser({
-      id: response.user.id,
-      username: response.user.username,
-      email: response.user.email,
-      role_id: response.user.role_id,
-      is_active: response.user.is_active ?? true,
-    });
-    console.log('Usuario logueado:', response.user);
+  useEffect(() => {
+    if (user) {
+      const saved = localStorage.getItem(`comparedCars_${user.id}`);
+      setComparedCars(saved ? JSON.parse(saved) : []);
+    } else {
+      setComparedCars([]);
+    }
+  }, [user]);
 
-    // Forzar una actualización del estado antes de navegar
-    // y usar un setTimeout para asegurar que la navegación ocurra después
-    // de que el componente se haya actualizado con el nuevo estado del usuario.
-    setTimeout(() => {
-      if (response.user.role_id === 1) {
-        navigate('/admin');
+  const saveComparison = (cars: number[]) => {
+    if (user) {
+      localStorage.setItem(`comparedCars_${user.id}`, JSON.stringify(cars));
+    }
+  };
+
+  const addToComparison = (carId: number) => {
+    setComparedCars(prev => {
+      const newCars = prev.includes(carId) ? prev : [...prev, carId].slice(0, 3);
+      saveComparison(newCars);
+      return newCars;
+    });
+  };
+
+  const removeFromComparison = (carId: number) => {
+    setComparedCars(prev => {
+      const newCars = prev.filter(id => id !== carId);
+      saveComparison(newCars);
+      return newCars;
+    });
+  };
+
+  const clearComparison = () => {
+    setComparedCars([]);
+    if (user) {
+      localStorage.removeItem(`comparedCars_${user.id}`);
+    }
+  };
+
+  const handleLogin = async (email: string, password: string, redirectTo?: string) => {
+    try {
+      const response: LoginResponse = await loginApi(email, password);
+      localStorage.setItem('token', response.access_token);
+      setUser({
+        id: response.user.id,
+        username: response.user.username,
+        email: response.user.email,
+        role_id: response.user.role_id,
+        is_active: response.user.is_active ?? true,
+      });
+
+      if (redirectTo) {
+        navigate(redirectTo, { replace: true });
+      } else if (response.user.role_id === 1) {
+        navigate('/admin', { replace: true });
       } else if (response.user.role_id === 2) {
-        navigate('/advisor');
+        navigate('/advisor', { replace: true });
       } else {
-        navigate('/');
+        navigate('/', { replace: true });
       }
-    }, 0);
-  } catch (error) {
-    throw error;
-  }
-};
+    } catch (error) {
+      throw error;
+    }
+  };
 
   const handleRegister = async (username: string, email: string, password: string) => {
     try {
@@ -91,10 +134,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
+    clearComparison();
     navigate('/login');
   };
 
-  const value = { user, loading, login: handleLogin, register: handleRegister, logout };
+  const value = {
+    user,
+    loading,
+    login: handleLogin,
+    register: handleRegister,
+    logout,
+    comparedCars,
+    addToComparison,
+    removeFromComparison,
+    clearComparison,
+  };
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 

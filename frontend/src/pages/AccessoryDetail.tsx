@@ -1,25 +1,31 @@
 // frontend/src/pages/AccessoryDetail.tsx
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
 
+interface Comment {
+  id: number;
+  user: string;
+  text: string;
+  date: string;
+  replies?: Comment[];
+}
+
 const AccessoryDetail = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation(); // ✅ Captura la ubicación actual
   const { user } = useAuth();
   const { addToCart } = useCart();
+
   const [accessory, setAccessory] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  // Estado para la cantidad a agregar al carrito
   const [quantity, setQuantity] = useState(1);
-  // Estado para los comentarios
-  const [comments, setComments] = useState<{ id: number; user: string; text: string; date: string; replies?: any[] }[]>([]);
-  // Estado para el nuevo comentario o respuesta
+  const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
-  // Estado para manejar qué comentario está siendo respondido
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
 
   useEffect(() => {
@@ -28,10 +34,12 @@ const AccessoryDetail = () => {
         navigate('/accessories');
         return;
       }
+
       try {
         const response = await api.get(`/accessories/${id}`);
         setAccessory(response.data);
-        // Simular comentarios (reemplaza esto con una llamada real a /comments cuando lo tengas)
+
+        // Comentarios simulados (reemplazar con API real cuando esté lista)
         setComments([
           {
             id: 1,
@@ -43,99 +51,90 @@ const AccessoryDetail = () => {
                 id: 101,
                 user: 'AleronShop',
                 text: '¡Gracias por tu comentario, Carlos! Nos alegra saber que te gustó.',
-                date: 'hace 1 día'
-              }
-            ]
+                date: 'hace 1 día',
+              },
+            ],
           },
           {
             id: 2,
             user: 'AutoFan99',
             text: '¿Es compatible con modelos anteriores al 2020?',
             date: 'hace 5 días',
-            replies: []
+            replies: [],
           },
         ]);
       } catch (error) {
         console.error('Error fetching accessory:', error);
+        toast.error('No se pudo cargar el accesorio.');
         navigate('/accessories');
       } finally {
         setLoading(false);
       }
     };
+
     fetchAccessory();
   }, [id, navigate]);
 
+  const handleAddToCart = () => {
+    if (!user) {
+      // ✅ Redirige al login y guarda la ruta actual
+      navigate('/login', { state: { from: location } });
+      return;
+    }
+    if (!accessory) return;
+    if (quantity < 1) {
+      toast.error('La cantidad debe ser al menos 1.');
+      return;
+    }
+    if (quantity > accessory.stock) {
+      toast.error(`Solo hay ${accessory.stock} unidades disponibles.`);
+      return;
+    }
+
+    // ✅ Agrega al carrito (el contexto maneja la lógica de API)
+    addToCart(accessory.id, quantity);
+    toast.success(`¡${quantity} unidad(es) de ${accessory.name} agregadas al carrito!`);
+    setQuantity(1);
+  };
+
   const handleAddComment = () => {
     if (!user) {
-      toast.error('Debes iniciar sesión para comentar.');
-      navigate('/login');
+      navigate('/login', { state: { from: location } });
       return;
     }
     if (!newComment.trim()) return;
-
-    const comment = {
-      id: comments.length + 1,
-      user: user.username,
-      text: newComment,
-      date: 'ahora',
-      replies: [],
-    };
-
-    setComments([comment, ...comments]);
+    setComments([
+      { id: Date.now(), user: user.username, text: newComment, date: 'ahora', replies: [] },
+      ...comments,
+    ]);
     setNewComment('');
     toast.success('Comentario publicado.');
   };
 
-  const handleAddToCart = () => {
-    if (!user) {
-      toast.error('Debes iniciar sesión para agregar productos al carrito.');
-      navigate('/login');
-      return;
-    }
-    if (quantity < 1 || quantity > accessory.stock) {
-      toast.error(`La cantidad debe estar entre 1 y ${accessory.stock}.`);
-      return;
-    }
-
-    // Llamada a la función del contexto CartContext
-    addToCart(accessory.id); // ✅ ¡CORREGIDO! Pasamos la cantidad
-    toast.success(`¡${quantity} unidad(es) de ${accessory.name} agregadas al carrito!`);
-    setQuantity(1); // Reiniciar la cantidad después de agregar
-  };
-
   const handleReply = (commentId: number) => {
     if (!user) {
-      toast.error('Debes iniciar sesión para responder.');
-      navigate('/login');
+      navigate('/login', { state: { from: location } });
       return;
     }
     setReplyingTo(commentId);
   };
 
   const handlePostReply = (parentCommentId: number) => {
-    if (!user) return;
-    if (!newComment.trim()) return;
-
-    setComments(prev =>
-      prev.map(comment => {
+    if (!user || !newComment.trim()) return;
+    setComments((prev) =>
+      prev.map((comment) => {
         if (comment.id === parentCommentId) {
           return {
             ...comment,
             replies: [
               ...(comment.replies || []),
-              {
-                id: (comment.replies?.length || 0) + 1,
-                user: user.username,
-                text: newComment,
-                date: 'ahora',
-              },
+              { id: Date.now(), user: user.username, text: newComment, date: 'ahora' },
             ],
           };
         }
         return comment;
       })
     );
-
     setNewComment('');
     setReplyingTo(null);
     toast.success('Respuesta publicada.');
@@ -165,17 +164,15 @@ const AccessoryDetail = () => {
     );
   }
 
-  // Generar una lista de imágenes para la galería (simulación)
   const galleryImages = [
     accessory.image_url || 'https://via.placeholder.com/800x600?text=Accesorio+Principal',
-    'https://via.placeholder.com/800x600?text=Accesorio+Perspectiva+1',
-    'https://via.placeholder.com/800x600?text=Accesorio+Perspectiva+2',
-    'https://via.placeholder.com/800x600?text=Accesorio+Instalado',
+    'https://via.placeholder.com/800x600?text=Perspectiva+1',
+    'https://via.placeholder.com/800x600?text=Perspectiva+2',
+    'https://via.placeholder.com/800x600?text=Instalado',
   ];
 
   return (
     <div className="min-h-screen bg-dark text-text">
-      {/* Header */}
       <header className="bg-dark-light border-b border-border px-6 py-4">
         <button
           onClick={() => navigate('/accessories')}
@@ -185,10 +182,8 @@ const AccessoryDetail = () => {
         </button>
       </header>
 
-      {/* Contenido principal */}
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Imagen Principal y Galería */}
           <div className="lg:col-span-2">
             <div className="mb-6">
               <img
@@ -197,12 +192,11 @@ const AccessoryDetail = () => {
                 className="w-full max-h-96 object-cover rounded-lg border border-border"
               />
             </div>
-            {/* Mini Galería */}
             <div className="flex space-x-2 overflow-x-auto pb-2">
               {galleryImages.map((img, index) => (
                 <img
                   key={index}
-                  src={img}
+                  src={img.trim()}
                   alt={`Perspectiva ${index + 1}`}
                   className="w-20 h-20 object-cover rounded-lg border border-border cursor-pointer hover:border-primary transition-colors"
                 />
@@ -210,7 +204,6 @@ const AccessoryDetail = () => {
             </div>
           </div>
 
-          {/* Información del producto */}
           <div className="lg:col-span-1">
             <h1 className="text-2xl font-bold text-text">{accessory.name}</h1>
             <p className="text-text-secondary mt-1">{accessory.category || '—'}</p>
@@ -236,7 +229,6 @@ const AccessoryDetail = () => {
               <p className="text-text-secondary">{accessory.description || 'Sin descripción.'}</p>
             </div>
 
-            {/* Sección de Cantidad y Botones */}
             <div className="mt-8">
               <label className="block text-text-secondary mb-2">Cantidad:</label>
               <div className="flex items-center gap-2 mb-4">
@@ -249,7 +241,9 @@ const AccessoryDetail = () => {
                 <input
                   type="number"
                   value={quantity}
-                  onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                  onChange={(e) =>
+                    setQuantity(Math.max(1, Math.min(accessory.stock, parseInt(e.target.value) || 1)))
+                  }
                   min="1"
                   max={accessory.stock}
                   className="w-12 text-center bg-dark border border-border rounded-md text-text focus:outline-none focus:ring-2 focus:ring-primary"
@@ -282,11 +276,8 @@ const AccessoryDetail = () => {
           </div>
         </div>
 
-        {/* ✅ SECCIÓN DE COMENTARIOS */}
         <div className="mt-16">
           <h2 className="text-2xl font-bold text-text mb-6">Comentarios ({comments.length})</h2>
-
-          {/* Formulario para nuevo comentario */}
           <div className="bg-dark-light p-4 rounded-lg mb-6">
             <textarea
               value={newComment}
@@ -305,7 +296,6 @@ const AccessoryDetail = () => {
             </div>
           </div>
 
-          {/* Lista de comentarios */}
           <div className="space-y-6">
             {comments.map((comment) => (
               <div key={comment.id} className="bg-dark-light p-4 rounded-lg border border-border/20">
@@ -319,8 +309,6 @@ const AccessoryDetail = () => {
                   </div>
                 </div>
                 <p className="text-text-secondary mb-4">{comment.text}</p>
-
-                {/* Botón de Respuesta */}
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => handleReply(comment.id)}
@@ -329,8 +317,6 @@ const AccessoryDetail = () => {
                     Responder
                   </button>
                 </div>
-
-                {/* Campo de respuesta si se está respondiendo a este comentario */}
                 {replyingTo === comment.id && (
                   <div className="mt-4 p-3 bg-dark/50 rounded-lg">
                     <textarea
@@ -356,8 +342,6 @@ const AccessoryDetail = () => {
                     </div>
                   </div>
                 )}
-
-                {/* Respuestas */}
                 {comment.replies && comment.replies.length > 0 && (
                   <div className="mt-4 pl-6 border-l-2 border-border/30 space-y-4">
                     <h4 className="text-sm font-medium text-text">Respuestas ({comment.replies.length})</h4>

@@ -1,3 +1,4 @@
+// frontend/src/pages/Consultation.tsx
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -9,7 +10,6 @@ const Consultation = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -17,7 +17,6 @@ const Consultation = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
     if (!subject.trim()) {
       setError('El asunto es obligatorio.');
       return;
@@ -26,25 +25,23 @@ const Consultation = () => {
       setError('El mensaje es obligatorio.');
       return;
     }
-
     if (!user) {
       navigate('/login', { state: { from: location } });
       return;
     }
-
     setLoading(true);
     try {
       await api.post('/consultations', {
         subject: subject.trim(),
         message: message.trim(),
       });
-      toast.success('Consulta enviada con éxito. Nos pondremos en contacto contigo pronto.');
+      toast.success('Consulta enviada con éxito.');
       navigate('/');
     } catch (err: any) {
       if (err.response?.data?.detail) {
         setError(err.response.data.detail);
       } else {
-        setError('Error al enviar la consulta. Inténtalo nuevamente.');
+        setError('Error al enviar la consulta.');
       }
     } finally {
       setLoading(false);
@@ -53,13 +50,10 @@ const Consultation = () => {
 
   return (
     <div className="min-h-screen bg-dark text-text flex flex-col justify-center">
-      {/* Hero Section más compacta */}
       <section className="relative h-[30vh] flex flex-col items-center justify-center text-center overflow-hidden mb-6">
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: "url('../public/images/consult_banner.jpg')",
-          }}
+          style={{ backgroundImage: "url('../public/images/consult_banner.jpg')" }}
         >
           <div className="absolute inset-0 bg-black/70"></div>
         </div>
@@ -72,15 +66,12 @@ const Consultation = () => {
           </p>
         </div>
       </section>
-
-      {/* Formulario con menos espacio */}
       <div className="container mx-auto px-4 pb-8 max-w-md">
         {error && (
           <div className="mb-3 p-2.5 bg-red-500/10 border border-red-500/30 text-red-300 rounded-lg text-sm text-center shadow-md">
             {error}
           </div>
         )}
-
         <form
           onSubmit={handleSubmit}
           className="bg-dark-lighter p-5 rounded-xl shadow-md border border-border backdrop-blur-md space-y-4"
@@ -102,7 +93,6 @@ const Consultation = () => {
               required
             />
           </div>
-
           <div>
             <label
               htmlFor="message"
@@ -120,7 +110,6 @@ const Consultation = () => {
               required
             ></textarea>
           </div>
-
           <div className="flex justify-end">
             <button
               type="submit"

@@ -7,8 +7,12 @@ export const getCartItems = async (userId: number): Promise<CartItem[]> => {
   return response.data;
 };
 
-export const addToCart = async (userId: number, accessoryId: number, quantity: number = 1): Promise<CartItem> => {
-  const response = await api.post<CartItem>('/cart', { user_id: userId, accessory_id: accessoryId, quantity });
+export const addToCart = async (userId: number, accessoryId: number, quantity: number = 1) => {
+  const response = await api.post(`/cart`, {
+    user_id: userId,
+    accessory_id: accessoryId,
+    quantity
+  });
   return response.data;
 };
 

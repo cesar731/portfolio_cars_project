@@ -1,16 +1,19 @@
 // frontend/src/pages/CarsCatalog.tsx
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const CarsCatalog = () => {
-  const [selectedForComparison, setSelectedForComparison] = useState<number[]>([]);
+  const { user, comparedCars, addToComparison, removeFromComparison } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [cars, setCars] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9;
 
-  // Estados para los filtros
   const [filters, setFilters] = useState({
     brand: '',
     model: '',
@@ -44,7 +47,6 @@ const CarsCatalog = () => {
     fetchCars();
   }, [filters]);
 
-  // Lógica de paginación
   const totalPages = Math.ceil(cars.length / itemsPerPage);
   const indexOfLast = currentPage * itemsPerPage;
   const indexOfFirst = indexOfLast - itemsPerPage;
@@ -58,18 +60,19 @@ const CarsCatalog = () => {
   };
 
   const handleAddToCompare = (id: number) => {
-    if (selectedForComparison.length >= 3) return;
-    if (!selectedForComparison.includes(id)) {
-      const newSelection = [...selectedForComparison, id];
-      setSelectedForComparison(newSelection);
-      localStorage.setItem('selectedCars', JSON.stringify(newSelection));
+    if (!user) {
+      // ✅ Redirige al login y guarda la ruta actual
+      navigate('/login', { state: { from: location } });
+      return;
+    }
+    if (comparedCars.length >= 3) return;
+    if (!comparedCars.includes(id)) {
+      addToComparison(id);
     }
   };
 
   const handleRemoveFromCompare = (id: number) => {
-    const newSelection = selectedForComparison.filter(item => item !== id);
-    setSelectedForComparison(newSelection);
-    localStorage.setItem('selectedCars', JSON.stringify(newSelection));
+    removeFromComparison(id);
   };
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -102,31 +105,27 @@ const CarsCatalog = () => {
 
   return (
     <div className="min-h-screen bg-dark text-text">
-     {/* HERO SECTION - Texto superpuesto sobre imagen de fondo */}
-<section className="relative h-screen flex items-center justify-center overflow-hidden">
-  {/* Imagen de fondo */}
-  <div 
-    className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-    style={{ backgroundImage: "url('../public/images/seccion_catalog_car2.jpg')" }}
-  >
-    <div className="absolute inset-0 bg-black/60"></div> {/* Overlay oscuro */}
-  </div>
-  {/* Contenido centrado (superpuesto) */}
-  <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
-    <h1 className="text-4xl md:text-6xl font-thin text-white leading-none tracking-tight mb-6">
-      Colección Exclusiva de Automóviles
-    </h1>
-    <p className="text-lg md:text-xl text-gray-200 mb-4 max-w-3xl mx-auto leading-relaxed">
-      Donde la historia, la ingeniería y la pasión se funden en máquinas sobre ruedas.
-    </p>
-    <p className="text-lg md:text-xl text-gray-200 mb-12 max-w-3xl mx-auto leading-relaxed">
-      Descubre íconos del pasado y visiones del futuro.
-    </p>
-  </div>
-
+      {/* HERO SECTION */}
+      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('../public/images/seccion_catalog_car2.jpg')" }}
+        >
+          <div className="absolute inset-0 bg-black/60"></div>
+        </div>
+        <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
+          <h1 className="text-4xl md:text-6xl font-thin text-white leading-none tracking-tight mb-6">
+            Colección Exclusiva de Automóviles
+          </h1>
+          <p className="text-lg md:text-xl text-gray-200 mb-4 max-w-3xl mx-auto leading-relaxed">
+            Donde la historia, la ingeniería y la pasión se funden en máquinas sobre ruedas.
+          </p>
+          <p className="text-lg md:text-xl text-gray-200 mb-12 max-w-3xl mx-auto leading-relaxed">
+            Descubre íconos del pasado y visiones del futuro.
+          </p>
+        </div>
       </section>
 
-      {/* Filtros Avanzados */}
       <div className="container mx-auto px-6 py-8">
         <div className="bg-dark-light p-6 rounded-xl shadow-card border border-border mb-8">
           <h2 className="text-2xl font-bold text-text mb-4">Filtros Avanzados</h2>
@@ -218,80 +217,79 @@ const CarsCatalog = () => {
             </div>
           </div>
         </div>
-        {/* Botón Comparar (opcional en móvil) */}
+
         <div className="md:hidden mb-6">
           <Link
             to="/compare"
             className="inline-block px-6 py-3 bg-primary text-text rounded-lg font-medium hover:bg-primary/90 transition-colors"
           >
-            📊 Comparar Autos ({selectedForComparison.length})
+            📊 Comparar Autos ({comparedCars.length})
           </Link>
         </div>
-     {/* Grid de Autos (solo los de la página actual) */}
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-  {currentCars.length > 0 ? (
-    currentCars.map((car) => (
-      <div
-        key={car.id}
-        className="group cursor-pointer bg-dark-light rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-300 shadow-card hover:shadow-elevated"
-      >
-        <div className="relative h-60 md:h-72 overflow-hidden">
-          <img
-            src={car.image_url?.[0] || 'https://via.placeholder.com/600x300?text=Auto+Premium'}
-            alt={`${car.brand} ${car.model}`}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div className="absolute bottom-4 left-4 right-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <div className="flex justify-between items-start">
-              <div>
-                <span className="inline-block px-2 py-1 bg-primary/80 text-xs font-medium rounded">
-                  {car.year}
-                </span>
-                <h3 className="text-lg font-light mt-1">{car.brand}</h3>
-                <p className="text-sm opacity-90">{car.model}</p>
-              </div>
-              <span className="text-xl font-bold bg-black/50 px-3 py-1 rounded">
-                ${car.price.toLocaleString()}
-              </span>
-            </div>
-          </div>
-        </div>
-        <div className="p-5">
-          <div className="flex gap-2">
-            <Link
-              to={`/cars/${car.id}`}
-              className="flex-1 py-2 px-3 text-center text-sm bg-primary text-text rounded-lg font-medium hover:bg-primary/90 transition-colors"
-            >
-              Ver
-            </Link>
-            <button
-              onClick={
-                selectedForComparison.includes(car.id)
-                  ? () => handleRemoveFromCompare(car.id)
-                  : () => handleAddToCompare(car.id)
-              }
-              disabled={selectedForComparison.length >= 3}
-              className={`flex-1 py-2 px-3 text-center text-sm rounded-lg font-medium transition-colors ${
-                selectedForComparison.includes(car.id)
-                  ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                  : 'bg-gray-700 text-text hover:bg-gray-600'
-              }`}
-            >
-              {selectedForComparison.includes(car.id) ? '✓ Seleccionado' : 'Comparar'}
-            </button>
-          </div>
-        </div>
-      </div>
-    ))
-  ) : (
-    <div className="col-span-full text-center py-12">
-      <p className="text-text-secondary">No hay autos disponibles con los filtros seleccionados.</p>
-    </div>
-  )}
-</div>
 
-        {/* Controles de paginación */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+          {currentCars.length > 0 ? (
+            currentCars.map((car) => (
+              <div
+                key={car.id}
+                className="group cursor-pointer bg-dark-light rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-300 shadow-card hover:shadow-elevated"
+              >
+                <div className="relative h-60 md:h-72 overflow-hidden">
+                  <img
+                    src={car.image_url?.[0] || 'https://via.placeholder.com/600x300?text=Auto+Premium'}
+                    alt={`${car.brand} ${car.model}`}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute bottom-4 left-4 right-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="inline-block px-2 py-1 bg-primary/80 text-xs font-medium rounded">
+                          {car.year}
+                        </span>
+                        <h3 className="text-lg font-light mt-1">{car.brand}</h3>
+                        <p className="text-sm opacity-90">{car.model}</p>
+                      </div>
+                      <span className="text-xl font-bold bg-black/50 px-3 py-1 rounded">
+                        ${car.price.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-5">
+                  <div className="flex gap-2">
+                    <Link
+                      to={`/cars/${car.id}`}
+                      className="flex-1 py-2 px-3 text-center text-sm bg-primary text-text rounded-lg font-medium hover:bg-primary/90 transition-colors"
+                    >
+                      Ver
+                    </Link>
+                    <button
+                      onClick={
+                        comparedCars.includes(car.id)
+                          ? () => handleRemoveFromCompare(car.id)
+                          : () => handleAddToCompare(car.id)
+                      }
+                      disabled={comparedCars.length >= 3 && !comparedCars.includes(car.id)}
+                      className={`flex-1 py-2 px-3 text-center text-sm rounded-lg font-medium transition-colors ${
+                        comparedCars.includes(car.id)
+                          ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                          : 'bg-gray-700 text-text hover:bg-gray-600'
+                      }`}
+                    >
+                      {comparedCars.includes(car.id) ? '✓ Seleccionado' : 'Comparar'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <p className="text-text-secondary">No hay autos disponibles con los filtros seleccionados.</p>
+            </div>
+          )}
+        </div>
+
         {totalPages > 1 && (
           <div className="flex justify-center items-center gap-2 mt-10">
             <button
@@ -323,13 +321,12 @@ const CarsCatalog = () => {
             </button>
           </div>
         )}
-
       </div>
-      {/* Notificación flotante para móviles */}
-      {selectedForComparison.length > 0 && (
+
+      {comparedCars.length > 0 && (
         <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-lg z-50 flex items-center gap-3">
           <span className="text-sm font-medium">
-            {selectedForComparison.length} auto(s) seleccionado(s) para comparar
+            {comparedCars.length} auto(s) seleccionado(s) para comparar
           </span>
           <Link
             to="/compare"

@@ -1,60 +1,48 @@
 // frontend/src/pages/CompareCars.tsx
 import { useState, useEffect } from 'react';
-import { Link} from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import api from '../services/api';
 import { Car } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 const CompareCars = () => {
+  const { comparedCars, clearComparison, removeFromComparison } = useAuth();
   const [selectedCars, setSelectedCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
-  
 
   useEffect(() => {
     const loadSelectedCars = async () => {
-      const saved = localStorage.getItem('selectedCars');
-      if (saved) {
-        try {
-          const ids: number[] = JSON.parse(saved);
-          if (ids.length === 0) {
-            setSelectedCars([]);
-            setLoading(false);
-            return;
-          }
-          // ✅ ¡CORREGIDO! Hacemos una solicitud por cada ID
-          const cars: Car[] = [];
-          for (const id of ids) {
-            try {
-              const response = await api.get<Car>(`/cars/${id}`);
-              cars.push(response.data);
-            } catch (error) {
-              console.warn(`Auto con ID ${id} no encontrado.`);
-            }
-          }
-          setSelectedCars(cars);
-        } catch (error) {
-          console.error('Error parsing selected cars:', error);
-          localStorage.removeItem('selectedCars');
-          setSelectedCars([]);
-        }
+      if (comparedCars.length === 0) {
+        setSelectedCars([]);
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+
+      try {
+        const cars: Car[] = [];
+        for (const id of comparedCars) {
+          try {
+            const response = await api.get<Car>(`/cars/${id}`);
+            cars.push(response.data);
+          } catch (error) {
+            console.warn(`Auto con ID ${id} no encontrado.`);
+          }
+        }
+        setSelectedCars(cars);
+      } catch (error) {
+        console.error('Error loading compared cars:', error);
+        setSelectedCars([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadSelectedCars();
-  }, []);
+  }, [comparedCars]);
 
-  const removeCar = (id: number) => {
-    const updated = selectedCars.filter(car => car.id !== id);
-    setSelectedCars(updated);
-    localStorage.setItem('selectedCars', JSON.stringify(updated.map(c => c.id)));
-  };
+  const removeCar = (id: number) => removeFromComparison(id);
+  const clearAll = () => clearComparison();
 
-  const clearAll = () => {
-    setSelectedCars([]);
-    localStorage.removeItem('selectedCars');
-  };
-
-  // ✅ ¡DEFINICIÓN DE ESPECIFICACIONES! — Solo campos que existen en tu modelo
   const specs = [
     { label: 'Marca', key: 'brand', render: (car: Car) => car.brand },
     { label: 'Modelo', key: 'model', render: (car: Car) => car.model },
@@ -83,23 +71,25 @@ const CompareCars = () => {
     );
   }
 
+  // ✅ Vista sin autos seleccionados — con imagen de fondo en toda la sección
   if (selectedCars.length === 0) {
     return (
-      <div className="min-h-screen bg-dark text-text">
-        {/* Header */}
-        <header className="bg-dark-light border-b border-border px-6 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-light text-text">📊 Comparar Autos</h1>
-        </header>
-        {/* Hero */}
-        <section className="relative h-[300px] bg-cover bg-center bg-no-repeat mt-4" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1549073953-5d821c29b3e8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')" }}>
-          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-            <h1 className="text-5xl font-light text-white mb-2">Comparar Autos</h1>
-            <p className="text-xl text-gray-200">Selecciona hasta 3 vehículos en el catálogo para comparar sus especificaciones técnicas.</p>
-          </div>
-        </section>
-        {/* Main */}
-        <main className="container mx-auto px-6 py-12 text-center">
-          <p className="text-text-secondary text-lg max-w-3xl mx-auto mb-8">
+      <div
+        className="min-h-screen bg-dark text-white relative flex flex-col items-center justify-center text-center px-6"
+        style={{
+          backgroundImage:
+            "url('../public/images/seccion_catalog_car2.jpg')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-black/60" /> {/* superposición oscura */}
+        <div className="relative z-10 max-w-3xl mx-auto">
+          <h1 className="text-5xl font-light mb-6">Comparar Autos</h1>
+          <p className="text-xl text-gray-200 mb-6">
+            Selecciona hasta 3 vehículos en el catálogo para comparar sus especificaciones técnicas.
+          </p>
+          <p className="text-lg text-gray-300 mb-10">
             Visita el catálogo de autos, haz clic en el botón “Comparar” en cualquier tarjeta y añade hasta tres vehículos para compararlos lado a lado.
           </p>
           <Link
@@ -108,14 +98,14 @@ const CompareCars = () => {
           >
             🚗 Ir al Catálogo de Autos
           </Link>
-        </main>
+        </div>
       </div>
     );
   }
 
+  // ✅ Vista cuando sí hay autos seleccionados
   return (
     <div className="min-h-screen bg-dark text-text">
-      {/* Header */}
       <header className="bg-dark-light border-b border-border px-6 py-4 flex items-center justify-between">
         <h1 className="text-2xl font-light text-text">📊 Comparar Autos</h1>
         <div className="flex items-center gap-4">
@@ -131,11 +121,13 @@ const CompareCars = () => {
         </div>
       </header>
 
-      {/* Selected Cars Grid */}
       <section className="container mx-auto px-6 py-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
           {selectedCars.map(car => (
-            <div key={car.id} className="bg-dark-light rounded-xl p-6 border border-border flex flex-col items-center text-center">
+            <div
+              key={car.id}
+              className="bg-dark-light rounded-xl p-6 border border-border flex flex-col items-center text-center"
+            >
               <img
                 src={car.image_url?.[0] || 'https://via.placeholder.com/120x80?text=Auto'}
                 alt={`${car.brand} ${car.model}`}
@@ -156,7 +148,6 @@ const CompareCars = () => {
           ))}
         </div>
 
-        {/* Comparison Table */}
         <div className="overflow-x-auto rounded-xl border border-border bg-dark-light shadow-card">
           <table className="w-full text-left">
             <thead>
@@ -177,9 +168,7 @@ const CompareCars = () => {
                   <td className="py-4 px-6 font-medium text-text min-w-[200px]">{spec.label}</td>
                   {selectedCars.map(car => (
                     <td key={`${car.id}-${spec.key}`} className="py-4 px-6 text-center text-text min-w-[180px]">
-                      <span className="font-medium">
-                        {spec.render(car)}
-                      </span>
+                      <span className="font-medium">{spec.render(car)}</span>
                     </td>
                   ))}
                 </tr>
@@ -188,7 +177,6 @@ const CompareCars = () => {
           </table>
         </div>
 
-        {/* Action Button */}
         <div className="mt-12 text-center">
           <Link
             to="/cars"
