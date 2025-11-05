@@ -1,17 +1,15 @@
 // frontend/src/pages/AdminDashboard.tsx
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
-import  api  from '../services/api';
-import { Car, Accessory, User, Consultation } from '../types';
+import api from '../services/api';
+import { toast } from 'react-hot-toast';
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
-  const [users, setUsers] = useState<User[]>([]);
-  const [cars, setCars] = useState<Car[]>([]);
-  const [accessories, setAccessories] = useState<Accessory[]>([]);
-  const [consultations, setConsultations] = useState<Consultation[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+  const [cars, setCars] = useState<any[]>([]);
+  const [accessories, setAccessories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -22,19 +20,18 @@ const AdminDashboard = () => {
     }
 
     const fetchData = async () => {
+      setLoading(true);
       try {
-        const [usersRes, carsRes, accessoriesRes, consultationsRes] = await Promise.all([
-          api.get('/users'),
-          api.get('/cars'),
-          api.get('/accessories'),
-          api.get('/consultations')
-        ]);
-        setUsers(usersRes.data);
-        setCars(carsRes.data);
-        setAccessories(accessoriesRes.data);
-        setConsultations(consultationsRes.data); 
+        // Cargar cada recurso individualmente para evitar que uno falle y bloquee todo
+        const loadUsers = api.get('/users').then(res => setUsers(res.data)).catch(err => console.error('Users:', err));
+        const loadCars = api.get('/cars').then(res => setCars(res.data)).catch(err => console.error('Cars:', err));
+        const loadAccessories = api.get('/accessories').then(res => setAccessories(res.data)).catch(err => console.error('Accessories:', err));
+        
+
+        await Promise.allSettled([loadUsers, loadCars, loadAccessories]);
       } catch (error) {
-        console.error('Error fetching admin data:', error);
+        toast.error('Error al cargar los datos del panel.');
+        console.error('Error general:', error);
       } finally {
         setLoading(false);
       }
@@ -61,7 +58,6 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-dark text-text">
-      {/* Header */}
       <header className="bg-dark-light border-b border-border px-6 py-4 flex items-center justify-between">
         <h1 className="text-2xl font-light text-text">Panel de Administración</h1>
         <button
@@ -72,156 +68,95 @@ const AdminDashboard = () => {
         </button>
       </header>
 
-      <div className="container mx-auto px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          <div className="bg-dark-light rounded-xl shadow-card border border-border p-6 text-center">
-            <h2 className="text-3xl font-bold text-primary mb-2">{users.length}</h2>
-            <p className="text-text-secondary">Usuarios Registrados</p>
-          </div>
-          {/* --- NUEVA SECCIÓN: ACCIONES RÁPIDAS --- */}
-<div className="mb-12">
-  <h2 className="text-2xl font-bold text-text mb-6">Acciones Rápidas</h2>
-  <div className="flex flex-col sm:flex-row gap-4">
-    <Link
-      to="/cars/new"
-      className="flex-1 py-4 px-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-300 text-center flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-      </svg>
-      Crear Nuevo Auto
-    </Link>
-    <Link
-      to="/accessories/new"
-      className="flex-1 py-4 px-6 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg font-medium hover:from-green-700 hover:to-green-800 transition-all duration-300 text-center flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-      </svg>
-      Crear Nuevo Accesorio
-    </Link>
-  </div>
-</div>
-          <div className="bg-dark-light rounded-xl shadow-card border border-border p-6 text-center">
-            <h2 className="text-3xl font-bold text-primary mb-2">{cars.filter(c => c.is_published).length}</h2>
-            <p className="text-text-secondary">Autos Publicados</p>
-          </div>
-          <div className="bg-dark-light rounded-xl shadow-card border border-border p-6 text-center">
-            <h2 className="text-3xl font-bold text-primary mb-2">{accessories.filter(a => a.is_published).length}</h2>
-            <p className="text-text-secondary">Accesorios Publicados</p>
+      <div className="container mx-auto px-6 py-8">
+        {/* Acciones Rápidas */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-text mb-4">Acciones Rápidas</h2>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Link
+              to="/cars/new"
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
+            >
+              ➕ Crear Auto
+            </Link>
+            <Link
+              to="/accessories/new"
+              className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition"
+            >
+              ➕ Crear Accesorio
+            </Link>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Usuarios */}
-          <div className="bg-dark-light rounded-xl shadow-card border border-border p-6">
-            <h2 className="text-2xl font-bold text-text mb-6">Usuarios</h2>
-            <div className="space-y-4 max-h-96 overflow-y-auto">
-              {users.map(user => (
-                <div key={user.id} className="flex items-center justify-between p-3 bg-dark/50 rounded-lg">
-                  <div>
-                    <p className="font-medium text-text">{user.username}</p>
-                    <p className="text-text-secondary text-sm">{user.email}</p>
-                    <span className={`inline-block px-2 py-1 text-xs rounded-full mt-1 ${
-                      user.role_id === 1 ? 'bg-red-500/20 text-red-400' :
-                      user.role_id === 2 ? 'bg-blue-500/20 text-blue-400' :
-                      'bg-green-500/20 text-green-400'
-                    }`}>
-                      {user.role_id === 1 ? 'Admin' : user.role_id === 2 ? 'Asesor' : 'Usuario'}
-                    </span>
-                  </div>
-                  <span className="text-text-secondary text-sm">
-                    {new Date(user.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-              ))}
-            </div>
+        {/* Resumen */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-dark-light p-4 rounded-lg border border-border">
+            <p className="text-text-secondary">Usuarios</p>
+            <p className="text-2xl font-bold text-white">{users.length}</p>
           </div>
+          <div className="bg-dark-light p-4 rounded-lg border border-border">
+            <p className="text-text-secondary">Autos Publicados</p>
+            <p className="text-2xl font-bold text-white">{cars.filter(c => c.is_published).length}</p>
+          </div>
+          <div className="bg-dark-light p-4 rounded-lg border border-border">
+            <p className="text-text-secondary">Accesorios Disponibles</p>
+            <p className="text-2xl font-bold text-white">{accessories.filter(a => a.is_published && a.stock > 0).length}</p>
+          </div>
+        </div>
 
+        {/* Secciones detalladas */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Autos */}
-          <div className="bg-dark-light rounded-xl shadow-card border border-border p-6">
-            <h2 className="text-2xl font-bold text-text mb-6">Autos</h2>
-            <div className="space-y-4 max-h-96 overflow-y-auto">
+          <div className="bg-dark-light p-6 rounded-xl border border-border">
+            <h3 className="text-xl font-bold text-text mb-4">Autos ({cars.length})</h3>
+            <div className="space-y-3 max-h-80 overflow-y-auto">
               {cars.slice(0, 5).map(car => (
-                <div key={car.id} className="flex items-center justify-between p-3 bg-dark/50 rounded-lg">
+                <div key={car.id} className="flex justify-between items-center p-3 bg-dark/50 rounded">
                   <div>
-                    <p className="font-medium text-text">{car.brand} {car.model}</p>
-                    <p className="text-text-secondary text-sm">{car.year} - ${car.price.toLocaleString()}</p>
+                    <p className="font-medium">{car.brand} {car.model}</p>
+                    <p className="text-sm text-text-secondary">${car.price.toLocaleString()}</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`inline-block px-2 py-1 text-xs rounded-full ${
-                      car.is_published ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
-                    }`}>
-                      {car.is_published ? 'Publicado' : 'No publicado'}
-                    </span>
-                    {/* ✅ ¡AÑADIDO! Botón de Editar */}
-                    <Link
-                      to={`/cars/edit/${car.id}`}
-                      className="text-blue-400 hover:text-blue-300 text-xs font-medium"
-                    >
-                      Editar
-                    </Link>
-                  </div>
+                  <Link
+                    to={`/cars/edit/${car.id}`}
+                    className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+                  >
+                    Editar
+                  </Link>
                 </div>
               ))}
             </div>
-            <Link to="/cars" className="block mt-4 text-primary hover:text-primary/80 text-sm font-medium">
-              Ver todos los autos →
-            </Link>
+            {cars.length > 5 && (
+              <Link to="/cars" className="mt-3 inline-block text-primary text-sm">Ver todos</Link>
+            )}
           </div>
 
           {/* Accesorios */}
-          <div className="bg-dark-light rounded-xl shadow-card border border-border p-6">
-            <h2 className="text-2xl font-bold text-text mb-6">Accesorios</h2>
-            <div className="space-y-4 max-h-96 overflow-y-auto">
+          <div className="bg-dark-light p-6 rounded-xl border border-border">
+            <h3 className="text-xl font-bold text-text mb-4">Accesorios ({accessories.length})</h3>
+            <div className="space-y-3 max-h-80 overflow-y-auto">
               {accessories.slice(0, 5).map(acc => (
-                <div key={acc.id} className="flex items-center justify-between p-3 bg-dark/50 rounded-lg">
+                <div key={acc.id} className="flex justify-between items-center p-3 bg-dark/50 rounded">
                   <div>
-                    <p className="font-medium text-text">{acc.name}</p>
-                    <p className="text-text-secondary text-sm">{acc.category} - ${acc.price.toLocaleString()}</p>
+                    <p className="font-medium">{acc.name}</p>
+                    <p className="text-sm text-text-secondary">${acc.price.toLocaleString()} • {acc.category}</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`inline-block px-2 py-1 text-xs rounded-full ${
-                      acc.is_published ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
-                    }`}>
-                      {acc.is_published ? 'Disponible' : 'No disponible'}
-                    </span>
-                    {/* ✅ ¡AÑADIDO! Botón de Editar */}
-                    <Link
-                      to={`/accessories/edit/${acc.id}`}
-                      className="text-blue-400 hover:text-blue-300 text-xs font-medium"
-                    >
-                      Editar
-                    </Link>
-                  </div>
+                  <Link
+                    to={`/accessories/edit/${acc.id}`}
+                    className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+                  >
+                    Editar
+                  </Link>
                 </div>
               ))}
             </div>
-            <Link to="/accessories" className="block mt-4 text-primary hover:text-primary/80 text-sm font-medium">
-              Ver todos los accesorios →
-            </Link>
+            {accessories.length > 5 && (
+              <Link to="/accessories" className="mt-3 inline-block text-primary text-sm">Ver todos</Link>
+            )}
           </div>
 
-          {/* Consultas */}
-          <div className="bg-dark-light rounded-xl shadow-card border border-border p-6">
-            <h2 className="text-2xl font-bold text-text mb-6">Consultas Pendientes</h2>
-            <div className="space-y-4 max-h-96 overflow-y-auto">
-              {consultations.filter(c => c.status === 'pending').slice(0, 5).map(consult => (
-                <div key={consult.id} className="flex items-center justify-between p-3 bg-dark/50 rounded-lg">
-                  <div>
-                    <p className="font-medium text-text">{consult.subject}</p>
-                    <p className="text-text-secondary text-sm">De: {consult.user_id}</p>
-                  </div>
-                  <span className="inline-block px-2 py-1 text-xs bg-yellow-500/20 text-yellow-400 rounded-full">
-                    Pendiente
-                  </span>
-                </div>
-              ))}
-            </div>
-            <Link to="/consultations" className="block mt-4 text-primary hover:text-primary/80 text-sm font-medium">
-              Ver todas las consultas →
-            </Link>
-          </div>
+          
+
+          
         </div>
       </div>
     </div>

@@ -1,241 +1,180 @@
 // frontend/src/pages/Profile.tsx
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate, useLocation } from 'react-router-dom';
-import api from '../services/api';
+import { Link, useNavigate } from 'react-router-dom';
+import { getCurrentUser, updateUserProfile, deactivateAccount } from '../services/userApi';
 import { toast } from 'react-hot-toast';
-
-// ✅ Definición local del tipo (evita errores de import)
-interface UserCarGalleryItem {
-  id: number;
-  car_name: string;
-  description?: string;
-  image_url: string;
-  likes: number;
-  user_id: number;
-  created_at: string;
-}
+import { User } from '../types';
 
 const Profile = () => {
-  const { user, logout } = useAuth();
+  const { user: authUser, logout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    avatar_url: '',
-  });
-
+  const [user, setUser] = useState<Partial<User> | null>(null);
   const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(false);
-  const [deactivating, setDeactivating] = useState(false);
-  const [galleryPosts, setGalleryPosts] = useState<UserCarGalleryItem[]>([]);
+  const [editing, setEditing] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState('');
 
   useEffect(() => {
-    // Si no hay usuario, redirigir al login y guardar la ruta
-    if (!user) {
-      navigate('/login', { state: { from: location } });
-      return;
-    }
-
-    const fetchProfileData = async () => {
+    const fetchProfile = async () => {
       try {
-        const userRes = await api.get('/api/users/me');
-        const userData = userRes.data;
-        setFormData({
-          username: userData.username || '',
-          email: userData.email || '',
-          avatar_url: userData.avatar_url || '',
-        });
-
-        const galleryRes = await api.get('/api/user-car-gallery/me');
-        setGalleryPosts(galleryRes.data || []);
+        const userData = await getCurrentUser();
+        setUser(userData);
+        setAvatarUrl(userData.avatar_url || '');
       } catch (err: any) {
-        console.error('Error al cargar el perfil:', err.response?.data || err);
-        toast.error('No se pudo cargar tu perfil. Por favor, inicia sesión.');
-        logout();
-        navigate('/login', { state: { from: location } });
+        if (err.response?.status === 401) {
+          // Solo cerrar sesión si el token es inválido
+          toast.error('Sesión expirada. Por favor inicia sesión nuevamente.');
+          logout();
+          navigate('/login');
+        } else {
+          toast.error('Error al cargar tu perfil.');
+          console.error(err);
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProfileData();
-  }, [user, navigate, location, logout]);
+    fetchProfile();
+  }, [logout, navigate]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setUpdating(true);
+  const handleSave = async () => {
     try {
-      await api.patch('/api/users/me', {
-        username: formData.username,
-        email: formData.email,
-        avatar_url: formData.avatar_url,
-      });
-      toast.success('Perfil actualizado correctamente.');
-    } catch (err: any) {
-      const msg = err.response?.data?.detail || 'Error al actualizar el perfil.';
-      toast.error(msg);
-    } finally {
-      setUpdating(false);
+      await updateUserProfile({ ...user, avatar_url: avatarUrl });
+      toast.success('Perfil actualizado con éxito.');
+      setEditing(false);
+    } catch (err) {
+      toast.error('No se pudo actualizar el perfil.');
+      console.error(err);
     }
   };
 
-  const handleDeactivateAccount = async () => {
-    if (!window.confirm('¿Estás seguro? Esta acción desactivará tu cuenta permanentemente.')) {
-      return;
-    }
-    setDeactivating(true);
+  const handleDeactivate = async () => {
+    if (!window.confirm('¿Estás seguro de desactivar tu cuenta? Esta acción no se puede deshacer.')) return;
     try {
-      await api.patch('/api/users/me/deactivate');
+      await deactivateAccount();
       toast.success('Cuenta desactivada correctamente.');
       logout();
-      navigate('/');
-    } catch (err: any) {
-      toast.error('No se pudo desactivar la cuenta.');
-    } finally {
-      setDeactivating(false);
-    }
-  };
-
-  const handleDeletePost = async (postId: number) => {
-    if (!window.confirm('¿Eliminar esta publicación?')) return;
-    try {
-      await api.delete(`/api/user-car-gallery/${postId}`);
-      setGalleryPosts((prev) => prev.filter((post) => post.id !== postId));
-      toast.success('Publicación eliminada.');
+      navigate('/login');
     } catch (err) {
-      toast.error('No se pudo eliminar la publicación.');
+      toast.error('No se pudo desactivar la cuenta.');
+      console.error(err);
     }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-dark text-text flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mb-4"></div>
-          <p className="text-text-secondary">Cargando perfil...</p>
-        </div>
+        <p>Cargando tu perfil...</p>
       </div>
     );
   }
 
+  if (!user) return null;
+
   return (
-    <div className="min-h-screen bg-dark text-text py-12">
-      <div className="container mx-auto px-6 max-w-4xl">
-        <h1 className="text-3xl font-light text-white mb-8">Mi Perfil</h1>
-
-        {/* Formulario de edición */}
-        <div className="bg-dark-light p-6 rounded-xl border border-border mb-10">
-          <h2 className="text-xl font-medium text-text mb-4">Editar Perfil</h2>
-          <form onSubmit={handleUpdateProfile} className="space-y-4">
-            <div>
-              <label className="block text-text-secondary text-sm mb-1">Avatar (URL)</label>
-              <input
-                type="url"
-                name="avatar_url"
-                value={formData.avatar_url}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 bg-dark border border-border rounded text-text focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="https://ejemplo.com/avatar.jpg"
-              />
-            </div>
-            <div>
-              <label className="block text-text-secondary text-sm mb-1">Nombre de usuario</label>
-              <input
-                type="text"
-                name="username"
-                value={formData.username}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 bg-dark border border-border rounded text-text focus:outline-none focus:ring-2 focus:ring-primary"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-text-secondary text-sm mb-1">Email</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 bg-dark border border-border rounded text-text focus:outline-none focus:ring-2 focus:ring-primary"
-                required
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={updating}
-              className="px-5 py-2 bg-primary text-text rounded hover:bg-primary/90 disabled:opacity-60"
-            >
-              {updating ? 'Guardando...' : 'Guardar cambios'}
-            </button>
-          </form>
-        </div>
-
-        {/* Publicaciones en la galería */}
-        <div className="mb-10">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-medium text-text">Mis Publicaciones</h2>
-            <button
-              onClick={() => navigate('/gallery/new')}
-              className="text-sm text-primary hover:text-primary/80"
-            >
-              + Nueva publicación
-            </button>
-          </div>
-
-          {galleryPosts.length === 0 ? (
-            <p className="text-text-secondary">No has publicado nada en la galería aún.</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {galleryPosts.map((post) => (
-                <div key={post.id} className="bg-dark p-4 rounded border border-border">
-                  <img
-                    src={post.image_url}
-                    alt={post.car_name}
-                    className="w-full h-32 object-cover rounded mb-2"
-                  />
-                  <h3 className="font-medium text-text">{post.car_name}</h3>
-                  <p className="text-text-secondary text-sm mb-2">{post.description?.slice(0, 60)}...</p>
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      onClick={() => navigate(`/gallery/edit/${post.id}`)}
-                      className="text-sm text-blue-400 hover:text-blue-300"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => handleDeletePost(post.id)}
-                      className="text-sm text-red-400 hover:text-red-300"
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+    <div className="min-h-screen bg-dark text-text p-6">
+      <h1 className="text-4xl font-light text-white mb-8">Mi Perfil</h1>
+      <div className="max-w-2xl mx-auto bg-dark-light p-8 rounded-xl shadow-card border border-border">
+        <div className="flex flex-col items-center mb-6">
+          <img
+            src={avatarUrl || 'https://via.placeholder.com/100?text=Avatar'}
+            alt="Avatar"
+            className="w-24 h-24 rounded-full object-cover mb-4 border-2 border-primary"
+          />
+          {editing && (
+            <input
+              type="url"
+              value={avatarUrl}
+              onChange={(e) => setAvatarUrl(e.target.value)}
+              placeholder="URL del avatar"
+              className="w-full px-3 py-2 bg-dark border border-border rounded text-text text-sm"
+            />
           )}
         </div>
 
-        {/* Desactivar cuenta */}
-        <div className="bg-red-900/20 border border-red-500/30 p-6 rounded-xl">
-          <h2 className="text-xl font-medium text-red-400 mb-2">Desactivar Cuenta</h2>
-          <p className="text-text-secondary text-sm mb-4">
-            Esta acción desactivará permanentemente tu cuenta.
-          </p>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-text-secondary mb-1">Usuario</label>
+            {editing ? (
+              <input
+                type="text"
+                value={user.username || ''}
+                onChange={(e) => setUser({ ...user, username: e.target.value })}
+                className="w-full px-3 py-2 bg-dark border border-border rounded text-text"
+              />
+            ) : (
+              <p className="text-white">{user.username}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-text-secondary mb-1">Email</label>
+            {editing ? (
+              <input
+                type="email"
+                value={user.email || ''}
+                onChange={(e) => setUser({ ...user, email: e.target.value })}
+                className="w-full px-3 py-2 bg-dark border border-border rounded text-text"
+              />
+            ) : (
+              <p className="text-white">{user.email}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-text-secondary mb-1">Rol</label>
+            <p className="text-white">
+              {user.role_id === 1 ? 'Administrador' : user.role_id === 2 ? 'Asesor' : 'Usuario'}
+            </p>
+          </div>
+          <div>
+            <label className="block text-text-secondary mb-1">Estado</label>
+            <p className={`font-medium ${user.is_active ? 'text-green-400' : 'text-red-400'}`}>
+              {user.is_active ? 'Activo' : 'Inactivo'}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-8 flex gap-4">
+          {editing ? (
+            <>
+              <button
+                onClick={handleSave}
+                className="px-6 py-2 bg-primary text-text rounded font-medium hover:bg-primary/90"
+              >
+                Guardar
+              </button>
+              <button
+                onClick={() => setEditing(false)}
+                className="px-6 py-2 bg-gray-700 text-text rounded font-medium"
+              >
+                Cancelar
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setEditing(true)}
+              className="px-6 py-2 bg-primary text-text rounded font-medium hover:bg-primary/90"
+            >
+              Editar Perfil
+            </button>
+          )}
           <button
-            onClick={handleDeactivateAccount}
-            disabled={deactivating}
-            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-60 text-sm"
+            onClick={handleDeactivate}
+            className="px-6 py-2 bg-red-500 text-white rounded font-medium hover:bg-red-600"
           >
-            {deactivating ? 'Desactivando...' : 'Desactivar mi cuenta'}
+            Desactivar Cuenta
           </button>
+        </div>
+
+        {/* Sección de publicaciones del usuario */}
+        <div className="mt-12 pt-6 border-t border-border">
+          <h2 className="text-2xl font-bold text-text mb-4">Mis Publicaciones</h2>
+          <Link
+            to="/gallery"
+            className="inline-block text-primary hover:text-primary/80"
+          >
+            Ver mis publicaciones en la galería →
+          </Link>
         </div>
       </div>
     </div>
