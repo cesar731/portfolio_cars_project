@@ -5,28 +5,25 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
-
-interface Comment {
-  id: number;
-  user: string;
-  text: string;
-  date: string;
-  replies?: Comment[];
-}
+import {
+  createAccessoryComment,
+  getAccessoryComments,
+  Comment as CommentType,
+} from '../services/accessoryCommentApi';
 
 const AccessoryDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const location = useLocation(); // ✅ Captura la ubicación actual
+  const location = useLocation();
   const { user } = useAuth();
   const { addToCart } = useCart();
-
   const [accessory, setAccessory] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
-  const [comments, setComments] = useState<Comment[]>([]);
+  const [comments, setComments] = useState<CommentType[]>([]);
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchAccessory = async () => {
@@ -34,35 +31,9 @@ const AccessoryDetail = () => {
         navigate('/accessories');
         return;
       }
-
       try {
         const response = await api.get(`/accessories/${id}`);
         setAccessory(response.data);
-
-        // Comentarios simulados (reemplazar con API real cuando esté lista)
-        setComments([
-          {
-            id: 1,
-            user: 'Carlos_Racing',
-            text: '¡Excelente calidad! Lo instalé en mi Porsche y quedó perfecto.',
-            date: 'hace 2 días',
-            replies: [
-              {
-                id: 101,
-                user: 'AleronShop',
-                text: '¡Gracias por tu comentario, Carlos! Nos alegra saber que te gustó.',
-                date: 'hace 1 día',
-              },
-            ],
-          },
-          {
-            id: 2,
-            user: 'AutoFan99',
-            text: '¿Es compatible con modelos anteriores al 2020?',
-            date: 'hace 5 días',
-            replies: [],
-          },
-        ]);
       } catch (error) {
         console.error('Error fetching accessory:', error);
         toast.error('No se pudo cargar el accesorio.');
@@ -72,12 +43,21 @@ const AccessoryDetail = () => {
       }
     };
 
+    const loadComments = async () => {
+      try {
+        const data = await getAccessoryComments(Number(id));
+        setComments(data);
+      } catch (err) {
+        toast.error('No se pudieron cargar los comentarios.');
+      }
+    };
+
     fetchAccessory();
+    loadComments();
   }, [id, navigate]);
 
   const handleAddToCart = () => {
     if (!user) {
-      // ✅ Redirige al login y guarda la ruta actual
       navigate('/login', { state: { from: location } });
       return;
     }
@@ -90,25 +70,43 @@ const AccessoryDetail = () => {
       toast.error(`Solo hay ${accessory.stock} unidades disponibles.`);
       return;
     }
-
-    // ✅ Agrega al carrito (el contexto maneja la lógica de API)
     addToCart(accessory.id, quantity);
     toast.success(`¡${quantity} unidad(es) de ${accessory.name} agregadas al carrito!`);
     setQuantity(1);
   };
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (!user) {
       navigate('/login', { state: { from: location } });
       return;
     }
     if (!newComment.trim()) return;
-    setComments([
-      { id: Date.now(), user: user.username, text: newComment, date: 'ahora', replies: [] },
-      ...comments,
-    ]);
-    setNewComment('');
-    toast.success('Comentario publicado.');
+
+    setSubmitting(true);
+    try {
+      const comment = await createAccessoryComment(Number(id), newComment, replyingTo || undefined);
+      
+      if (replyingTo) {
+        setComments(prev =>
+          prev.map(c =>
+            c.id === replyingTo
+              ? { ...c, replies: [...(c.replies || []), comment] }
+              : c
+          )
+        );
+      } else {
+        setComments(prev => [comment, ...prev]);
+      }
+
+      setNewComment('');
+      setReplyingTo(null);
+      toast.success('Comentario publicado.');
+    } catch (err) {
+      toast.error('Error al publicar el comentario.');
+      console.error(err);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleReply = (commentId: number) => {
@@ -119,27 +117,6 @@ const AccessoryDetail = () => {
     setReplyingTo(commentId);
   };
 
-  const handlePostReply = (parentCommentId: number) => {
-    if (!user || !newComment.trim()) return;
-    setComments((prev) =>
-      prev.map((comment) => {
-        if (comment.id === parentCommentId) {
-          return {
-            ...comment,
-            replies: [
-              ...(comment.replies || []),
-              { id: Date.now(), user: user.username, text: newComment, date: 'ahora' },
-            ],
-          };
-        }
-        return comment;
-      })
-    );
-    setNewComment('');
-    setReplyingTo(null);
-    toast.success('Respuesta publicada.');
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-dark text-text flex items-center justify-center">
@@ -148,28 +125,7 @@ const AccessoryDetail = () => {
     );
   }
 
-  if (!accessory) {
-    return (
-      <div className="min-h-screen bg-dark text-text flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl text-red-400 mb-4">Accesorio no encontrado</h2>
-          <button
-            onClick={() => navigate('/accessories')}
-            className="px-6 py-3 bg-primary text-text rounded-lg hover:bg-primary/90"
-          >
-            Volver a la tienda
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const galleryImages = [
-    accessory.image_url || 'https://via.placeholder.com/800x600?text=Accesorio+Principal',
-    'https://via.placeholder.com/800x600?text=Perspectiva+1',
-    'https://via.placeholder.com/800x600?text=Perspectiva+2',
-    'https://via.placeholder.com/800x600?text=Instalado',
-  ];
+  if (!accessory) return null;
 
   return (
     <div className="min-h-screen bg-dark text-text">
@@ -181,7 +137,6 @@ const AccessoryDetail = () => {
           ← Volver a Accesorios
         </button>
       </header>
-
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
@@ -193,17 +148,20 @@ const AccessoryDetail = () => {
               />
             </div>
             <div className="flex space-x-2 overflow-x-auto pb-2">
-              {galleryImages.map((img, index) => (
+              {[
+                accessory.image_url || 'https://via.placeholder.com/800x600?text=Accesorio+Principal',
+                'https://via.placeholder.com/800x600?text=Perspectiva+1',
+                'https://via.placeholder.com/800x600?text=Perspectiva+2',
+              ].map((img, idx) => (
                 <img
-                  key={index}
-                  src={img.trim()}
-                  alt={`Perspectiva ${index + 1}`}
-                  className="w-20 h-20 object-cover rounded-lg border border-border cursor-pointer hover:border-primary transition-colors"
+                  key={idx}
+                  src={img}
+                  alt={`Vista ${idx + 1}`}
+                  className="w-20 h-20 object-cover rounded-lg border border-border"
                 />
               ))}
             </div>
           </div>
-
           <div className="lg:col-span-1">
             <h1 className="text-2xl font-bold text-text">{accessory.name}</h1>
             <p className="text-text-secondary mt-1">{accessory.category || '—'}</p>
@@ -228,7 +186,6 @@ const AccessoryDetail = () => {
               <h2 className="text-lg font-semibold text-text mb-2">Descripción</h2>
               <p className="text-text-secondary">{accessory.description || 'Sin descripción.'}</p>
             </div>
-
             <div className="mt-8">
               <label className="block text-text-secondary mb-2">Cantidad:</label>
               <div className="flex items-center gap-2 mb-4">
@@ -266,32 +223,29 @@ const AccessoryDetail = () => {
               >
                 {accessory.stock > 0 ? 'Agregar al carrito' : 'Agotado'}
               </button>
-              <button
-                onClick={() => navigate('/accessories')}
-                className="w-full mt-3 py-3 text-primary border border-primary rounded-lg hover:bg-primary/10"
-              >
-                Seguir comprando
-              </button>
             </div>
           </div>
         </div>
 
+        {/* Comentarios */}
         <div className="mt-16">
           <h2 className="text-2xl font-bold text-text mb-6">Comentarios ({comments.length})</h2>
           <div className="bg-dark-light p-4 rounded-lg mb-6">
             <textarea
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Escribe tu comentario..."
+              placeholder={user ? "Escribe tu comentario..." : "Inicia sesión para comentar"}
+              disabled={!user}
               className="w-full bg-dark border border-border rounded-lg px-3 py-2 text-text placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
               rows={3}
             />
             <div className="mt-3 flex justify-end">
               <button
                 onClick={handleAddComment}
-                className="px-4 py-2 bg-primary text-text rounded-lg hover:bg-primary/90 text-sm font-medium"
+                disabled={!user || !newComment.trim() || submitting}
+                className="px-4 py-2 bg-primary text-text rounded-lg hover:bg-primary/90 text-sm font-medium disabled:opacity-50"
               >
-                Publicar
+                {submitting ? 'Publicando...' : 'Publicar'}
               </button>
             </div>
           </div>
@@ -301,14 +255,16 @@ const AccessoryDetail = () => {
               <div key={comment.id} className="bg-dark-light p-4 rounded-lg border border-border/20">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                    {comment.user.charAt(0)}
+                    {comment.username.charAt(0)}
                   </div>
                   <div>
-                    <span className="font-medium text-text">{comment.user}</span>
-                    <span className="text-text-secondary text-sm ml-2">· {comment.date}</span>
+                    <span className="font-medium text-text">{comment.username}</span>
+                    <span className="text-text-secondary text-sm ml-2">
+                      · {new Date(comment.created_at).toLocaleDateString()}
+                    </span>
                   </div>
                 </div>
-                <p className="text-text-secondary mb-4">{comment.text}</p>
+                <p className="text-text-secondary mb-4">{comment.content}</p>
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => handleReply(comment.id)}
@@ -317,12 +273,13 @@ const AccessoryDetail = () => {
                     Responder
                   </button>
                 </div>
+
                 {replyingTo === comment.id && (
                   <div className="mt-4 p-3 bg-dark/50 rounded-lg">
                     <textarea
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
-                      placeholder={`Responde a ${comment.user}...`}
+                      placeholder={`Responde a ${comment.username}...`}
                       className="w-full bg-dark border border-border rounded-lg px-3 py-2 text-text placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
                       rows={2}
                     />
@@ -334,7 +291,8 @@ const AccessoryDetail = () => {
                         Cancelar
                       </button>
                       <button
-                        onClick={() => handlePostReply(comment.id)}
+                        onClick={handleAddComment}
+                        disabled={!newComment.trim() || submitting}
                         className="px-3 py-1 bg-primary text-text rounded-lg text-xs font-medium hover:bg-primary/90"
                       >
                         Enviar
@@ -342,6 +300,7 @@ const AccessoryDetail = () => {
                     </div>
                   </div>
                 )}
+
                 {comment.replies && comment.replies.length > 0 && (
                   <div className="mt-4 pl-6 border-l-2 border-border/30 space-y-4">
                     <h4 className="text-sm font-medium text-text">Respuestas ({comment.replies.length})</h4>
@@ -349,12 +308,14 @@ const AccessoryDetail = () => {
                       <div key={reply.id} className="bg-dark/50 p-3 rounded-lg">
                         <div className="flex items-center gap-2 mb-1">
                           <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-teal-500 rounded-full flex items-center justify-center text-white font-bold text-xs">
-                            {reply.user.charAt(0)}
+                            {reply.username.charAt(0)}
                           </div>
-                          <span className="font-medium text-text">{reply.user}</span>
-                          <span className="text-text-secondary text-xs">· {reply.date}</span>
+                          <span className="font-medium text-text">{reply.username}</span>
+                          <span className="text-text-secondary text-xs">
+                            · {new Date(reply.created_at).toLocaleDateString()}
+                          </span>
                         </div>
-                        <p className="text-text-secondary">{reply.text}</p>
+                        <p className="text-text-secondary">{reply.content}</p>
                       </div>
                     ))}
                   </div>

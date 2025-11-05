@@ -1,180 +1,101 @@
+// frontend/src/pages/UserGalleryDetail.tsx
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getUserGallery } from '../services/userCarGalleryApi';
-import { UserCarGalleryItem } from '../types';
-import { motion } from 'framer-motion';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-hot-toast';
+import api from '../services/api';
+import { likeGalleryEntry } from '../services/userCarGalleryApi';
 
 const UserGalleryDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const [item, setItem] = useState<UserCarGalleryItem | null>(null);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [gallery, setGallery] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchGalleryItem = async () => {
+    const fetchEntry = async () => {
+      if (!id) {
+        navigate('/gallery');
+        return;
+      }
       try {
-        const data = await getUserGallery();
-        const foundItem = data.find((i: UserCarGalleryItem) => i.id.toString() === id);
-        setItem(foundItem || null);
-      } catch (error) {
-        console.error('Error fetching gallery item:', error);
+        const res = await api.get(`/user-car-gallery/${id}`);
+        setGallery(res.data);
+      } catch (err) {
+        toast.error('Entrada no encontrada.');
+        navigate('/gallery');
       } finally {
         setLoading(false);
       }
     };
-    fetchGalleryItem();
-  }, [id]);
+    fetchEntry();
+  }, [id, navigate]);
+
+  const handleLike = async () => {
+    if (!gallery) return;
+    try {
+      const res = await likeGalleryEntry(gallery.id);
+      setGallery({ ...gallery, likes: res.likes });
+      toast.success('¡Like enviado!');
+    } catch (err) {
+      toast.error('No se pudo dar like.');
+      console.error(err);
+    }
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-dark text-text flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mb-4"></div>
-          <p className="text-text-secondary">Cargando detalles...</p>
-        </div>
+        <p className="text-text-secondary">Cargando publicación...</p>
       </div>
     );
   }
 
-  if (!item) {
-    return (
-      <div className="min-h-screen bg-dark text-text flex flex-col items-center justify-center text-center">
-        <h2 className="text-2xl text-white mb-4">Publicación no encontrada</h2>
-        <p className="text-text-secondary mb-6">La publicación que buscas no existe o fue eliminada.</p>
-        <Link
-          to="/gallery"
-          className="px-6 py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition"
-        >
-          Volver a la galería
-        </Link>
-      </div>
-    );
-  }
+  if (!gallery) return null;
 
   return (
-    <div className="min-h-screen bg-dark text-text pb-16">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4 }}
-        className="max-w-5xl mx-auto px-6 py-10"
-      >
-        {/* Botón de regreso */}
+    <div className="min-h-screen bg-dark text-text">
+      <header className="bg-dark-light border-b border-border px-6 py-4">
         <button
-          onClick={() => navigate(-1)}
-          className="text-text-secondary hover:text-primary transition mb-6 flex items-center gap-2"
+          onClick={() => navigate('/gallery')}
+          className="text-primary hover:text-primary/80 flex items-center gap-2"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Volver
+          ← Volver a Galería
         </button>
-
-        {/* Imagen principal */}
-        <div className="rounded-2xl overflow-hidden mb-8 border border-border shadow-md shadow-primary/20">
-          <img
-            src={item.image_url || 'https://via.placeholder.com/800x500?text=Publicación'}
-            alt={item.car_name}
-            className="w-full h-[400px] object-cover"
-          />
+      </header>
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="text-center mb-6">
+          <h1 className="text-3xl font-bold text-text">{gallery.car_name}</h1>
+          {gallery.brand && (
+            <p className="text-text-secondary">
+              {gallery.brand} {gallery.model} • {gallery.year}
+            </p>
+          )}
         </div>
-
-        {/* Encabezado */}
-        <h1 className="text-3xl md:text-4xl font-semibold text-white mb-2">
-          {item.car_name}
-        </h1>
-
-        <p className="text-text-secondary mb-6">
-          Publicado por <span className="text-white font-medium">{item.user?.username || 'Anónimo'}</span> ·{' '}
-          {new Date(item.created_at).toLocaleDateString('es-ES', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-          })}
-        </p>
-
-        {/* Descripción */}
-        <div className="bg-dark-light p-6 rounded-xl border border-border mb-8">
-          <h2 className="text-xl font-semibold text-white mb-3">Descripción</h2>
-          <p className="text-text leading-relaxed whitespace-pre-line">
-            {item.description || 'Sin descripción disponible.'}
-          </p>
+        <img
+          src={gallery.image_url}
+          alt={gallery.car_name}
+          className="w-full h-96 object-cover rounded-xl mb-6 border border-border"
+        />
+        <div className="bg-dark-light p-6 rounded-xl mb-6">
+          <p className="text-text-secondary whitespace-pre-line">{gallery.description}</p>
         </div>
-
-        {/* Detalles técnicos (solo si es vehículo) */}
-        {item.is_vehicle && (
-          <div className="bg-dark-light p-6 rounded-xl border border-border mb-8">
-            <h2 className="text-xl font-semibold text-white mb-3">Detalles del Vehículo</h2>
-            <div className="flex flex-wrap gap-3 text-sm text-text-secondary">
-              {item.brand && (
-                <span className="px-3 py-1 bg-dark rounded-lg border border-border">
-                  Marca: <span className="text-white">{item.brand}</span>
-                </span>
-              )}
-              {item.model && (
-                <span className="px-3 py-1 bg-dark rounded-lg border border-border">
-                  Modelo: <span className="text-white">{item.model}</span>
-                </span>
-              )}
-              {item.year && (
-                <span className="px-3 py-1 bg-dark rounded-lg border border-border">
-                  Año: <span className="text-white">{item.year}</span>
-                </span>
-              )}
-              {item.horsepower && (
-                <span className="px-3 py-1 bg-dark rounded-lg border border-border">
-                  Potencia: <span className="text-white">{item.horsepower} HP</span>
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Interacciones */}
-        <div className="flex items-center justify-between mt-10 border-t border-border pt-4">
-          <div className="flex items-center gap-2 text-text-secondary">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-              />
+        <div className="flex items-center justify-between">
+          <button
+            onClick={handleLike}
+            className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.81 0-1.568-.44-1.831-1.111l-3.5-7A2 2 0 016 11h4.764" />
             </svg>
-            <span>{item.likes || 0} me gusta</span>
-          </div>
-
-          <div className="flex items-center gap-2 text-text-secondary">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-              />
-            </svg>
-            <span>0 comentarios</span>
-          </div>
+            {gallery.likes || 0} likes
+          </button>
+          <span className="text-text-secondary text-sm">
+            Publicado por: {gallery.user?.username || 'Usuario'}
+          </span>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };
