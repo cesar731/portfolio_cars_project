@@ -121,3 +121,14 @@ export interface Notification {
   created_at: string;
   updated_at: string;
 }
+
+
+export interface UserCarGalleryOut {
+  id: number;
+  car_name: string;
+  description?: string;
+  image_url: string;
+  likes: number;
+  user_id: number;
+  created_at: string;
+}
