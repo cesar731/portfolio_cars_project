@@ -225,12 +225,12 @@ const Cart = () => {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => toast('Funcionalidad de pago en desarrollo')}
-                  className="w-full mt-8 py-3 bg-primary text-text rounded-lg font-medium hover:bg-primary/90 transition"
-                >
-                  Proceder al Pago
-                </button>
+                <Link
+  to="/checkout"
+  className="w-full mt-8 py-3 bg-primary text-text rounded-lg font-medium hover:bg-primary/90 transition"
+>
+  Proceder al Pago
+</Link>
               </div>
             </div>
           </>

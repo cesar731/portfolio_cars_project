@@ -27,6 +27,7 @@ import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import ScrollToTop from './components/ScrollToTop';
 import UserGalleryEdit from './pages/UserGalleryEdit';
+import Checkout from './pages/Checkout'; 
 
 function App() {
   
@@ -61,6 +62,7 @@ function App() {
                 <Route path="/cars/edit/:id" element={<CarEdit />} />
                 <Route path="/accessories/new" element={<AccessoryCreate />} />
                 <Route path="/accessories/edit/:id" element={<AccessoryEdit />} />
+                <Route path="/checkout" element={<Checkout />} />
                 <Route path="/advisor" element={<AdvisorPanel />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

@@ -9,3 +9,5 @@ from .consultation import Consultation
 from .user_car_gallery import UserCarGallery  
 from .cart_item import CartItem
 from .notification import Notification  
+from .purchase_item import PurchaseItem
+from .purchase import Purchase

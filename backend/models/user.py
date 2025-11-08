@@ -3,6 +3,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from ..database.database import Base
 from datetime import datetime
+from .purchase import Purchase
 
 class User(Base):
     __tablename__ = "users"
@@ -34,3 +35,5 @@ class User(Base):
 
     # 🔥 RELACIÓN FALTANTE (CORREGIDA)
     accessory_comments = relationship("AccessoryComment", back_populates="user")
+
+    purchases = relationship("Purchase", back_populates="user")
