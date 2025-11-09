@@ -20,6 +20,7 @@ def create_comment(
     ).first()
     if not accessory:
         raise HTTPException(status_code=404, detail="Accesorio no encontrado")
+    
     db_comment = models.accessory_comment.AccessoryComment(
         accessory_id=accessory_id,
         user_id=current_user.id,
@@ -29,6 +30,18 @@ def create_comment(
     db.add(db_comment)
     db.commit()
     db.refresh(db_comment)
+
+    # 👇 Recargar el comentario con las relaciones necesarias para que Pydantic pueda serializarlo
+    db_comment = (
+        db.query(models.accessory_comment.AccessoryComment)
+        .options(
+            joinedload(models.accessory_comment.AccessoryComment.user),
+            joinedload(models.accessory_comment.AccessoryComment.replies)
+            .joinedload(models.accessory_comment.AccessoryComment.user)
+        )
+        .filter(models.accessory_comment.AccessoryComment.id == db_comment.id)
+        .first()
+    )
     return db_comment
 
 @router.get("/{accessory_id}/comments", response_model=list[AccessoryCommentOut])
@@ -38,6 +51,7 @@ def get_comments(accessory_id: int, db: Session = Depends(get_db)):
     ).first()
     if not accessory:
         raise HTTPException(status_code=404, detail="Accesorio no encontrado")
+    
     comments = (
         db.query(models.accessory_comment.AccessoryComment)
         .filter(
