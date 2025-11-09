@@ -40,7 +40,6 @@ const AdvisorPanel = () => {
     navigate('/login');
   };
 
-  // ✅ ¡NUEVA FUNCIÓN! Para responder una consulta
   const handleRespond = async (consultationId: number, message: string) => {
     if (!message.trim()) {
       toast.error('El mensaje de respuesta no puede estar vacío.');
@@ -53,7 +52,6 @@ const AdvisorPanel = () => {
         status: 'responded',
       });
       toast.success('¡Consulta respondida con éxito!');
-      // Actualizar la lista de consultas
       setConsultations(prev =>
         prev.map(c =>
           c.id === consultationId
@@ -125,33 +123,41 @@ const AdvisorPanel = () => {
                   )}
                 </div>
 
-                {consult.status === 'pending' && (
-                  <div className="mt-4">
-                    <textarea
-                      placeholder="Escribe tu respuesta aquí..."
-                      className="w-full px-3 py-2 bg-dark border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary mb-2"
-                      rows={3}
-                      // ✅ ¡CORREGIDO! Usamos un estado local por consulta
-                      onChange={(e) => {
-                        // Podrías manejar el estado por consulta si lo deseas, pero para simplicidad lo dejamos así
-                        // En producción, podrías usar un estado como { [consultationId]: message }
-                      }}
-                    />
-                    <button
-                      onClick={() => {
-                        // ✅ ¡CORREGIDO! Obtenemos el valor del textarea
-                        const textarea = document.querySelector(`textarea[placeholder="Escribe tu respuesta aquí..."]`) as HTMLTextAreaElement;
-                        if (textarea) {
-                          handleRespond(consult.id, textarea.value);
-                          textarea.value = ''; // Limpiar el campo después de enviar
-                        }
-                      }}
-                      className="w-full py-2 bg-primary text-text rounded-lg font-medium hover:bg-primary/90 transition-colors"
+                {/* ✅ BOTONES DE ACCIÓN */}
+                <div className="mt-4 flex flex-col gap-3">
+                  {consult.status === 'pending' && (
+                    <>
+                      <textarea
+                        placeholder="Escribe tu respuesta aquí..."
+                        className="w-full px-3 py-2 bg-dark border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary mb-2"
+                        rows={3}
+                        id={`response-${consult.id}`}
+                      />
+                      <button
+                        onClick={() => {
+                          const textarea = document.getElementById(`response-${consult.id}`) as HTMLTextAreaElement;
+                          if (textarea?.value.trim()) {
+                            handleRespond(consult.id, textarea.value);
+                            textarea.value = '';
+                          }
+                        }}
+                        className="w-full py-2 bg-primary text-text rounded-lg font-medium hover:bg-primary/90 transition-colors"
+                      >
+                        Responder
+                      </button>
+                    </>
+                  )}
+
+                  {/* ✅ BOTÓN DE CHAT (SI HAY USUARIO ASOCIADO) */}
+                  {consult.user_id && (
+                    <Link
+                      to={`/chat/${consult.user_id}`}
+                      className="w-full py-2 bg-blue-600/20 text-blue-400 rounded-lg font-medium hover:bg-blue-600/30 transition-colors text-center flex items-center justify-center gap-2"
                     >
-                      Responder
-                    </button>
-                  </div>
-                )}
+                      💬 Abrir Chat
+                    </Link>
+                  )}
+                </div>
               </div>
             ))}
           </div>

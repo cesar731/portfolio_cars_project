@@ -11,3 +11,4 @@ from .cart_item import CartItem
 from .notification import Notification  
 from .purchase_item import PurchaseItem
 from .purchase import Purchase
+from .message import Message

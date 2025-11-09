@@ -1,14 +1,31 @@
 // frontend/src/components/Header.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import api from '../services/api';
 
 const Header = () => {
   const { user, logout } = useAuth();
   const { cartItems } = useCart();
   const navigate = useNavigate();
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // ✅ Controla el menú hamburguesa
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [advisorId, setAdvisorId] = useState<number | null>(null);
+
+  // Obtener un asesor disponible (role_id = 2)
+  useEffect(() => {
+    const fetchAdvisor = async () => {
+      if (!user) return;
+      try {
+        const res = await api.get('/users');
+        const advisor = res.data.find((u: any) => u.role_id === 2);
+        setAdvisorId(advisor?.id || null);
+      } catch (err) {
+        console.error('No se pudo cargar un asesor');
+      }
+    };
+    fetchAdvisor();
+  }, [user]);
 
   const handleLogout = () => {
     logout();
@@ -26,12 +43,10 @@ const Header = () => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-dark-light border-b border-border px-6 py-4">
       <div className="flex items-center justify-between">
-        {/* Logo */}
         <Link to="/" className="text-xl font-bold text-text hover:text-primary transition-colors">
           Viaggio Velogge
         </Link>
 
-        {/* Menú hamburguesa (solo en móvil) */}
         <button
           className="md:hidden text-text"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -48,7 +63,6 @@ const Header = () => {
           )}
         </button>
 
-        {/* Menú de escritorio (oculto en móvil) */}
         <nav className="hidden md:flex items-center gap-6">
           {navItems.map((item) => (
             <Link
@@ -61,7 +75,6 @@ const Header = () => {
           ))}
         </nav>
 
-        {/* Botones de autenticación / carrito (escritorio) */}
         <div className="hidden md:flex items-center gap-4">
           {user ? (
             <>
@@ -76,6 +89,19 @@ const Header = () => {
                   </span>
                 )}
               </Link>
+
+              {/* Botón de chat (si hay asesor) */}
+              {advisorId && (
+                <Link
+                  to={`/chat/${advisorId}`}
+                  className="relative p-2 text-text hover:text-primary transition-colors"
+                  title="Chatear con asesor"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </Link>
+              )}
 
               {/* Menú de usuario */}
               <div className="relative group">
@@ -121,7 +147,7 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Menú móvil (solo visible cuando isMenuOpen = true) */}
+      {/* Menú móvil */}
       {isMenuOpen && (
         <div className="md:hidden mt-4 pb-4 border-t border-border/30">
           <div className="flex flex-col gap-4">
@@ -144,6 +170,17 @@ const Header = () => {
                 >
                   🛒 Carrito ({cartItems.length})
                 </Link>
+
+                {advisorId && (
+                  <Link
+                    to={`/chat/${advisorId}`}
+                    className="text-text hover:text-primary transition-colors py-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    💬 Chat con Asesor
+                  </Link>
+                )}
+
                 <Link
                   to="/profile"
                   className="text-text hover:text-primary transition-colors py-2"

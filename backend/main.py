@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.database.database import Base, engine
-from backend.routers import accessories, auth, cars, consultations, user_car_gallery, users, cart, notifications, accessory_comments, purchases
+from backend.routers import accessories, auth, cars, consultations, user_car_gallery, users, cart, notifications, accessory_comments, purchases, messages 
 
 from dotenv import load_dotenv
 
@@ -34,6 +34,7 @@ app.include_router(cart.router, prefix="/api/cart", tags=["Cart"])
 app.include_router(notifications.router, prefix="/api/notifications", tags=["Notifications"])
 app.include_router(accessory_comments.router, prefix="/api/accessories", tags=["Accessory Comments"])
 app.include_router(purchases.router, prefix="/api/purchases", tags=["Purchases"])
+app.include_router(messages.router, prefix="/api/messages", tags=["Messages"])
 
 @app.get("/")
 def root():

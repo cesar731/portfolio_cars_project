@@ -28,6 +28,7 @@ import { CartProvider } from './context/CartContext';
 import ScrollToTop from './components/ScrollToTop';
 import UserGalleryEdit from './pages/UserGalleryEdit';
 import Checkout from './pages/Checkout'; 
+import ChatPage from './pages/ChatPage';
 
 function App() {
   
@@ -64,6 +65,7 @@ function App() {
                 <Route path="/accessories/edit/:id" element={<AccessoryEdit />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/advisor" element={<AdvisorPanel />} />
+                <Route path="/chat/:advisorId" element={<ChatPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
