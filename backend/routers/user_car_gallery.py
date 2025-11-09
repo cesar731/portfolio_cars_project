@@ -56,13 +56,53 @@ def delete_user_car_gallery_entry(entry_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Entrada eliminada correctamente"}
 
-# ✅ LIKE PROTEGIDO (opcional, pero funcional sin auth si lo deseas)
-@router.post("/{entry_id}/like", response_model=dict)
-def like_gallery_entry(entry_id: int, db: Session = Depends(get_db)):
-    entry = db.query(models.user_car_gallery.UserCarGallery).filter(models.user_car_gallery.UserCarGallery.id == entry_id).first()
+@router.post("/{entry_id}/like", status_code=200)
+def like_gallery_entry(
+    entry_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    # Verificar que la publicación existe
+    entry = db.query(models.UserCarGallery).filter(models.UserCarGallery.id == entry_id).first()
     if not entry:
-        raise HTTPException(status_code=404, detail="Entrada no encontrada")
+        raise HTTPException(status_code=404, detail="Publicación no encontrada")
+
+    # Verificar si ya le dio like
+    existing = db.query(models.UserCarGalleryLike).filter(
+        models.UserCarGalleryLike.user_id == current_user.id,
+        models.UserCarGalleryLike.gallery_id == entry_id
+    ).first()
+
+    if existing:
+        # Ya dio like → no hacer nada o devolver mensaje
+        return {"liked": True, "likes": entry.likes}
+
+    # Crear like
+    like = models.UserCarGalleryLike(user_id=current_user.id, gallery_id=entry_id)
+    db.add(like)
     entry.likes = (entry.likes or 0) + 1
     db.commit()
-    db.refresh(entry)
-    return {"likes": entry.likes}
+
+    return {"liked": True, "likes": entry.likes}
+
+@router.delete("/{entry_id}/like", status_code=200)
+def unlike_gallery_entry(
+    entry_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    entry = db.query(models.UserCarGallery).filter(models.UserCarGallery.id == entry_id).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Publicación no encontrada")
+
+    like = db.query(models.UserCarGalleryLike).filter(
+        models.UserCarGalleryLike.user_id == current_user.id,
+        models.UserCarGalleryLike.gallery_id == entry_id
+    ).first()
+
+    if like:
+        db.delete(like)
+        entry.likes = max(0, (entry.likes or 0) - 1)
+        db.commit()
+
+    return {"liked": False, "likes": entry.likes}
