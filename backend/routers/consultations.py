@@ -36,7 +36,8 @@ def create_consultation(
 def get_all_consultations(db: Session = Depends(get_db)):
     # ✅ ¡CORREGIDO! Cargamos la relación con el usuario para que ConsultationOut pueda serializarlo
     consultations = db.query(models.consultation.Consultation).options(
-        joinedload(models.consultation.Consultation.user)  # Carga el usuario
+        joinedload(models.consultation.Consultation.user),
+          joinedload(models.Consultation.advisor)  # Carga el usuario
     ).all()
     return consultations
 
