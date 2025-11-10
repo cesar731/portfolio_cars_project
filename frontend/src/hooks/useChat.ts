@@ -1,6 +1,7 @@
 // frontend/src/hooks/useChat.ts
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
+import api from '../services/api';
 
 interface Message {
   id: number;
@@ -19,7 +20,10 @@ export const useChat = (userId: number, receiverId: number, consultationId: numb
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (!token) return;
+    if (!token) {
+      toast.error('No autenticado');
+      return;
+    }
 
     const wsUrl = `ws://localhost:8000/api/messages/ws/${userId}`;
     ws.current = new WebSocket(wsUrl);
@@ -35,16 +39,14 @@ export const useChat = (userId: number, receiverId: number, consultationId: numb
       }
     };
 
-    ws.current.onerror = () => toast.error('Error en la conexión de chat');
+    ws.current.onerror = () => toast.error('Error en la conexión del chat');
     ws.current.onclose = () => setConnected(false);
 
-    // Reemplaza esa línea por:
-fetch(`${import.meta.env.VITE_API_URL}/messages/consultation/${consultationId}`, {
-  headers: { Authorization: `Bearer ${token}` }
-})
-.then(res => res.json())
-.then(data => setMessages(data))
-.catch(() => toast.error('No se pudo cargar el historial'));
+    // ✅ Cargar historial usando la API centralizada (con auth automática)
+    api.get(`/messages/consultation/${consultationId}`)
+      .then((res) => setMessages(res.data))
+      .catch(() => toast.error('No se pudo cargar el historial'));
+
     return () => {
       ws.current?.close();
     };
@@ -52,6 +54,19 @@ fetch(`${import.meta.env.VITE_API_URL}/messages/consultation/${consultationId}`,
 
   const sendMessage = (content: string) => {
     if (ws.current?.readyState === WebSocket.OPEN) {
+      // ✅ Añadir mensaje localmente de inmediato
+      const newLocalMessage: Message = {
+        id: Date.now(),
+        sender_id: userId,
+        receiver_id: receiverId,
+        consultation_id: consultationId,
+        content,
+        created_at: new Date().toISOString(),
+        sender: { username: 'Tú' },
+      };
+      setMessages((prev) => [...prev, newLocalMessage]);
+
+      // Enviar por WebSocket
       ws.current.send(
         JSON.stringify({
           receiver_id: receiverId,

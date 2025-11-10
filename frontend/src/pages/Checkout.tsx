@@ -15,12 +15,10 @@ const Checkout = () => {
       toast.error('Debes iniciar sesión para continuar.');
       return;
     }
-
     if (cartItems.length === 0) {
       toast.error('Tu carrito está vacío.');
       return;
     }
-
     const userId = Number(user.id);
     if (isNaN(userId)) {
       toast.error('Error: ID de usuario inválido.');
@@ -43,15 +41,25 @@ const Checkout = () => {
         items
       });
 
-      // Descargar PDF inmediatamente
+      // ✅ CORREGIDO: Descargar como HTML (no PDF)
       const purchaseId = response.data.id;
-      const pdfUrl = `/api/purchases/${purchaseId}/invoice`;
-      const link = document.createElement('a');
-      link.href = pdfUrl;
-      link.download = `factura_${response.data.invoice_number}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      try {
+        const htmlResponse = await api.get(`/purchases/${purchaseId}/invoice`, {
+          responseType: 'blob',
+        });
+
+        const url = window.URL.createObjectURL(new Blob([htmlResponse.data], { type: 'text/html' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `factura_${response.data.invoice_number}.html`); // 👈 .html
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } catch (htmlErr) {
+        console.error('Error al descargar factura:', htmlErr);
+        toast.error('No se pudo descargar la factura. Puedes descargarla más tarde desde tu perfil.');
+      }
 
       toast.success(`Compra realizada. Factura: ${response.data.invoice_number}`);
       clearCart();

@@ -1,6 +1,6 @@
 # backend/routers/purchases.py
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import FileResponse
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 from backend.database.database import get_db
 from backend import models
@@ -9,26 +9,20 @@ from backend.schemas.purchase import PurchaseCreate, PurchaseOut
 from datetime import datetime
 import uuid
 import os
-import pdfkit
 
 router = APIRouter()
-
-# Directorio para facturas
-PDF_DIR = "invoices"
-os.makedirs(PDF_DIR, exist_ok=True)
 
 def generate_invoice_number() -> str:
     return f"INV-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
 
 @router.post("/checkout", response_model=PurchaseOut)
 def checkout(
-    purchase_: PurchaseCreate,  # ✅ Corregido: nombre de variable + tipo
+    purchase_: PurchaseCreate,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
     if current_user.id != purchase_.user_id:
         raise HTTPException(status_code=403, detail="No autorizado")
-
     total = 0.0
     purchase_items = []
     for item in purchase_.items:
@@ -40,7 +34,6 @@ def checkout(
             )
         total += accessory.price * item.quantity
         purchase_items.append((accessory, item.quantity))
-
     invoice_num = generate_invoice_number()
     purchase = models.Purchase(
         user_id=current_user.id,
@@ -49,7 +42,6 @@ def checkout(
     )
     db.add(purchase)
     db.flush()
-
     for accessory, qty in purchase_items:
         db_item = models.PurchaseItem(
             purchase_id=purchase.id,
@@ -59,13 +51,11 @@ def checkout(
         )
         accessory.stock -= qty
         db.add(db_item)
-
     db.commit()
     db.refresh(purchase)
     return purchase
 
-
-@router.get("/{purchase_id}/invoice", response_class=FileResponse)
+@router.get("/{purchase_id}/invoice")
 def download_invoice(
     purchase_id: int,
     db: Session = Depends(get_db),
@@ -110,7 +100,6 @@ def download_invoice(
             </thead>
             <tbody>
     """
-
     total_general = 0
     for item in purchase.items:
         total_item = item.quantity * item.price_at_purchase
@@ -123,7 +112,6 @@ def download_invoice(
                     <td>${total_item:,.2f}</td>
                 </tr>
         """
-
     html_content += f"""
             </tbody>
         </table>
@@ -133,17 +121,11 @@ def download_invoice(
     </html>
     """
 
-    html_path = os.path.join(PDF_DIR, f"{purchase.invoice_number}.html")
-    pdf_path = os.path.join(PDF_DIR, f"{purchase.invoice_number}.pdf")
-
-    with open(html_path, "w", encoding="utf-8") as f:
-        f.write(html_content)
-
-    pdfkit.from_file(html_path, pdf_path)
-    os.remove(html_path)
-
-    return FileResponse(
-        path=pdf_path,
-        media_type="application/pdf",
-        filename=f"factura_{purchase.invoice_number}.pdf"
+    # ✅ Devolver HTML como archivo descargable
+    return Response(
+        content=html_content,
+        media_type="text/html",
+        headers={
+            "Content-Disposition": f'attachment; filename="factura_{purchase.invoice_number}.html"'
+        }
     )
