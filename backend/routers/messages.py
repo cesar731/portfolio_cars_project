@@ -85,10 +85,13 @@ def get_message_history_by_consultation(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
+    # ✅ CORRECTO: El usuario debe ser parte de la consulta (como solicitante o asesor)
     consultation = db.query(models.Consultation).filter(
         models.Consultation.id == consultation_id,
-        models.Consultation.user_id.in_([current_user.id]),
-        models.Consultation.advisor_id.in_([current_user.id])
+        (
+            (models.Consultation.user_id == current_user.id) |
+            (models.Consultation.advisor_id == current_user.id)
+        )
     ).first()
     if not consultation:
         raise HTTPException(status_code=403, detail="Consulta no autorizada")

@@ -31,6 +31,7 @@ const AdvisorPanel = () => {
         setLoading(false);
       }
     };
+
     fetchConsultations();
   }, [user, navigate]);
 
@@ -76,7 +77,6 @@ const AdvisorPanel = () => {
 
   return (
     <div className="min-h-screen bg-dark text-text">
-      {/* Header */}
       <header className="bg-dark-light border-b border-border px-6 py-4 flex items-center justify-between">
         <h1 className="text-2xl font-light text-text">Panel de Asesor</h1>
         <button
@@ -116,7 +116,6 @@ const AdvisorPanel = () => {
                     <p>Respondido: {new Date(consult.answered_at).toLocaleString()}</p>
                   )}
                 </div>
-                {/* ✅ BOTONES DE ACCIÓN */}
                 <div className="mt-4 flex flex-col gap-3">
                   {consult.status === 'pending' && (
                     <>
@@ -142,10 +141,11 @@ const AdvisorPanel = () => {
                       </button>
                     </>
                   )}
-                  {/* ✅ BOTÓN DE CHAT SOLO SI ESTÁ RESPONDIDA Y HAY USER_ID */}
+
+                  {/* ✅ CORREGIDO: Ruta correcta con solo consultationId */}
                   {consult.status === 'responded' && consult.user_id && (
                     <Link
-                      to={`/chat/${consult.user_id}/${consult.id}`}
+                      to={`/chat/${consult.id}`}
                       className="w-full py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-center"
                     >
                       💬 Abrir Chat con {consult.user?.username || 'Usuario'}
