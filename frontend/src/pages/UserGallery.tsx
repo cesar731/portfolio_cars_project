@@ -51,7 +51,7 @@ const UserGallery = () => {
         className="relative w-full h-[100vh] flex flex-col items-center justify-center text-center"
         style={{
           backgroundImage:
-            'linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.6)), url(https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1600&q=70)',
+            'linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.6)), url(../public/images/galleryft.jpeg)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundAttachment: 'scroll'

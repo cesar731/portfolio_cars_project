@@ -1,5 +1,5 @@
 // frontend/src/pages/AdminDashboard.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
@@ -11,6 +11,12 @@ const AdminDashboard = () => {
   const [cars, setCars] = useState<any[]>([]);
   const [accessories, setAccessories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // === Estados para los términos de búsqueda ===
+  const [userSearch, setUserSearch] = useState('');
+  const [carSearch, setCarSearch] = useState('');
+  const [accessorySearch, setAccessorySearch] = useState('');
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,12 +28,9 @@ const AdminDashboard = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Cargar cada recurso individualmente para evitar que uno falle y bloquee todo
         const loadUsers = api.get('/users').then(res => setUsers(res.data)).catch(err => console.error('Users:', err));
         const loadCars = api.get('/cars').then(res => setCars(res.data)).catch(err => console.error('Cars:', err));
         const loadAccessories = api.get('/accessories').then(res => setAccessories(res.data)).catch(err => console.error('Accessories:', err));
-        
-
         await Promise.allSettled([loadUsers, loadCars, loadAccessories]);
       } catch (error) {
         toast.error('Error al cargar los datos del panel.');
@@ -44,6 +47,36 @@ const AdminDashboard = () => {
     logout();
     navigate('/login');
   };
+
+  // === Filtros con useMemo para evitar recálculos innecesarios ===
+  const filteredUsers = useMemo(() => {
+    if (!userSearch.trim()) return users;
+    const term = userSearch.toLowerCase();
+    return users.filter(u =>
+      u.username.toLowerCase().includes(term) ||
+      u.email.toLowerCase().includes(term)
+    );
+  }, [users, userSearch]);
+
+  const filteredCars = useMemo(() => {
+    if (!carSearch.trim()) return cars;
+    const term = carSearch.toLowerCase();
+    return cars.filter(c =>
+      c.brand.toLowerCase().includes(term) ||
+      c.model.toLowerCase().includes(term) ||
+      c.description?.toLowerCase().includes(term)
+    );
+  }, [cars, carSearch]);
+
+  const filteredAccessories = useMemo(() => {
+    if (!accessorySearch.trim()) return accessories;
+    const term = accessorySearch.toLowerCase();
+    return accessories.filter(a =>
+      a.name.toLowerCase().includes(term) ||
+      a.description?.toLowerCase().includes(term) ||
+      a.category?.toLowerCase().includes(term)
+    );
+  }, [accessories, accessorySearch]);
 
   if (loading) {
     return (
@@ -104,14 +137,47 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Secciones detalladas */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Autos */}
-          <div className="bg-dark-light p-6 rounded-xl border border-border">
-            <h3 className="text-xl font-bold text-text mb-4">Autos ({cars.length})</h3>
-            <div className="space-y-3 max-h-80 overflow-y-auto">
-              {cars.slice(0, 5).map(car => (
-                <div key={car.id} className="flex justify-between items-center p-3 bg-dark/50 rounded">
+        {/* Sección de Usuarios con buscador */}
+        <div className="mb-10">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold text-text">Usuarios ({filteredUsers.length})</h3>
+            <input
+              type="text"
+              placeholder="Buscar por nombre o email..."
+              value={userSearch}
+              onChange={(e) => setUserSearch(e.target.value)}
+              className="px-3 py-1 bg-dark border border-border rounded-lg text-text text-sm w-64 focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+          <div className="bg-dark-light p-4 rounded-lg border border-border max-h-60 overflow-y-auto">
+            {filteredUsers.length > 0 ? (
+              filteredUsers.slice(0, 5).map(u => (
+                <div key={u.id} className="py-2 border-b border-border/30 last:border-0">
+                  <span className="font-medium">{u.username}</span> • <span className="text-sm text-text-secondary">{u.email}</span>
+                </div>
+              ))
+            ) : (
+              <p className="text-text-secondary text-sm">No se encontraron usuarios.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Sección de Autos con buscador */}
+        <div className="mb-10">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold text-text">Autos ({filteredCars.length})</h3>
+            <input
+              type="text"
+              placeholder="Buscar por marca, modelo o descripción..."
+              value={carSearch}
+              onChange={(e) => setCarSearch(e.target.value)}
+              className="px-3 py-1 bg-dark border border-border rounded-lg text-text text-sm w-64 focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+          <div className="bg-dark-light p-4 rounded-lg border border-border max-h-60 overflow-y-auto">
+            {filteredCars.length > 0 ? (
+              filteredCars.slice(0, 5).map(car => (
+                <div key={car.id} className="flex justify-between items-center py-2 border-b border-border/30 last:border-0">
                   <div>
                     <p className="font-medium">{car.brand} {car.model}</p>
                     <p className="text-sm text-text-secondary">${car.price.toLocaleString()}</p>
@@ -123,19 +189,29 @@ const AdminDashboard = () => {
                     Editar
                   </Link>
                 </div>
-              ))}
-            </div>
-            {cars.length > 5 && (
-              <Link to="/cars" className="mt-3 inline-block text-primary text-sm">Ver todos</Link>
+              ))
+            ) : (
+              <p className="text-text-secondary text-sm">No se encontraron autos.</p>
             )}
           </div>
+        </div>
 
-          {/* Accesorios */}
-          <div className="bg-dark-light p-6 rounded-xl border border-border">
-            <h3 className="text-xl font-bold text-text mb-4">Accesorios ({accessories.length})</h3>
-            <div className="space-y-3 max-h-80 overflow-y-auto">
-              {accessories.slice(0, 5).map(acc => (
-                <div key={acc.id} className="flex justify-between items-center p-3 bg-dark/50 rounded">
+        {/* Sección de Accesorios con buscador */}
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold text-text">Accesorios ({filteredAccessories.length})</h3>
+            <input
+              type="text"
+              placeholder="Buscar por nombre, descripción o categoría..."
+              value={accessorySearch}
+              onChange={(e) => setAccessorySearch(e.target.value)}
+              className="px-3 py-1 bg-dark border border-border rounded-lg text-text text-sm w-64 focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+          <div className="bg-dark-light p-4 rounded-lg border border-border max-h-60 overflow-y-auto">
+            {filteredAccessories.length > 0 ? (
+              filteredAccessories.slice(0, 5).map(acc => (
+                <div key={acc.id} className="flex justify-between items-center py-2 border-b border-border/30 last:border-0">
                   <div>
                     <p className="font-medium">{acc.name}</p>
                     <p className="text-sm text-text-secondary">${acc.price.toLocaleString()} • {acc.category}</p>
@@ -147,16 +223,11 @@ const AdminDashboard = () => {
                     Editar
                   </Link>
                 </div>
-              ))}
-            </div>
-            {accessories.length > 5 && (
-              <Link to="/accessories" className="mt-3 inline-block text-primary text-sm">Ver todos</Link>
+              ))
+            ) : (
+              <p className="text-text-secondary text-sm">No se encontraron accesorios.</p>
             )}
           </div>
-
-          
-
-          
         </div>
       </div>
     </div>
