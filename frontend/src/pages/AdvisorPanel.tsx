@@ -31,7 +31,6 @@ const AdvisorPanel = () => {
         setLoading(false);
       }
     };
-
     fetchConsultations();
   }, [user, navigate]);
 
@@ -45,15 +44,14 @@ const AdvisorPanel = () => {
       toast.error('El mensaje de respuesta no puede estar vacío.');
       return;
     }
-
     try {
       await api.put(`/consultations/${consultationId}/respond`, {
-        message: message,
+        message,
         status: 'responded',
       });
       toast.success('¡Consulta respondida con éxito!');
-      setConsultations(prev =>
-        prev.map(c =>
+      setConsultations((prev) =>
+        prev.map((c) =>
           c.id === consultationId
             ? { ...c, status: 'responded', answered_at: new Date().toISOString() }
             : c
@@ -88,10 +86,8 @@ const AdvisorPanel = () => {
           Cerrar Sesión
         </button>
       </header>
-
       <div className="container mx-auto px-6 py-12">
         <h2 className="text-3xl font-light text-white mb-8">Consultas Asignadas</h2>
-
         {consultations.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-text-secondary">No tienes consultas asignadas en este momento.</p>
@@ -112,9 +108,7 @@ const AdvisorPanel = () => {
                     {consult.status === 'pending' ? 'Pendiente' : 'Respondida'}
                   </span>
                 </div>
-
                 <p className="text-text-secondary mb-4">{consult.message}</p>
-
                 <div className="text-sm text-text-secondary mb-4">
                   <p>De: {consult.user?.username || `Usuario ID: ${consult.user_id}`}</p>
                   <p>Enviado: {new Date(consult.created_at).toLocaleString()}</p>
@@ -122,7 +116,6 @@ const AdvisorPanel = () => {
                     <p>Respondido: {new Date(consult.answered_at).toLocaleString()}</p>
                   )}
                 </div>
-
                 {/* ✅ BOTONES DE ACCIÓN */}
                 <div className="mt-4 flex flex-col gap-3">
                   {consult.status === 'pending' && (
@@ -135,7 +128,9 @@ const AdvisorPanel = () => {
                       />
                       <button
                         onClick={() => {
-                          const textarea = document.getElementById(`response-${consult.id}`) as HTMLTextAreaElement;
+                          const textarea = document.getElementById(
+                            `response-${consult.id}`
+                          ) as HTMLTextAreaElement;
                           if (textarea?.value.trim()) {
                             handleRespond(consult.id, textarea.value);
                             textarea.value = '';
@@ -147,14 +142,13 @@ const AdvisorPanel = () => {
                       </button>
                     </>
                   )}
-
-                  {/* ✅ BOTÓN DE CHAT (SI HAY USUARIO ASOCIADO) */}
-                  {consult.user_id && (
+                  {/* ✅ BOTÓN DE CHAT SOLO SI ESTÁ RESPONDIDA Y HAY USER_ID */}
+                  {consult.status === 'responded' && consult.user_id && (
                     <Link
-                      to={`/chat/${consult.user_id}`}
-                      className="w-full py-2 bg-blue-600/20 text-blue-400 rounded-lg font-medium hover:bg-blue-600/30 transition-colors text-center flex items-center justify-center gap-2"
+                      to={`/chat/${consult.user_id}/${consult.id}`}
+                      className="w-full py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-center"
                     >
-                      💬 Abrir Chat
+                      💬 Abrir Chat con {consult.user?.username || 'Usuario'}
                     </Link>
                   )}
                 </div>
@@ -162,12 +156,6 @@ const AdvisorPanel = () => {
             ))}
           </div>
         )}
-
-        <div className="mt-12 text-center">
-          <Link to="/consultation" className="px-6 py-3 bg-primary text-text rounded-lg font-medium hover:bg-primary/90 transition-colors">
-            Nueva Consulta
-          </Link>
-        </div>
       </div>
     </div>
   );

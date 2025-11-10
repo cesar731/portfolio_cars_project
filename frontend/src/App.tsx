@@ -29,6 +29,7 @@ import ScrollToTop from './components/ScrollToTop';
 import UserGalleryEdit from './pages/UserGalleryEdit';
 import Checkout from './pages/Checkout'; 
 import ChatPage from './pages/ChatPage';
+import MyConsultations from './pages/MyConsultations';
 
 function App() {
   
@@ -58,6 +59,7 @@ function App() {
                 <Route path="/gallery/new" element={<UserGalleryCreate />} />
                 <Route path="/gallery/edit/:id" element={<UserGalleryEdit />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/my-consultations" element={<MyConsultations />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/cars/new" element={<CarCreate />} />
                 <Route path="/cars/edit/:id" element={<CarEdit />} />
@@ -65,7 +67,7 @@ function App() {
                 <Route path="/accessories/edit/:id" element={<AccessoryEdit />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/advisor" element={<AdvisorPanel />} />
-                <Route path="/chat/:advisorId" element={<ChatPage />} />
+                <Route path="/chat/:consultationId" element={<ChatPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>

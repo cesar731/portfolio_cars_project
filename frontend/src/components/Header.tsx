@@ -1,44 +1,32 @@
 // frontend/src/components/Header.tsx
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import api from '../services/api';
 
 const Header = () => {
   const { user, logout } = useAuth();
   const { cartItems } = useCart();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [advisorId, setAdvisorId] = useState<number | null>(null);
-
-  // Obtener un asesor disponible (role_id = 2)
-  useEffect(() => {
-    const fetchAdvisor = async () => {
-      if (!user) return;
-      try {
-        const res = await api.get('/users');
-        const advisor = res.data.find((u: any) => u.role_id === 2);
-        setAdvisorId(advisor?.id || null);
-      } catch (err) {
-        console.error('No se pudo cargar un asesor');
-      }
-    };
-    fetchAdvisor();
-  }, [user]);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
-  const navItems = [
+  // Define los elementos base del menú
+  const baseNavItems = [
     { label: 'Autos', path: '/cars' },
     { label: 'Accesorios', path: '/accessories' },
     { label: 'Galería', path: '/gallery' },
-    { label: 'Consulta', path: '/consultation' },
     { label: 'Comparar', path: '/compare' },
   ];
+
+  // Agrega "Consulta" solo si el usuario es rol 3 (usuario normal)
+  const navItems = user?.role_id === 3
+    ? [...baseNavItems.slice(0, 3), { label: 'Consulta', path: '/consultation' }, baseNavItems[3]]
+    : baseNavItems;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-dark-light border-b border-border px-6 py-4">
@@ -46,7 +34,6 @@ const Header = () => {
         <Link to="/" className="text-xl font-bold text-text hover:text-primary transition-colors">
           Viaggio Velogge
         </Link>
-
         <button
           className="md:hidden text-text"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -62,7 +49,6 @@ const Header = () => {
             </svg>
           )}
         </button>
-
         <nav className="hidden md:flex items-center gap-6">
           {navItems.map((item) => (
             <Link
@@ -74,7 +60,6 @@ const Header = () => {
             </Link>
           ))}
         </nav>
-
         <div className="hidden md:flex items-center gap-4">
           {user ? (
             <>
@@ -90,19 +75,6 @@ const Header = () => {
                 )}
               </Link>
 
-              {/* Botón de chat (si hay asesor) */}
-              {advisorId && (
-                <Link
-                  to={`/chat/${advisorId}`}
-                  className="relative p-2 text-text hover:text-primary transition-colors"
-                  title="Chatear con asesor"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                </Link>
-              )}
-
               {/* Menú de usuario */}
               <div className="relative group">
                 <button className="flex items-center gap-2 text-text hover:text-primary transition-colors">
@@ -115,6 +87,12 @@ const Header = () => {
                   <Link to="/profile" className="block px-4 py-2 text-text hover:bg-primary/10 transition-colors">
                     Mi Perfil
                   </Link>
+                  {/* ✅ Agregado: Mis Consultas (solo para usuarios normales) */}
+                  {user.role_id === 3 && (
+                    <Link to="/my-consultations" className="block px-4 py-2 text-text hover:bg-primary/10 transition-colors">
+                      Mis Consultas
+                    </Link>
+                  )}
                   {user.role_id === 1 && (
                     <Link to="/admin" className="block px-4 py-2 text-text hover:bg-primary/10 transition-colors">
                       Panel de Administrador
@@ -170,17 +148,6 @@ const Header = () => {
                 >
                   🛒 Carrito ({cartItems.length})
                 </Link>
-
-                {advisorId && (
-                  <Link
-                    to={`/chat/${advisorId}`}
-                    className="text-text hover:text-primary transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    💬 Chat con Asesor
-                  </Link>
-                )}
-
                 <Link
                   to="/profile"
                   className="text-text hover:text-primary transition-colors py-2"
@@ -188,6 +155,16 @@ const Header = () => {
                 >
                   Mi Perfil
                 </Link>
+                {/* ✅ Agregado en menú móvil */}
+                {user.role_id === 3 && (
+                  <Link
+                    to="/my-consultations"
+                    className="text-text hover:text-primary transition-colors py-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Mis Consultas
+                  </Link>
+                )}
                 {user.role_id === 1 && (
                   <Link
                     to="/admin"
