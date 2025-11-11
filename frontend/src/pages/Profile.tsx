@@ -3,8 +3,9 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { getCurrentUser, updateUserProfile, deactivateAccount } from '../services/userApi';
+import { getUserGalleryMe } from '../services/userCarGalleryApi';
 import { toast } from 'react-hot-toast';
-import { User } from '../types';
+import { User, UserCarGalleryItem } from '../types';
 
 const Profile = () => {
   const { user: authUser, logout } = useAuth();
@@ -13,6 +14,8 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [userGallery, setUserGallery] = useState<UserCarGalleryItem[]>([]);
+  const [galleryLoading, setGalleryLoading] = useState(true);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -22,7 +25,6 @@ const Profile = () => {
         setAvatarUrl(userData.avatar_url || '');
       } catch (err: any) {
         if (err.response?.status === 401) {
-          // Solo cerrar sesión si el token es inválido
           toast.error('Sesión expirada. Por favor inicia sesión nuevamente.');
           logout();
           navigate('/login');
@@ -35,8 +37,23 @@ const Profile = () => {
       }
     };
 
-    fetchProfile();
-  }, [logout, navigate]);
+    const fetchGallery = async () => {
+      try {
+        const galleryData = await getUserGalleryMe();
+        setUserGallery(galleryData);
+      } catch (err) {
+        console.error('Error al cargar tus publicaciones:', err);
+        toast.error('No se pudieron cargar tus publicaciones.');
+      } finally {
+        setGalleryLoading(false);
+      }
+    };
+
+    if (authUser) {
+      fetchProfile();
+      fetchGallery();
+    }
+  }, [logout, navigate, authUser]);
 
   const handleSave = async () => {
     try {
@@ -69,7 +86,6 @@ const Profile = () => {
       </div>
     );
   }
-
   if (!user) return null;
 
   return (
@@ -92,7 +108,6 @@ const Profile = () => {
             />
           )}
         </div>
-
         <div className="space-y-4">
           <div>
             <label className="block text-text-secondary mb-1">Usuario</label>
@@ -123,7 +138,11 @@ const Profile = () => {
           <div>
             <label className="block text-text-secondary mb-1">Rol</label>
             <p className="text-white">
-              {user.role_id === 1 ? 'Administrador' : user.role_id === 2 ? 'Asesor' : 'Usuario'}
+              {user.role_id === 1
+                ? 'Administrador'
+                : user.role_id === 2
+                ? 'Asesor'
+                : 'Usuario'}
             </p>
           </div>
           <div>
@@ -133,7 +152,6 @@ const Profile = () => {
             </p>
           </div>
         </div>
-
         <div className="mt-8 flex gap-4">
           {editing ? (
             <>
@@ -166,15 +184,59 @@ const Profile = () => {
           </button>
         </div>
 
-        {/* Sección de publicaciones del usuario */}
+        {/* === Sección de publicaciones del usuario === */}
         <div className="mt-12 pt-6 border-t border-border">
-          <h2 className="text-2xl font-bold text-text mb-4">Mis Publicaciones</h2>
-          <Link
-            to="/gallery"
-            className="inline-block text-primary hover:text-primary/80"
-          >
-            Ver mis publicaciones en la galería →
-          </Link>
+          <h2 className="text-2xl font-bold text-text mb-4">
+            Mis Publicaciones ({userGallery.length})
+          </h2>
+          {galleryLoading ? (
+            <p className="text-text-secondary">Cargando publicaciones...</p>
+          ) : userGallery.length === 0 ? (
+            <p className="text-text-secondary">No has publicado nada aún.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {userGallery.map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-dark/30 p-3 rounded-lg border border-border hover:bg-primary/10 transition relative"
+                >
+                  <img
+                    src={item.image_url}
+                    alt={item.car_name}
+                    className="w-full h-32 object-cover rounded mb-2"
+                  />
+                  <h3 className="text-white text-sm font-medium line-clamp-1">
+                    {item.car_name}
+                  </h3>
+                  <p className="text-text-secondary text-xs">
+                    {new Date(item.created_at).toLocaleDateString()}
+                  </p>
+                  <div className="mt-2 flex gap-2">
+                    <Link
+                      to={`/gallery/${item.id}`}
+                      className="text-xs text-primary hover:text-primary/80"
+                    >
+                      Ver
+                    </Link>
+                    <Link
+                      to={`/gallery/edit/${item.id}`}
+                      className="text-xs text-yellow-400 hover:text-yellow-300"
+                    >
+                      Editar
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="mt-4">
+            <Link
+              to="/gallery/new"
+              className="inline-block text-primary hover:text-primary/80 text-sm"
+            >
+              + Nueva publicación
+            </Link>
+          </div>
         </div>
       </div>
     </div>

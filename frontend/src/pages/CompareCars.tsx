@@ -78,7 +78,7 @@ const CompareCars = () => {
         className="min-h-screen bg-dark text-white relative flex flex-col items-center justify-center text-center px-6"
         style={{
           backgroundImage:
-            "url('../public/images/seccion_catalog_car2.jpg')",
+            "url('../public/images/comparacion.jpg')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}

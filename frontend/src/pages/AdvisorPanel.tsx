@@ -1,5 +1,5 @@
 // frontend/src/pages/AdvisorPanel.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { Consultation } from '../types';
@@ -10,6 +10,7 @@ const AdvisorPanel = () => {
   const { user, logout } = useAuth();
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState(''); // ✅ nuevo estado para búsqueda
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,10 +21,9 @@ const AdvisorPanel = () => {
 
     const fetchConsultations = async () => {
       try {
-        const response = await api.get('/consultations');
-        setConsultations(
-          response.data.filter((c: Consultation) => c.advisor_id === user.id)
-        );
+        const response = await api.get<Consultation[]>('/consultations');
+        const assigned = response.data.filter((c) => c.advisor_id === user.id);
+        setConsultations(assigned);
       } catch (error) {
         console.error('Error fetching consultations:', error);
         toast.error('Error al cargar tus consultas.');
@@ -34,6 +34,18 @@ const AdvisorPanel = () => {
 
     fetchConsultations();
   }, [user, navigate]);
+
+  // ✅ Filtro reactivo con useMemo
+  const filteredConsultations = useMemo(() => {
+    if (!searchTerm.trim()) return consultations;
+    const term = searchTerm.toLowerCase();
+    return consultations.filter((consult) => {
+      const matchesSubject = consult.subject?.toLowerCase().includes(term);
+      const matchesMessage = consult.message.toLowerCase().includes(term);
+      const matchesUsername = consult.user?.username?.toLowerCase().includes(term);
+      return matchesSubject || matchesMessage || matchesUsername;
+    });
+  }, [consultations, searchTerm]);
 
   const handleLogout = () => {
     logout();
@@ -86,15 +98,34 @@ const AdvisorPanel = () => {
           Cerrar Sesión
         </button>
       </header>
-      <div className="container mx-auto px-6 py-12">
-        <h2 className="text-3xl font-light text-white mb-8">Consultas Asignadas</h2>
-        {consultations.length === 0 ? (
+      <div className="container mx-auto px-6 py-8">
+        {/* ✅ Campo de búsqueda */}
+        <div className="mb-6">
+          <label className="block text-text-secondary mb-2">Buscar en consultas</label>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Asunto, mensaje o nombre del usuario..."
+            className="w-full md:w-96 px-4 py-2 bg-dark border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+
+        <h2 className="text-3xl font-light text-white mb-6">
+          Consultas Asignadas ({filteredConsultations.length})
+        </h2>
+
+        {filteredConsultations.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-text-secondary">No tienes consultas asignadas en este momento.</p>
+            <p className="text-text-secondary">
+              {searchTerm
+                ? 'No se encontraron consultas con ese criterio.'
+                : 'No tienes consultas asignadas en este momento.'}
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {consultations.map((consult) => (
+            {filteredConsultations.map((consult) => (
               <div key={consult.id} className="bg-dark-light rounded-xl shadow-card border border-border p-6">
                 <div className="flex justify-between items-start mb-4">
                   <h3 className="text-xl font-bold text-text">{consult.subject || 'Sin asunto'}</h3>
@@ -141,8 +172,6 @@ const AdvisorPanel = () => {
                       </button>
                     </>
                   )}
-
-                  {/* ✅ CORREGIDO: Ruta correcta con solo consultationId */}
                   {consult.status === 'responded' && consult.user_id && (
                     <Link
                       to={`/chat/${consult.id}`}

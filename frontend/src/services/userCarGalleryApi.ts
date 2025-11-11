@@ -28,3 +28,10 @@ export const likeGalleryEntry = async (entryId: number): Promise<{ likes: number
   const res = await api.post(`/user-car-gallery/${entryId}/like`);
   return res.data;
 };
+
+
+
+export const getUserGalleryMe = async (): Promise<UserCarGalleryItem[]> => {
+  const response = await api.get<UserCarGalleryItem[]>('/user-car-gallery/me');
+  return response.data;
+};

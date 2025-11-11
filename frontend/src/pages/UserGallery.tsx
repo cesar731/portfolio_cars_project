@@ -51,10 +51,9 @@ const UserGallery = () => {
         className="relative w-full h-[100vh] flex flex-col items-center justify-center text-center"
         style={{
           backgroundImage:
-            'linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.6)), url(../public/images/galleryft.jpeg)',
+            "url('../public/images/gallery.png')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          backgroundAttachment: 'scroll'
         }}
       >
         <h1 className="text-5xl md:text-7xl font-light text-white mb-3 drop-shadow-lg">
