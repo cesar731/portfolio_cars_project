@@ -1,8 +1,9 @@
 // frontend/src/pages/Login.tsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Link, useNavigate, useLocation } from 'react-router-dom'; // ✅ useLocation
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import GoogleButton from 'react-google-button';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -15,9 +16,7 @@ const Login = () => {
 
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation(); // ✅ Capturar la ubicación actual
-
-  // Obtener la ruta de redirección (por defecto '/')
+  const location = useLocation();
   const from = (location.state as any)?.from?.pathname || '/';
 
   useEffect(() => {
@@ -50,10 +49,8 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // ✅ ¡PASAR `from` al método login!
       await login(email, password, from);
       setFailedAttempts(0);
-      // No necesitas navegar aquí, ya lo hace `login()`
     } catch (err: any) {
       const newFailedAttempts = failedAttempts + 1;
       setFailedAttempts(newFailedAttempts);
@@ -75,6 +72,11 @@ const Login = () => {
     }
   };
 
+  // ✅ CORREGIDO: Redirige al backend, no a Google directamente
+  const handleGoogleLogin = () => {
+    window.location.href = 'http://localhost:8000/api/auth/google/login';
+  };
+
   return (
     <div className="min-h-screen bg-dark text-text flex items-center justify-center p-6">
       <div className="w-full max-w-md bg-dark-light p-10 rounded-2xl shadow-2xl border border-border">
@@ -88,6 +90,23 @@ const Login = () => {
         <p className="text-center text-text-secondary mb-8">
           Bienvenido de vuelta. Por favor ingresa tus credenciales.
         </p>
+
+        {/* Botón de Google */}
+        <div className="mb-6">
+          <GoogleButton
+            onClick={handleGoogleLogin}
+            style={{ width: '100%', height: '44px' }}
+          />
+        </div>
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-border"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-dark-light text-text-secondary">o</span>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit}>
           {error && (
