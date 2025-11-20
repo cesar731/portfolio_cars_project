@@ -28,9 +28,19 @@ const Register = () => {
     try {
       await register(username, email, password);
       toast.success('¡Registro exitoso! Revisa tu correo para confirmar tu cuenta.');
-      navigate('/login');
-    } catch {
-      toast.error('Error al registrar. Verifica tus datos.');
+      navigate(`/verify-email?email=${encodeURIComponent(email)}`);
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const message = err?.response?.data?.detail;
+
+      if (status === 202 && message === "Reenviado código de verificación") {
+        toast.success('Hemos reenviado el código de verificación a tu correo.');
+        navigate(`/verify-email?email=${encodeURIComponent(email)}`);
+      } else if (status === 400 && message === "El email ya está registrado") {
+        toast.error('Este correo ya tiene una cuenta activa.');
+      } else {
+        toast.error('Error al registrar. Verifica tus datos.');
+      }
     } finally {
       setLoading(false);
     }
