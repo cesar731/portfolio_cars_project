@@ -72,7 +72,6 @@ const Login = () => {
     }
   };
 
-  // ✅ CORREGIDO: Redirige al backend, no a Google directamente
   const handleGoogleLogin = () => {
     window.location.href = 'http://localhost:8000/api/auth/google/login';
   };
@@ -91,7 +90,6 @@ const Login = () => {
           Bienvenido de vuelta. Por favor ingresa tus credenciales.
         </p>
 
-        {/* Botón de Google */}
         <div className="mb-6">
           <GoogleButton
             onClick={handleGoogleLogin}
@@ -167,9 +165,9 @@ const Login = () => {
             </Link>
           </p>
           <p className="mt-2">
-            <a href="#" className="text-primary hover:text-primary/80 font-medium">
+            <Link to="/forgot-password" className="text-primary hover:text-primary/80 font-medium">
               ¿Olvidaste tu contraseña?
-            </a>
+            </Link>
           </p>
         </div>
       </div>

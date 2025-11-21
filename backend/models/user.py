@@ -16,6 +16,14 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     avatar_url = Column(String, nullable=True)
 
+    # 🔥 NUEVAS COLUMNAS PARA RESTABLECIMIENTO CON CÓDIGO
+    reset_code = Column(Integer, nullable=True)      # Código de 6 dígitos
+    reset_expires = Column(DateTime, nullable=True)  # Fecha de expiración
+
+    # 🔑 Columnas para verificación de correo
+    verify_code = Column(Integer, nullable=True)
+    verify_expires = Column(DateTime, nullable=True)
+
     # Relaciones
     role = relationship("Role", backref="users")
     cars = relationship("Car", back_populates="creator")
@@ -32,8 +40,5 @@ class User(Base):
     )
     galleries = relationship("UserCarGallery", back_populates="user")
     notifications = relationship("Notification", back_populates="user")
-
-    # 🔥 RELACIÓN FALTANTE (CORREGIDA)
     accessory_comments = relationship("AccessoryComment", back_populates="user")
-
     purchases = relationship("Purchase", back_populates="user")

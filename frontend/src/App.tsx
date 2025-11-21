@@ -32,36 +32,61 @@ import UserGalleryEdit from './pages/UserGalleryEdit';
 import Checkout from './pages/Checkout';
 import ChatPage from './pages/ChatPage';
 import MyConsultations from './pages/MyConsultations';
+import ForgotPassword from './pages/ForgotPassword';
+import VerifyCode from './pages/VerifyCode';
+import ResetPassword from './pages/ResetPassword';
+import VerifyEmail from './pages/VerifyEmail';  // ✅ Nuevo
 
-// Componente auxiliar para manejar el token
 function TokenHandler() {
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
 
+    const error = urlParams.get('error');
+    const errorDescription = urlParams.get('error_description');
+
+    if (error) {
+      let errorMessage = "Hubo un problema con la autenticación.";
+      switch (error) {
+        case 'access_denied':
+          errorMessage = "Has cancelado el inicio de sesión con Google.";
+          break;
+        case 'no_code_provided':
+          errorMessage = "No se recibió el código de autorización.";
+          break;
+        case 'token_exchange_failed':
+          errorMessage = `Fallo al obtener el token: ${errorDescription || 'Error desconocido'}`;
+          break;
+        case 'unexpected_error':
+          errorMessage = "Ocurrió un error inesperado durante el inicio de sesión.";
+          break;
+        default:
+          errorMessage = `Error: ${error} - ${errorDescription || ''}`;
+      }
+
+      toast.error(errorMessage);
+      window.history.replaceState({}, document.title, location.pathname);
+      navigate('/login', { replace: true });
+      return;
+    }
+
+    const token = urlParams.get('token');
     if (token) {
       try {
-        // Guardar token
         localStorage.setItem('token', token);
         toast.success('¡Bienvenido con Google!');
-
-        // Limpiar el token de la URL
         window.history.replaceState({}, document.title, location.pathname);
 
-        // Decodificar token
         const payload = JSON.parse(atob(token.split('.')[1]));
         const role_id = payload.role_id || 3;
 
-        // Redirigir según rol
         if (role_id === 1) {
           navigate('/admin', { replace: true });
         } else if (role_id === 2) {
           navigate('/advisor', { replace: true });
         } else {
-          // Ya estás en '/', pero podrías ir a perfil o dashboard
           navigate('/', { replace: true });
         }
       } catch (err) {
@@ -85,6 +110,10 @@ function AppContent() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/verify-code" element={<VerifyCode />} />
+          <Route path="/verify-email" element={<VerifyEmail />} /> {/* ✅ Nuevo */}
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/cars" element={<CarsCatalog />} />
           <Route path="/cars/:id" element={<CarDetail />} />
           <Route path="/compare" element={<CompareCars />} />

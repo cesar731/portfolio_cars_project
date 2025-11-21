@@ -1,3 +1,4 @@
+# backend/schemas/auth.py
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 
@@ -12,6 +13,9 @@ class LoginRequest(BaseModel):
     email: EmailStr
     password: str
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr  # 👈 Esta es la línea que faltaba
+
 class UserAuth(BaseModel):
     id: int
     username: str
@@ -19,4 +23,4 @@ class UserAuth(BaseModel):
     role_id: Optional[int]
 
     class Config:
-        orm_mode = True
+        from_attributes = True  # ✅ Pydantic v2 (reemplaza orm_mode)
