@@ -11,7 +11,10 @@ const AccessoriesShop = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 9; // Mostrar 9 accesorios por página
+  const itemsPerPage = 9;
+
+  // URL del backend para archivos
+  const FILES_URL = import.meta.env.VITE_FILES_URL;
 
   const categories = ['all', 'Rines', 'Escapes', 'Amortiguadores', 'Luces', 'Interior'];
 
@@ -46,10 +49,9 @@ const AccessoriesShop = () => {
     }
 
     setFilteredAccessories(result);
-    setCurrentPage(1); // Reiniciar a la primera página al filtrar
+    setCurrentPage(1);
   }, [searchTerm, selectedCategory, accessories]);
 
-  // 🔹 Al cambiar de página, hacer scroll al inicio
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentPage]);
@@ -65,15 +67,13 @@ const AccessoriesShop = () => {
     );
   }
 
-  // Calcular los accesorios que se mostrarán según la página actual
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentAccessories = filteredAccessories.slice(startIndex, startIndex + itemsPerPage);
-
-  // Calcular número total de páginas
   const totalPages = Math.ceil(filteredAccessories.length / itemsPerPage);
 
   return (
     <div className="min-h-screen bg-dark text-text">
+
       {/* HERO */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <div
@@ -83,9 +83,7 @@ const AccessoriesShop = () => {
           <div className="absolute inset-0 bg-black/70"></div>
         </div>
         <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
-          <h1 className="text-5xl md:text-6xl font-light text-white mb-4">
-            Tienda de Accesorios
-          </h1>
+          <h1 className="text-5xl md:text-6xl font-light text-white mb-4">Tienda de Accesorios</h1>
           <p className="text-xl md:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto leading-relaxed">
             Encuentra los accesorios perfectos para tu vehículo: rines, escapes, amortiguadores y más.
           </p>
@@ -104,15 +102,16 @@ const AccessoriesShop = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Ej: Rines deportivos..."
-              className="w-full px-4 py-3 bg-dark border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+              className="w-full px-4 py-3 bg-dark border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
+
           <div className="w-full md:w-64">
             <label className="block text-sm font-medium text-text mb-2">Categoría</label>
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full px-4 py-3 bg-dark border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+              className="w-full px-4 py-3 bg-dark border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary"
             >
               {categories.map((cat) => (
                 <option key={cat} value={cat}>
@@ -126,35 +125,49 @@ const AccessoriesShop = () => {
         {/* RESULTADOS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {currentAccessories.length > 0 ? (
-            currentAccessories.map((acc) => (
-              <div key={acc.id} className="group cursor-pointer">
-                <div className="relative overflow-hidden rounded-xl shadow-card bg-dark-light border border-border h-full flex flex-col">
-                  <img
-                    src={acc.image_url || 'https://via.placeholder.com/300x200?text=Accesorio'}
-                    alt={acc.name}
-                    className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div className="p-4 flex-grow flex flex-col">
-                    <h3 className="font-bold text-text text-sm">{acc.name}</h3>
-                    <p className="text-text-secondary text-xs mt-1">{acc.category}</p>
-                    <p className="text-text-secondary text-xs mt-2 line-clamp-2">
-                      {acc.description}
-                    </p>
-                    <span className="mt-auto text-primary font-bold">
-                      ${acc.price.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="p-4 border-t border-border">
-                    <Link
-                      to={`/accessories/${acc.id}`}
-                      className="block w-full py-2 px-4 text-center text-sm bg-primary/10 text-primary border border-primary/30 rounded-lg hover:bg-primary/20 transition-colors font-medium"
-                    >
-                      Ver Detalles →
-                    </Link>
+            currentAccessories.map((acc) => {
+              // 🔥 NUEVA LÓGICA PARA TOMAR LA PRIMERA IMAGEN REAL
+              const firstImage =
+                (acc.images && acc.images.length > 0)
+                  ? `${FILES_URL}${acc.images[0].image_url}`
+                  : acc.image_url
+                  ? acc.image_url.startsWith('http')
+                    ? acc.image_url
+                    : `${FILES_URL}${acc.image_url}`
+                  : 'https://via.placeholder.com/300x200?text=Accesorio';
+
+              return (
+                <div key={acc.id} className="group cursor-pointer">
+                  <div className="relative overflow-hidden rounded-xl shadow-card bg-dark-light border border-border h-full flex flex-col">
+                    <img
+                      src={firstImage}
+                      alt={acc.name}
+                      className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+
+                    <div className="p-4 flex-grow flex flex-col">
+                      <h3 className="font-bold text-text text-sm">{acc.name}</h3>
+                      <p className="text-text-secondary text-xs mt-1">{acc.category}</p>
+                      <p className="text-text-secondary text-xs mt-2 line-clamp-2">
+                        {acc.description}
+                      </p>
+                      <span className="mt-auto text-primary font-bold">
+                        ${acc.price.toLocaleString()}
+                      </span>
+                    </div>
+
+                    <div className="p-4 border-t border-border">
+                      <Link
+                        to={`/accessories/${acc.id}`}
+                        className="block w-full py-2 px-4 text-center text-sm bg-primary/10 text-primary border border-primary/30 rounded-lg hover:bg-primary/20 transition-colors font-medium"
+                      >
+                        Ver Detalles →
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <div className="col-span-full text-center py-12">
               <p className="text-text-secondary">No hay accesorios disponibles.</p>

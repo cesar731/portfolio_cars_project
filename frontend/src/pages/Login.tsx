@@ -8,6 +8,7 @@ import GoogleButton from 'react-google-button';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
@@ -78,14 +79,17 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-dark text-text flex items-center justify-center p-6">
-      <div className="w-full max-w-md bg-dark-light p-10 rounded-2xl shadow-2xl border border-border">
+      <div className="w-full max-w-md bg-dark-light p-10 rounded-2xl shadow-2xl border border-border relative">
+
         <button
           onClick={() => navigate(-1)}
           className="absolute top-4 right-4 text-text-secondary hover:text-text transition-colors"
         >
           ×
         </button>
+
         <h1 className="text-3xl font-bold text-center text-white mb-2">Iniciar Sesión</h1>
+
         <p className="text-center text-text-secondary mb-8">
           Bienvenido de vuelta. Por favor ingresa tus credenciales.
         </p>
@@ -122,6 +126,7 @@ const Login = () => {
             </div>
           )}
 
+          {/* EMAIL */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-text mb-2">Email</label>
             <input
@@ -135,18 +140,74 @@ const Login = () => {
             />
           </div>
 
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-text mb-2">Contraseña</label>
+          {/* CONTRASEÑA */}
+          <div className="mb-6 relative flex items-center">
+            <label className="absolute -top-6 left-0 block text-sm font-medium text-text">
+              Contraseña
+            </label>
+
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-4 py-3 bg-dark border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-4 py-3 bg-dark border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary pr-10"
               required
               disabled={isLocked}
             />
+
+            {/* ICONO DEL OJO (NEGRO SIEMPRE) */}
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2"
+            >
+              {showPassword ? (
+                // Ojo tachado negro
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="black"
+                  strokeWidth="2"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a10.05 10.05 0 011.29-2.86M9.88 9.88a3 3 0 104.24 4.24"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3 3l18 18"
+                  />
+                </svg>
+              ) : (
+                // Ojo normal negro
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="black"
+                  strokeWidth="2"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.543 7"
+                  />
+                </svg>
+              )}
+            </button>
           </div>
+
 
           <button
             type="submit"

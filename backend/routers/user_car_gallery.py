@@ -1,4 +1,3 @@
-# backend/routers/user_car_gallery.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 from typing import List
@@ -21,10 +20,9 @@ def create_user_car_gallery_entry(entry: UserCarGalleryCreate, db: Session = Dep
 def get_all_user_car_gallery_entries(db: Session = Depends(get_db)):
     entries = db.query(models.user_car_gallery.UserCarGallery).options(
         joinedload(models.user_car_gallery.UserCarGallery.user)
-    ).all()
+    ).order_by(models.user_car_gallery.UserCarGallery.created_at.desc()).all()
     return entries
 
-# ✅ SOLO LAS DEL USUARIO ACTUAL (CORREGIDO)
 @router.get("/me", response_model=List[UserCarGalleryOut])
 def get_current_user_gallery(
     db: Session = Depends(get_db),
@@ -34,6 +32,7 @@ def get_current_user_gallery(
         db.query(models.UserCarGallery)
         .filter(models.UserCarGallery.user_id == current_user.id)
         .options(joinedload(models.UserCarGallery.user))
+        .order_by(models.UserCarGallery.created_at.desc())
         .all()
     )
     return entries
@@ -62,27 +61,22 @@ def like_gallery_entry(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    # Verificar que la publicación existe
     entry = db.query(models.UserCarGallery).filter(models.UserCarGallery.id == entry_id).first()
     if not entry:
         raise HTTPException(status_code=404, detail="Publicación no encontrada")
 
-    # Verificar si ya le dio like
     existing = db.query(models.UserCarGalleryLike).filter(
         models.UserCarGalleryLike.user_id == current_user.id,
         models.UserCarGalleryLike.gallery_id == entry_id
     ).first()
 
     if existing:
-        # Ya dio like → no hacer nada o devolver mensaje
         return {"liked": True, "likes": entry.likes}
 
-    # Crear like
     like = models.UserCarGalleryLike(user_id=current_user.id, gallery_id=entry_id)
     db.add(like)
     entry.likes = (entry.likes or 0) + 1
     db.commit()
-
     return {"liked": True, "likes": entry.likes}
 
 @router.delete("/{entry_id}/like", status_code=200)

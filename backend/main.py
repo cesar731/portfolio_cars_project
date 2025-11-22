@@ -1,26 +1,42 @@
 from dotenv import load_dotenv
 import os
 
+# Cargar variables de entorno
 load_dotenv()
 
-# 🔍 Diagnóstico: imprime las variables
+# 🔍 Diagnóstico opcional (puedes borrarlo si quieres)
 print("🔍 SMTP_USER =", repr(os.getenv("SMTP_USER")))
 print("🔍 SMTP_PASSWORD =", repr(os.getenv("SMTP_PASSWORD")))
 
-# ⬇️ LUEGO: el resto de las importaciones
+# Importaciones principales
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from backend.database.database import Base, engine
 
-# Ahora sí puedes importar tus routers
+# Routers
 from backend.routers import (
     accessories, auth, cars, consultations, user_car_gallery,
     users, cart, notifications, accessory_comments,
     purchases, messages, user_car_gallery_comments
 )
 
+# Crear instancia FastAPI
 app = FastAPI(title="Portfolio Cars API")
 
+# Crear carpeta uploads si no existe
+if not os.path.exists("uploads"):
+    os.makedirs("uploads")
+
+# ======================================================
+# 🖼️ SERVIR ARCHIVOS ESTÁTICOS: IMÁGENES
+# ======================================================
+# Esto es lo que PERMITE que tu frontend pueda cargar imágenes
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+# ======================================================
+# 🌐 CORS
+# ======================================================
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
@@ -34,6 +50,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ======================================================
+# 📌 REGISTRO DE ROUTERS (API)
+# ======================================================
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(cars.router, prefix="/api/cars", tags=["Cars"])
@@ -47,6 +66,9 @@ app.include_router(purchases.router, prefix="/api/purchases", tags=["Purchases"]
 app.include_router(messages.router, prefix="/api/messages", tags=["Messages"])
 app.include_router(user_car_gallery_comments.router, prefix="/api/gallery", tags=["Gallery Comments"])
 
+# ======================================================
+# 🏠 RUTA PRINCIPAL
+# ======================================================
 @app.get("/")
 def root():
     return {"message": "Bienvenido a Portfolio Cars API 🚗"}

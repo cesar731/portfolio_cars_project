@@ -344,7 +344,7 @@ def seed_cars(db, user_id):
             year=random.randint(1960, 2025),
             price=round(random.uniform(20000, 2000000), 2),
             description=f"Auto deportivo de lujo #{i+1}",
-            image_url=[CAR_IMAGES_BY_ID[i % len(CAR_IMAGES_BY_ID)]],
+            image_url=CAR_IMAGES_BY_ID[i % len(CAR_IMAGES_BY_ID)],
             fuel_type=random.choice(FUEL_TYPES),
             mileage=random.randint(0, 200000) if random.random() > 0.3 else None,
             color=random.choice(["Rojo", "Negro", "Blanco", "Azul", "Gris"]),

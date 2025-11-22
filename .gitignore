@@ -27,3 +27,8 @@ build/
 .idea/
 *.swp
 *.swo
+
+# imgs upload 
+
+# Ignorar uploads
+uploads/

@@ -43,7 +43,8 @@ export interface Accessory {
   name: string;
   description?: string;
   price: number;
-  image_url: string;
+  image_url?: string; // ✅ Opcional, si quieres mantener compatibilidad
+  image_urls?: string[]; // ✅ Nuevo campo: array de URLs
   category: string;
   stock: number;
   created_by: number;

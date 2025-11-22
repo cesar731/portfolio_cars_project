@@ -9,16 +9,20 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (password !== confirmPassword) {
       toast.error('Las contraseñas no coinciden.');
       return;
     }
+
     if (!acceptedTerms) {
       toast.error('Debes aceptar los Términos y Condiciones y la Política de Privacidad.');
       return;
@@ -34,12 +38,12 @@ const Register = () => {
       const message = err?.response?.data?.detail;
 
       if (status === 202 && message === "Reenviado código de verificación") {
-        toast.success('Hemos reenviado el código de verificación a tu correo.');
+        toast.success('Se envió nuevamente el código a tu correo.');
         navigate(`/verify-email?email=${encodeURIComponent(email)}`);
       } else if (status === 400 && message === "El email ya está registrado") {
         toast.error('Este correo ya tiene una cuenta activa.');
       } else {
-        toast.error('Error al registrar. Verifica tus datos.');
+        toast.error('Error al registrarse.');
       }
     } finally {
       setLoading(false);
@@ -52,6 +56,8 @@ const Register = () => {
         <h1 className="text-2xl sm:text-3xl font-bold text-text mb-4 text-center">Crear Cuenta</h1>
 
         <form onSubmit={handleRegister} className="space-y-4">
+
+          {/* USERNAME */}
           <div>
             <label className="block text-text-secondary mb-1 text-sm">Nombre de usuario</label>
             <input
@@ -64,6 +70,7 @@ const Register = () => {
             />
           </div>
 
+          {/* EMAIL */}
           <div>
             <label className="block text-text-secondary mb-1 text-sm">Correo electrónico</label>
             <input
@@ -76,32 +83,90 @@ const Register = () => {
             />
           </div>
 
+          {/* PASSWORDS */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
+
+            {/* PASSWORD */}
+            <div className="relative">
               <label className="block text-text-secondary mb-1 text-sm">Contraseña</label>
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-3 py-2 bg-dark border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                className="w-full px-3 py-2 bg-dark border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary text-sm pr-10"
                 placeholder="Mínimo 8 caracteres"
               />
+
+              {/* ICONO CENTRADO */}
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 inset-y-10 flex items-center"
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              >
+                {showPassword ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none"
+                    viewBox="0 0 24 24" stroke="black" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.58 10.58a3 3 0 004.24 4.24" />
+                    <path strokeLinecap="round" strokeLinejoin="round"
+                      d="M16.68 16.68C15.27 17.53 13.68 18 12 18c-5 0-9-4-10-6 1-2 3-4 5.6-5.4" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none"
+                    viewBox="0 0 24 24" stroke="black" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round"
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.543 7" />
+                  </svg>
+                )}
+              </button>
             </div>
 
-            <div>
+            {/* CONFIRM PASSWORD */}
+            <div className="relative">
               <label className="block text-text-secondary mb-1 text-sm">Confirmar</label>
               <input
-                type="password"
+                type={showConfirmPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="w-full px-3 py-2 bg-dark border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                className="w-full px-3 py-2 bg-dark border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary text-sm pr-10"
                 placeholder="Repite la contraseña"
               />
+
+              {/* ICONO CENTRADO */}
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 inset-y-10 flex items-center"
+                aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              >
+                {showConfirmPassword ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none"
+                    viewBox="0 0 24 24" stroke="white" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18" />
+                    <path strokeLinecap="round" strokeLinejoin="round"
+                      d="M10.58 10.58a3 3 0 004.24 4.24" />
+                    <path strokeLinecap="round" strokeLinejoin="round"
+                      d="M16.68 16.68C15.27 17.53 13.68 18 12 18c-5 0-9-4-10-6 1-2 3-4 5.6-5.4" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none"
+                    viewBox="0 0 24 24" stroke="white" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round"
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.543 7" />
+                  </svg>
+                )}
+              </button>
             </div>
           </div>
 
+          {/* TERMS */}
           <div className="flex items-start mt-2">
             <input
               type="checkbox"
@@ -113,17 +178,19 @@ const Register = () => {
             />
             <label htmlFor="privacy" className="text-xs text-text-secondary leading-snug">
               Acepto los{' '}
-              <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+              <a href="/privacy" target="_blank" rel="noopener noreferrer"
+                className="text-primary hover:underline">
                 Términos y Condiciones
               </a>{' '}
               y la{' '}
-              <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+              <a href="/privacy" target="_blank" rel="noopener noreferrer"
+                className="text-primary hover:underline">
                 Política de Privacidad
-              </a>
-              .
+              </a>.
             </label>
           </div>
 
+          {/* BUTTON */}
           <button
             type="submit"
             disabled={loading}
@@ -133,6 +200,7 @@ const Register = () => {
           </button>
         </form>
 
+        {/* LOGIN LINK */}
         <p className="text-center text-text-secondary mt-4 text-sm">
           ¿Ya tienes cuenta?{' '}
           <Link to="/login" className="text-primary hover:text-primary/80 font-medium">
