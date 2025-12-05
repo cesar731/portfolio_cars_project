@@ -152,3 +152,8 @@ Frontend: React 19, TypeScript, Tailwind CSS, Axios, Formik, React Router v7
 
 ¿Encontraste un bug? ¡Abre un issue o PR!
 """
+
+
+desea descargar la base de datos??
+este es el link:
+https://drive.google.com/drive/folders/1qKAbzpo4_JzUKFznwqmyogCNm2fIHx_7?usp=sharing
