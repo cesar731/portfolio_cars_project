@@ -24,16 +24,6 @@ from backend.routers import (
 # Crear instancia FastAPI
 app = FastAPI(title="Portfolio Cars API")
 
-# Crear carpeta uploads si no existe
-if not os.path.exists("uploads"):
-    os.makedirs("uploads")
-
-# ======================================================
-# 🖼️ SERVIR ARCHIVOS ESTÁTICOS: IMÁGENES
-# ======================================================
-# Esto es lo que PERMITE que tu frontend pueda cargar imágenes
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
-
 # ======================================================
 # 🌐 CORS
 # ======================================================

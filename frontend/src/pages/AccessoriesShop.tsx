@@ -13,9 +13,6 @@ const AccessoriesShop = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9;
 
-  // URL del backend para archivos
-  const FILES_URL = import.meta.env.VITE_FILES_URL;
-
   const categories = ['all', 'Rines', 'Escapes', 'Amortiguadores', 'Luces', 'Interior'];
 
   useEffect(() => {
@@ -75,66 +72,54 @@ const AccessoriesShop = () => {
     <div className="min-h-screen bg-dark text-text">
 
       {/* HERO */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: "url('../public/images/seccion_accesory_car3.jpg')" }}
         >
           <div className="absolute inset-0 bg-black/70"></div>
         </div>
+
         <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
           <h1 className="text-5xl md:text-6xl font-light text-white mb-4">Tienda de Accesorios</h1>
-          <p className="text-xl md:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Encuentra los accesorios perfectos para tu vehículo: rines, escapes, amortiguadores y más.
+          <p className="text-xl md:text-2xl text-gray-200 mb-8">
+            Encuentra los accesorios perfectos para tu vehículo.
           </p>
         </div>
       </section>
 
-      {/* FILTROS */}
       <div className="container mx-auto px-6 py-8">
-        <div className="flex flex-col md:flex-row gap-6 mb-8">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-text mb-2">
-              Buscar por nombre o descripción
-            </label>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Ej: Rines deportivos..."
-              className="w-full px-4 py-3 bg-dark border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
 
-          <div className="w-full md:w-64">
-            <label className="block text-sm font-medium text-text mb-2">Categoría</label>
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full px-4 py-3 bg-dark border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat === 'all' ? 'Todas las categorías' : cat}
-                </option>
-              ))}
-            </select>
-          </div>
+        {/* BUSCADOR */}
+        <div className="flex flex-col md:flex-row gap-4 mb-8">
+          <input
+            type="text"
+            placeholder="Buscar accesorio..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full md:w-1/2 px-4 py-2 rounded-lg bg-dark-light border border-border text-text"
+          />
+
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="px-4 py-2 rounded-lg bg-dark-light border border-border text-text"
+          >
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat === 'all' ? 'Todas las Categorías' : cat}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {/* RESULTADOS */}
+        {/* GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {currentAccessories.length > 0 ? (
             currentAccessories.map((acc) => {
-              // 🔥 NUEVA LÓGICA PARA TOMAR LA PRIMERA IMAGEN REAL
-              const firstImage =
-                (acc.images && acc.images.length > 0)
-                  ? `${FILES_URL}${acc.images[0].image_url}`
-                  : acc.image_url
-                  ? acc.image_url.startsWith('http')
-                    ? acc.image_url
-                    : `${FILES_URL}${acc.image_url}`
-                  : 'https://via.placeholder.com/300x200?text=Accesorio';
+              const firstImage = acc.images?.length
+                ? acc.images[0].image_url
+                : acc.image_url || 'https://via.placeholder.com/300x200?text=Accesorio';
 
               return (
                 <div key={acc.id} className="group cursor-pointer">
@@ -175,40 +160,25 @@ const AccessoriesShop = () => {
           )}
         </div>
 
-        {/* PAGINACIÓN */}
+        {/* PAGINACIÓN (la que tenías antes) */}
         {totalPages > 1 && (
           <div className="flex justify-center mt-10 space-x-2">
-            <button
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              className="px-4 py-2 bg-dark-light border border-border rounded-lg text-text hover:bg-primary/10 disabled:opacity-50"
-            >
-              ← Anterior
-            </button>
-
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
               <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`px-4 py-2 border rounded-lg ${
-                  currentPage === page
+                key={num}
+                onClick={() => setCurrentPage(num)}
+                className={`px-4 py-2 rounded-lg border ${
+                  currentPage === num
                     ? 'bg-primary text-white border-primary'
-                    : 'bg-dark-light text-text border-border hover:bg-primary/10'
+                    : 'bg-dark-light text-text border-border hover:bg-dark'
                 }`}
               >
-                {page}
+                {num}
               </button>
             ))}
-
-            <button
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-              className="px-4 py-2 bg-dark-light border border-border rounded-lg text-text hover:bg-primary/10 disabled:opacity-50"
-            >
-              Siguiente →
-            </button>
           </div>
         )}
+
       </div>
     </div>
   );
