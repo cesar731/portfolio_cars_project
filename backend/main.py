@@ -41,6 +41,10 @@ origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "https://tu-frontend-production.up.railway.app",
+    "https://frontend-abc123.up.railway.app",
+    "https://frontend-abc123.up.railway.app",
+    "https://portfoliocarsproject-production.up.railway.app",
+    "https://cooperative-freedom-production.up.railway.app"
 ]
 
 app.add_middleware(
