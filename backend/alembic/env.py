@@ -18,7 +18,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 # --- Importar la Base de modelos y todos los modelos ---
-from backend.database.database import Base, DATABASE_URL
+from database.database import Base, DATABASE_URL
 from backend import models
 
 # Alembic Config object
