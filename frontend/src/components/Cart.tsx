@@ -16,11 +16,11 @@ const Cart = () => {
     const fetchCart = async () => {
       if (!user) return;
       try {
-        const response = await api.get(`/api/cart/${user.id}`);
+        const response = await api.get(`/cart/${user.id}`);
         const cartData = response.data;
         const accessories = await Promise.all(
           cartData.map(async (item: any) => {
-            const accessoryRes = await api.get(`/api/accessories/${item.accessory_id}`);
+            const accessoryRes = await api.get(`/accessories/${item.accessory_id}`);
             return accessoryRes.data;
           })
         );
@@ -37,7 +37,7 @@ const Cart = () => {
 
   const removeFromCart = async (accessoryId: number) => {
     try {
-      await api.delete(`/api/cart/${user?.id}/${accessoryId}`);
+      await api.delete(`/cart/${user?.id}/${accessoryId}`);
       setCartItems(cartItems.filter(item => item.id !== accessoryId));
     } catch (error) {
       console.error('Error removing from cart:', error);
