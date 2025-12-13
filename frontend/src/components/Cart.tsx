@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { api } from '../services/api';
+import  api  from '../services/api';
 import { Accessory } from '../types'; 
 import './Cart.css';
 

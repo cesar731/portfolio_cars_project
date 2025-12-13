@@ -97,18 +97,14 @@ const UserGallery = () => {
                           {item.user?.username || 'Anónimo'}
                         </span>{' '}
                         ·{' '}
-                        {new Date(item.created_at).toLocaleDateString('es-ES', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
+                        {item.created_at && (
+                          new Date(item.created_at).toLocaleDateString('es-ES', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          })
+                        )}
                       </p>
-
-                      {item.description && (
-                        <p className="text-text text-sm line-clamp-2 mb-3">
-                          {item.description}
-                        </p>
-                      )}
 
                       {item.is_vehicle && (
                         <div className="flex flex-wrap gap-2 mb-3">

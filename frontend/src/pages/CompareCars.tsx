@@ -47,7 +47,9 @@ const CompareCars = () => {
     { label: 'Marca', key: 'brand', render: (car: Car) => car.brand },
     { label: 'Modelo', key: 'model', render: (car: Car) => car.model },
     { label: 'Año', key: 'year', render: (car: Car) => car.year },
-    { label: 'Precio', key: 'price', render: (car: Car) => `$${car.price.toLocaleString()}` },
+    { label: 'Precio', key: 'price', render: (car: Car) =>
+      car.price !== undefined ? `$${car.price.toLocaleString()}` : '-',
+    },
     { label: 'Combustible', key: 'fuel_type', render: (car: Car) => car.fuel_type || '-' },
     { label: 'Kilometraje', key: 'mileage', render: (car: Car) => car.mileage ? `${car.mileage.toLocaleString()} km` : '-' },
     { label: 'Color', key: 'color', render: (car: Car) => car.color || '-' },

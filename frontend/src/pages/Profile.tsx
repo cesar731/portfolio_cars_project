@@ -209,7 +209,9 @@ const Profile = () => {
                     {item.car_name}
                   </h3>
                   <p className="text-text-secondary text-xs">
-                    {new Date(item.created_at).toLocaleDateString()}
+                    {item.created_at
+                      ? new Date(item.created_at).toLocaleDateString()
+                      : 'Fecha no disponible'}
                   </p>
                   <div className="mt-2 flex gap-2">
                     <Link

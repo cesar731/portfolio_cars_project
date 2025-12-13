@@ -13,7 +13,9 @@ const AccessoryCard: React.FC<{ accessory: Accessory }> = ({ accessory }) => {
       alert('Debes iniciar sesión para agregar productos al carrito.');
       return;
     }
-    addToCart(accessory.id);
+
+    // ✅ FIX: addToCart ahora recibe cantidad
+    addToCart(accessory.id, 1);
   };
 
   return (
@@ -23,19 +25,36 @@ const AccessoryCard: React.FC<{ accessory: Accessory }> = ({ accessory }) => {
         alt={accessory.name}
         className="w-full h-48 object-cover rounded-lg mb-4"
       />
+
       <div className="accessory-info">
-        <h3 className="accessory-title text-xl font-bold text-text mb-2">{accessory.name}</h3>
-        <p className="accessory-price text-primary font-bold text-lg">${accessory.price.toLocaleString()}</p>
-        <p className="accessory-category text-text-secondary text-sm mb-4">{accessory.category || '-'}</p>
-        <p className={`accessory-stock text-sm mb-4 ${
-          accessory.stock > 0 ? 'text-green-400' : 'text-red-400'
-        }`}>
+        <h3 className="accessory-title text-xl font-bold text-text mb-2">
+          {accessory.name}
+        </h3>
+
+        <p className="accessory-price text-primary font-bold text-lg">
+          ${accessory.price.toLocaleString()}
+        </p>
+
+        <p className="accessory-category text-text-secondary text-sm mb-4">
+          {accessory.category || '-'}
+        </p>
+
+        <p
+          className={`accessory-stock text-sm mb-4 ${
+            accessory.stock > 0 ? 'text-green-400' : 'text-red-400'
+          }`}
+        >
           {accessory.stock > 0 ? 'En stock' : 'Agotado'}
         </p>
+
         <div className="flex gap-2">
-          <Link to={`/accessories/${accessory.id}`} className="flex-1 py-2 px-4 bg-primary/10 text-primary border border-primary/30 rounded-lg hover:bg-primary/20 transition-colors text-center text-sm font-medium">
+          <Link
+            to={`/accessories/${accessory.id}`}
+            className="flex-1 py-2 px-4 bg-primary/10 text-primary border border-primary/30 rounded-lg hover:bg-primary/20 transition-colors text-center text-sm font-medium"
+          >
             Ver Detalles
           </Link>
+
           {accessory.stock > 0 && (
             <button
               onClick={handleAddToCart}

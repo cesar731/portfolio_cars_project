@@ -1,7 +1,8 @@
 // frontend/src/context/AuthContext.tsx
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { LoginResponse, register as registerApi, login as loginApi } from '../services/authApi';
-import { getCurrentUser, User } from '../services/userApi';
+import { getCurrentUser } from '../services/userApi';
+import { User } from '../types';
 import { useNavigate } from 'react-router-dom';
 
 export interface AuthContextType {

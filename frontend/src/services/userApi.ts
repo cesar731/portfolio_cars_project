@@ -1,4 +1,3 @@
-// frontend/src/services/userApi.ts
 import api from './api';
 import { User } from '../types';
 
@@ -19,7 +18,9 @@ export const getCurrentUser = async (): Promise<User> => {
   return res.data;
 };
 
-export const updateUserProfile = async (data: Partial<User>): Promise<User> => {
+export const updateUserProfile = async (
+  data: Partial<User>
+): Promise<User> => {
   const res = await api.patch('/users/me', data);
   return res.data;
 };
