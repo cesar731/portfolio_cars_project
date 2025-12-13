@@ -1,7 +1,7 @@
-# backend/reset_admin_password.py
-from backend.database.database import SessionLocal
-from backend.models.user import User
-from backend.security.password import get_password_hash
+# reset_admin_password.py
+from database.database import SessionLocal
+from models.user import User
+from security.password import get_password_hash
 def reset_admin_password():
     db = SessionLocal()
     try:

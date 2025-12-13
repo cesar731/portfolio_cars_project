@@ -1,10 +1,10 @@
-# backend/routers/user_car_gallery_comments.py
+# /routers/user_car_gallery_comments.py
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
-from backend.database.database import get_db
-from backend import models
-from backend.schemas.user_car_gallery_comment import GalleryCommentCreate, GalleryCommentOut
-from backend.security.oauth2 import get_current_user
+from database.database import get_db
+import models
+from schemas.user_car_gallery_comment import GalleryCommentCreate, GalleryCommentOut
+from security.oauth2 import get_current_user
 
 router = APIRouter()
 

@@ -1,12 +1,12 @@
-# backend/routers/accessories.py
+# /routers/accessories.py
 import os
 import shutil
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
 from sqlalchemy.orm import Session
-from backend.database.database import get_db
-from backend import models
-from backend.models.accessory_images import AccessoryImage
+from database.database import get_db
+import models
+from models.accessory_images import AccessoryImage
 
 router = APIRouter()
 

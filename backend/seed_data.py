@@ -1,4 +1,4 @@
-# backend/seed_data.py
+# /seed_data.py
 import os
 import sys
 import random
@@ -7,13 +7,13 @@ from datetime import datetime, timedelta
 # Asegurar que el directorio raíz esté en sys.path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from backend.database.database import SessionLocal, engine, Base
-from backend.models.user import User
-from backend.models.role import Role
-from backend.models.car import Car
-from backend.models.accessory import Accessory
-from backend.models.user_car_gallery import UserCarGallery
-from backend.security.password import get_password_hash
+from database.database import SessionLocal, engine, Base
+from models.user import User
+from models.role import Role
+from models.car import Car
+from models.accessory import Accessory
+from models.user_car_gallery import UserCarGallery
+from security.password import get_password_hash
 
 # === IMÁGENES ÚNICAS Y TEMÁTICAS ===
 

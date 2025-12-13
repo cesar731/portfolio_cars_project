@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 from typing import List
-from backend.database.database import get_db
-from backend import models
-from backend.schemas.user_car_gallery import UserCarGalleryCreate, UserCarGalleryOut
-from backend.security.oauth2 import get_current_user
+from database.database import get_db
+import models
+from schemas.user_car_gallery import UserCarGalleryCreate, UserCarGalleryOut
+from security.oauth2 import get_current_user
 
 router = APIRouter()
 

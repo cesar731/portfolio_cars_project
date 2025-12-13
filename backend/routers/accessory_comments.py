@@ -1,10 +1,10 @@
-# backend/routers/accessory_comments.py
+# /routers/accessory_comments.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
-from backend.database.database import get_db
-from backend import models
-from backend.schemas.accessory_comment import AccessoryCommentCreate, AccessoryCommentOut
-from backend.security.oauth2 import get_current_user
+from database.database import get_db
+import models
+from schemas.accessory_comment import AccessoryCommentCreate, AccessoryCommentOut
+from security.oauth2 import get_current_user
 
 router = APIRouter()
 

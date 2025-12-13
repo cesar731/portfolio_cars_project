@@ -1,10 +1,10 @@
-# backend/routers/notifications.py
+# /routers/notifications.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from backend.database.database import get_db
-from backend import models
-from backend.schemas.notification import NotificationCreate, NotificationOut, NotificationUpdate
-from backend.security.oauth2 import get_current_user
+from database.database import get_db
+import models
+from schemas.notification import NotificationCreate, NotificationOut, NotificationUpdate
+from security.oauth2 import get_current_user
 
 router = APIRouter()
 

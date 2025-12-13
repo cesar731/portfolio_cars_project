@@ -1,4 +1,4 @@
-# backend/routers/auth.py
+# /routers/auth.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
@@ -10,11 +10,11 @@ from urllib.parse import urlencode
 import random
 from pydantic import BaseModel
 
-from backend.database.database import get_db
-from backend import models, schemas
-from backend.security.password import verify_password, get_password_hash
-from backend.security.oauth2 import create_access_token
-from backend.utils.email import send_password_reset_code_email, send_verification_code_email
+from database.database import get_db
+import models, schemas
+from security.password import verify_password, get_password_hash
+from security.oauth2 import create_access_token
+from utils.email import send_password_reset_code_email, send_verification_code_email
 
 router = APIRouter()
 

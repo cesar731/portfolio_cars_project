@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from backend.database.database import get_db
-from backend import models, schemas
-from backend.schemas.car import CarCreate, CarOut, CarUpdate
+from database.database import get_db
+import models, schemas
+from schemas.car import CarCreate, CarOut, CarUpdate
 from typing import Optional
 
 router = APIRouter()

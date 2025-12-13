@@ -1,11 +1,11 @@
-# backend/routers/purchases.py
+# routers/purchases.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
-from backend.database.database import get_db
-from backend import models
-from backend.security.oauth2 import get_current_user
-from backend.schemas.purchase import PurchaseCreate, PurchaseOut
+from database.database import get_db
+import models
+from security.oauth2 import get_current_user
+from schemas.purchase import PurchaseCreate, PurchaseOut
 from datetime import datetime
 import uuid
 import os

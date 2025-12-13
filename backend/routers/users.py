@@ -1,11 +1,11 @@
-# backend/routers/users.py
+# /routers/users.py
 
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.orm import Session
-from backend.database.database import get_db
-from backend import models, schemas
-from backend.security.password import get_password_hash
-from backend.security.oauth2 import get_current_user
+from database.database import get_db
+import models, schemas
+from security.password import get_password_hash
+from security.oauth2 import get_current_user
 from fastapi import Body
 
 router = APIRouter()
@@ -100,13 +100,13 @@ def update_current_user(
     db.refresh(current_user)
     return current_user
 
-# backend/routers/users.py
+# /routers/users.py
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.orm import Session
-from backend.database.database import get_db
-from backend import models, schemas
-from backend.security.password import get_password_hash
-from backend.security.oauth2 import get_current_user
+from database.database import get_db
+import models, schemas
+from security.password import get_password_hash
+from security.oauth2 import get_current_user
 
 router = APIRouter()
 

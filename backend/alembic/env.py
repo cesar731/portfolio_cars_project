@@ -12,14 +12,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # --- AÑADIDO: Asegurar que el directorio raíz del proyecto está en sys.path ---
-# Añadir el directorio padre de 'alembic' (que es 'backend') al path
+# Añadir el directorio padre de 'alembic' (que es '') al path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-# Añadir el directorio padre de 'backend' (que es la raíz del proyecto) al path 👈 ¡ESTA ES LA LÍNEA CLAVE!
+# Añadir el directorio padre de '' (que es la raíz del proyecto) al path 👈 ¡ESTA ES LA LÍNEA CLAVE!
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 # --- Importar la Base de modelos y todos los modelos ---
 from database.database import Base, DATABASE_URL
-from backend import models
+import models
 
 # Alembic Config object
 config = context.config

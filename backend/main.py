@@ -12,10 +12,10 @@ print("🔍 SMTP_PASSWORD =", repr(os.getenv("SMTP_PASSWORD")))
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from backend.database.database import Base, engine
+from database.database import Base, engine
 
 # Routers
-from backend.routers import (
+from routers import (
     accessories, auth, cars, consultations, user_car_gallery,
     users, cart, notifications, accessory_comments,
     purchases, messages, user_car_gallery_comments

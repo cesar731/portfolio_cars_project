@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
-from backend.database.database import get_db
-from backend import models, schemas
-from backend.schemas.consultation import ConsultationCreate, ConsultationOut, ConsultationUpdate
-from backend.security.oauth2 import get_current_user
+from database.database import get_db
+import models, schemas
+from schemas.consultation import ConsultationCreate, ConsultationOut, ConsultationUpdate
+from security.oauth2 import get_current_user
 from datetime import datetime as dt
 
 router = APIRouter()
