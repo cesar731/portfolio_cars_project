@@ -1,0 +1,9 @@
+{
+  "build": {
+    "builder": "python",
+    "args": ["-m", "pip", "install", "-r", "backend/requirements.txt"]
+  },
+  "deploy": {
+    "startCommand": "./start.sh"
+  }
+}
