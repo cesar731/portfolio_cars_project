@@ -1,7 +1,7 @@
 # backend/models/message.py
 from sqlalchemy import Column, Integer, ForeignKey, String, DateTime, Boolean
 from sqlalchemy.orm import relationship
-from ..database.database import Base
+from database.database import Base
 from datetime import datetime
 
 class Message(Base):

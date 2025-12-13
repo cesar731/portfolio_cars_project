@@ -1,7 +1,7 @@
 # backend/models/purchase.py
 from sqlalchemy import Column, Integer, ForeignKey, DateTime, String, Float
 from sqlalchemy.orm import relationship
-from ..database.database import Base
+from database.database import Base
 from datetime import datetime
 
 class Purchase(Base):

@@ -1,7 +1,7 @@
 # backend/models/user_car_gallery_like.py
 from sqlalchemy import Column, Integer, ForeignKey, DateTime, UniqueConstraint
 from sqlalchemy.orm import relationship
-from ..database.database import Base
+from database.database import Base
 from datetime import datetime
 
 class UserCarGalleryLike(Base):

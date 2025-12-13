@@ -1,7 +1,7 @@
 # backend/models/accessory_comment.py
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
-from ..database.database import Base
+from database.database import Base
 from datetime import datetime
 
 class AccessoryComment(Base):

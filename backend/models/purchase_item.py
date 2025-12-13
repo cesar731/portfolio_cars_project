@@ -1,7 +1,7 @@
 # backend/models/purchase_item.py
 from sqlalchemy import Column, Integer, ForeignKey, Float
 from sqlalchemy.orm import relationship
-from ..database.database import Base
+from database.database import Base
 
 class PurchaseItem(Base):
     __tablename__ = "purchase_items"
