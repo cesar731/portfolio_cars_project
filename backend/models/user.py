@@ -3,7 +3,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from database.database import Base
 from datetime import datetime
-from purchase import Purchase
+from models.purchase import Purchase
 
 class User(Base):
     __tablename__ = "users"
