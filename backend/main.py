@@ -44,7 +44,7 @@ origins = [
     "https://frontend-abc123.up.railway.app",
     "https://frontend-abc123.up.railway.app",
     "https://portfoliocarsproject-production.up.railway.app",
-    "https://cooperative-freedom-production.up.railway.app"
+    "https://cooperative-freedom-production.up.railway.app",
 ]
 
 app.add_middleware(
